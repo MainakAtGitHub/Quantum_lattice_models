@@ -1,4 +1,4 @@
-function r=impurity_dos_p(inputfile, division, part)
+function r=impurity_dos(inputfile, division, part)
 
 % calculate the impurity density of states
 % inputfile : file that contains the parameters
@@ -14,11 +14,12 @@ if nargin <1
     ita = input('Enter ita   '); % broadening
     firstEnergy = input('Enter starting energy   ');
     lastEnergy = input('Enter last energy   ');
-    nEnergyPoints = input('Enter no of enery points   ');
+    nEnergyPoints = input('Enter no of energy points   ');
     % set some input filenames
     TB_file='TB_hamiltonian_FeSe_2D.mat';
     Gamma_file='Gamma_FeSe_10_orbital_Milan_symmetrized.mat';
     BdGfileName = ['BdG_Impurity_FeSe', '_N_', num2str(N),'_Vimp_', num2str(Vimp)];
+    casestring='LDOS_FeSe_Milan_Gamma';
     load(TB_file);
     % possibly not necessary?
     latticeVectors = latticeVector;
@@ -69,7 +70,11 @@ nSuperCells = size(superLatticeVectors,1);
 % variable not used ?
 nUnitCellsDelta = size(superDeltaVectors,1);
 E = repmat(energy,nBands,1);
-greensKSpace = zeros(M, M, nDosSites, nEnergyPoints);
+
+% orphan later
+if ~exist('casestring','var')
+    casestring='LDOS_FeSe_Milan_Gamma';
+end;
 
 % some code for parallelization
 if nargin < 2
@@ -97,6 +102,20 @@ else
     end
 end;
 
+% only allocate this variable if it is really needed
+if (division==0 || part>division)
+    greensKSpace = zeros(M, M, nDosSites, nEnergyPoints);
+end;
+
+LDOSfileName = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N), '_M_', num2str(M), '_ita_', num2str(ita)];
+% create some sub-directory to avoid many files in one directory
+if division>0
+    dirstring=[LDOSfileName,'_division_',num2str(division)];
+    if ~(exist(dirstring,'dir'))
+        mkdir(dirstring)
+    end;
+end;
+
 % only one for loop
 for index=startindex:endindex
     iKy= mod(index-1,M)+1;
@@ -116,24 +135,40 @@ for index=startindex:endindex
     [eigVector eigValue] = eig(kSpaceHamiltonian);
     [eigValueK sortingIndex] = sort(real(diag(eigValue)));
     eigVectorK = (eigVector(:,sortingIndex));
-    Ek = repmat(eigValueK((nBands + 1):end), 1, nEnergyPoints) ;
+    Ek_vector=eigValueK((nBands + 1):end);
     uK = eigVectorK(siteIndices,(nBands + 1):end);
     vK = eigVectorK(nBands + siteIndices,(nBands + 1):end);
-    greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita )) + ...
-        ((abs(vK)).^2)*(1./(E + Ek + 1i*ita ));
-    toc;  
+    % depending on the mode do different things
+    if division==0
+        % single calculation of full DOS
+        Ek = repmat(Ek_vector, 1, nEnergyPoints) ;
+        greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita )) + ...
+            ((abs(vK)).^2)*(1./(E + Ek + 1i*ita ));
+    else
+        % save result in one single file
+        save([dirstring,'/','index_',num2str(index),'.mat'],'uK','vK','Ek_vector');
+    end;
+    toc;
 end
-casestring='LDOS_FeSe_Milan_Gamma';
 LDOSfileName = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N), '_M_', num2str(M), '_ita_', num2str(ita)];
 if part>division
     if division>0
         % read in the precalculated results and sum over
-        for partindex=1:division
-            Greenskspacefilename=[LDOSfileName,'_division_',num2str(division),'_part_',num2str(partindex)];
-            greensKSpace_partial=load(Greenskspacefilename,'-mat');
-            greensKSpace=greensKSpace+greensKSpace_partial.greensKSpace;
+        %for partindex=1:division
+        %    Greenskspacefilename=[LDOSfileName,'_division_',num2str(division),'_part_',num2str(partindex)];
+        %    greensKSpace_partial=load(Greenskspacefilename,'-mat');
+        %    greensKSpace=greensKSpace+greensKSpace_partial.greensKSpace;
+        %end;
+        for index=1:M^2
+            iKy= mod(index-1,M)+1;
+            iKx= ceil(index/M);
+            load([dirstring,'/','index_',num2str(index),'.mat']);
+            % caeful: double code here, change both when doing any
+            % modifications
+            Ek = repmat(Ek_vector, 1, nEnergyPoints) ;
+            greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita )) + ...
+                ((abs(vK)).^2)*(1./(E + Ek + 1i*ita ));
         end;
-        
     end
     % do the calculation of dos
     greensRealSpace = zeros(nDosSites, nEnergyPoints);
@@ -158,7 +193,7 @@ if part>division
 else
     % write out partial result for later use
     % to be done: write out only v_k, u_k
-    Greenskspacefilename=[LDOSfileName,'_division_',num2str(division),'_part_',num2str(part)];
-    save(Greenskspacefilename,'greensKSpace');
+  %  Greenskspacefilename=[LDOSfileName,'_division_',num2str(division),'_part_',num2str(part)];
+  %  save(Greenskspacefilename,'greensKSpace');
 end
 r=1;

@@ -79,17 +79,17 @@ batchcommand=sbatch
 executable=run_impurity_dos_p.sh
 # create subdirectory number_of_tasks_Casename
 #case0=`./get_input.sh $1 "Case"`
-sub_dir='kmeshparallel_'$2
-if [ ! -d "$sub_dir" ]        
-then                    
-	echo "Creating subdirectory $sub_dir."
-	mkdir $sub_dir
-fi                                                                                                      
-if [ ! -d "$sub_dir" ]
-then                    
-	echo "Error"
-	exit
-fi
+#sub_dir='kmeshparallel_'$2
+#if [ ! -d "$sub_dir" ]        
+#then                    
+#	echo "Creating subdirectory $sub_dir."
+#	mkdir $sub_dir
+#fi                                                                                                      
+#if [ ! -d "$sub_dir" ]
+#then                    
+#	echo "Error"
+#	exit
+#fi
 
 # to do: copy input files into subdirectory
 
@@ -98,7 +98,7 @@ fi
 # create number_of_tasks inputfiles in subdirectory
 for (( task=1; task<=num_tasks+1; task++ ))
 do
-	submit_script=${template}'_task_'${task}
+	submit_script=${template}'_'${inputfile}'_task_'${task}
 	cp $template $submit_script
 	replace_input $submit_script parameter1 ${inputfile} space
 	replace_input $submit_script parameter3 ${task} space
