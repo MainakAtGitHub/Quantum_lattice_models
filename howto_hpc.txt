@@ -1,0 +1,37 @@
+Descriptio how to use Matlab on HPC HiperGator
+
+1) Manually on the dev1 or dev2 nodes
+a) Load module
+$ module load matlab/2013a
+
+This sets the Matlab directory:
+/apps/matlab/r2013a/
+
+b) setup cache directory (necessary for running compiled programs)
+$ export MCR_CACHE_ROOT=${TMPDIR}
+
+c) compile your program (on dev1 or dev2)
+mcc -R -singleCompThread -m some_prog.m
+
+
+2) Parallelization using queue
+
+a) prepare directory on /lfs/scratch/<username>
+copy following files there
+I) impurity_dos parallelize_qmesh.sh run_impurity_dos.sh  
+II) *.mat files that contain data (TB model, converged gaps)
+III) created input file standart_input_imp_dos_M_81.mat
+
+b) initiate the parallelization
+$ parallelize_qmesh.sh <parameterfile> <number_of_tasks>
+for example
+$ parallelize_qmesh.sh standart_input_imp_dos_M_81.mat 20
+
+This creates submit scripts for run_impurity_dos.sh and submits them.
+Then all k-points are calculated and stored in a sub-directory
+
+Finally one has to submit one more job (after all jobs have finished):
+
+$ qsub chi0_hpc.pbs_<parameterfile>_task_<number_of_tasks+1>
+for example
+$ qsub chi0_hpc.pbs_standart_input_imp_dos_M_81.mat_task_21

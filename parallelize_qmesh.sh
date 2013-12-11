@@ -49,6 +49,7 @@ inputfile=$1
 
 template=$3
 
+batchcommand=sbatch
 if [ ! -e "$3" ]
 then
 	echo "Error submit_script_template $3 does not exist, using standart ones:"
@@ -66,17 +67,33 @@ then
 				echo "  parameter3=" >> chi0_itp.sh
 				echo '  run_impurity_dos.sh /home/software/matlabR2012a-64/ $parameter1 $parameter2 $parameter3 > $parameter1$parameter2$parameter3.out 2>&1' >> chi0_itp.sh
 				template=chi0_itp.sh
+				batchcommand=sbatch
 				break;;
 			[Hh]* ) 
-				echo "not implemented yet"
-				exit;;
-			* ) echo "Please answer correctly.";;
-		esac
-	done
-fi
+				batchcommand=qsub
+				echo "#! /bin/bash" > chi0_hpc.pbs
+				echo "#PBS -N impurity_dos" >> chi0_hpc.pbs
+				echo "#PBS -o nout.out" >> chi0_hpc.pbs
+				echo "#PBS -e error.err" >> chi0_hpc.pbs
+				echo "#PBS -M kreisel@phys.ufl.edu" >> chi0_hpc.pbs
+				echo "#PBS -r n" >> chi0_hpc.pbs
+				echo "#PBS -l walltime=12:00:00" >> chi0_hpc.pbs
+				echo "#PBS -l nodes=1:ppn=1" >> chi0_hpc.pbs
+				echo "#PBS -l pmem=3500mb" >> chi0_hpc.pbs
+				echo 'cd $PBS_O_WORKDIR' >> chi0_hpc.pbs
+				echo "  parameter1=input_10Band_fese_000GP_exp_ce.dat" >> chi0_hpc.pbs
+				echo "  parameter2=" >> chi0_hpc.pbs
+				echo "  parameter3=" >> chi0_hpc.pbs
+				echo "module load matlab/2013a" >> chi0_hpc.pbs
+				echo './run_impurity_dos.sh ${MATLAB} $parameter1 $parameter2 $parameter3 > $parameter1$parameter2$parameter3.out 2>&1' >> chi0_hpc.pbs
+				template=chi0_hpc.pbs
+				break;;
+				* ) echo "Please answer correctly.";;
+			esac
+		done
+	fi
 
-batchcommand=sbatch
-executable=run_impurity_dos_p.sh
+#executable=run_impurity_dos_p.sh
 # create subdirectory number_of_tasks_Casename
 #case0=`./get_input.sh $1 "Case"`
 #sub_dir='kmeshparallel_'$2
@@ -113,5 +130,3 @@ do
 		 echo "Please submit one job ${batchcommand} ${submit_script} when precalculation has been finished."
  	 fi
 done
-
-
