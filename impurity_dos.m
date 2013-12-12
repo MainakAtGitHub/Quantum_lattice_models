@@ -20,9 +20,6 @@ if nargin <1
     Gamma_file='Gamma_FeSe_10_orbital_Milan_symmetrized.mat';
     BdGfileName = ['BdG_Impurity_FeSe', '_N_', num2str(N),'_Vimp_', num2str(Vimp)];
     casestring='LDOS_FeSe_Milan_Gamma';
-    load(TB_file);
-    % possibly not necessary?
-    latticeVectors = latticeVector;
     % save variables for next run
     save('standart_input_imp_dos.mat')
 else
@@ -31,9 +28,10 @@ else
 end;
 
 load(TB_file);
+% possibly not necessary?
+latticeVectors = latticeVector;
 load(Gamma_file);
 load(BdGfileName);
-
 
 nOrbitals = size(TBparameters,1);
 nBands = N^2*nOrbitals;
@@ -85,12 +83,20 @@ if nargin < 2
     division=0;
 else
     % set up the start and endindex for parallelization
-    division=str2num(division);
-    part=str2num(part);
+    if isa(division,'char')
+        division=str2num(division);
+    end;
+    if isa(part,'char')
+        part=str2num(part);
+    end
     if part > division
         % just do the summation and integration
         startindex=1;
         endindex=0;
+    elseif part <0
+        % only calculate single point
+        startindex=-part;
+        endindex=-part;
     else
         pointspertask=ceil(M^2/division);
         startindex=pointspertask*(part-1)+1;
@@ -100,7 +106,7 @@ else
             endindex=M^2
         end;
     end
-end;
+end
 
 % only allocate this variable if it is really needed
 if (division==0 || part>division)
@@ -159,26 +165,39 @@ if part>division
         %    greensKSpace_partial=load(Greenskspacefilename,'-mat');
         %    greensKSpace=greensKSpace+greensKSpace_partial.greensKSpace;
         %end;
+        Disp('Reading in precalculated eigenvalues and Bogoliubov coefficients...')
         for index=1:M^2
             iKy= mod(index-1,M)+1;
             iKx= ceil(index/M);
-            load([dirstring,'/','index_',num2str(index),'.mat']);
+            try
+                load([dirstring,'/','index_',num2str(index),'.mat']); 
+            catch exception
+                % missing k-point (or wrong input as number of k-points)
+                % First can happen if one job crashes; catch this by
+                % calculating on the fly
+                Disp('Missing k-point, recalculating on the fly.')
+                impurity_dos(inputfile, division, -index);
+                load([dirstring,'/','index_',num2str(index),'.mat']);
+            end
             % caeful: double code here, change both when doing any
             % modifications
             Ek = repmat(Ek_vector, 1, nEnergyPoints) ;
             greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita )) + ...
                 ((abs(vK)).^2)*(1./(E + Ek + 1i*ita ));
         end;
+        Disp('... done.');
     end
     % do the calculation of dos
     greensRealSpace = zeros(nDosSites, nEnergyPoints);
+    Disp('calculating GF in real space...');
     for iSite = 1: nDosSites
         for iEnergyPoint = 1:nEnergyPoints
+            Disp(['Done ',num2str(iSite),' of ', num2str(nDosSites), 'nDosSites']);
             greensRealSpace(iSite, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*...
                 singular_double_quad(1./squeeze(greensKSpace(:, :, iSite, iEnergyPoint)));
         end
     end
-    
+    Disp('Writing out LDOS ...');
     ldos = (-(1/pi))*imag(greensRealSpace);
     orbitalLDOSFarAway = ldos(1:5,:);
     totalLDOSFarAway = sum(orbitalLDOSFarAway,1);

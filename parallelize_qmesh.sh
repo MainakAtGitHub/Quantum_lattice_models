@@ -50,6 +50,7 @@ inputfile=$1
 template=$3
 
 batchcommand=sbatch
+holdflag='--hold'
 if [ ! -e "$3" ]
 then
 	echo "Error submit_script_template $3 does not exist, using standart ones:"
@@ -58,35 +59,39 @@ then
 		read -p "[I]TP (Slurm), [H]PC-script " ih
 		case $ih in
 			[iI]* ) 
-				echo "#! /bin/bash" > chi0_itp.sh
-				echo "#SBATCH -p dfg" >> chi0_itp.sh
-				echo "#SBATCH -n 1" >> chi0_itp.sh
-				echo "#SBATCH --mem-per-cpu=3800" >> chi0_itp.sh
-				echo "  parameter1=standart_input_imp_dos_M_20.mat" >> chi0_itp.sh
-				echo "  parameter2=" >> chi0_itp.sh
-				echo "  parameter3=" >> chi0_itp.sh
-				echo '  run_impurity_dos.sh /home/software/matlabR2012a-64/ $parameter1 $parameter2 $parameter3 > $parameter1$parameter2$parameter3.out 2>&1' >> chi0_itp.sh
-				template=chi0_itp.sh
-				batchcommand=sbatch
+				batchfile=script.sh
+				echo "#! /bin/bash" > ${batchfile}
+				echo "#SBATCH -p dfg" >> ${batchfile}
+				echo "#SBATCH -n 1" >> ${batchfile}
+				echo "#SBATCH --mem-per-cpu=3800" >> ${batchfile}
+				echo "  parameter1=standart_input_imp_dos_M_20.mat" >> ${batchfile}
+				echo "  parameter2=" >> ${batchfile}
+				echo "  parameter3=" >> ${batchfile}
+				echo '  run_impurity_dos.sh /home/software/matlabR2012a-64/ $parameter1 $parameter2 $parameter3 > $parameter1$parameter2$parameter3.out 2>&1' >> ${batchfile}
+				releasecommand='scontrol release <job_id>'
+				template=${batchfile}
 				break;;
 			[Hh]* ) 
 				batchcommand=qsub
-				echo "#! /bin/bash" > chi0_hpc.pbs
-				echo "#PBS -N impurity_dos" >> chi0_hpc.pbs
-				echo "#PBS -o nout.out" >> chi0_hpc.pbs
-				echo "#PBS -e error.err" >> chi0_hpc.pbs
-				echo "#PBS -M kreisel@phys.ufl.edu" >> chi0_hpc.pbs
-				echo "#PBS -r n" >> chi0_hpc.pbs
-				echo "#PBS -l walltime=12:00:00" >> chi0_hpc.pbs
-				echo "#PBS -l nodes=1:ppn=1" >> chi0_hpc.pbs
-				echo "#PBS -l pmem=3500mb" >> chi0_hpc.pbs
-				echo 'cd $PBS_O_WORKDIR' >> chi0_hpc.pbs
-				echo "  parameter1=input_10Band_fese_000GP_exp_ce.dat" >> chi0_hpc.pbs
-				echo "  parameter2=" >> chi0_hpc.pbs
-				echo "  parameter3=" >> chi0_hpc.pbs
-				echo "module load matlab/2013a" >> chi0_hpc.pbs
-				echo './run_impurity_dos.sh ${MATLAB} $parameter1 $parameter2 $parameter3 > $parameter1$parameter2$parameter3.out 2>&1' >> chi0_hpc.pbs
-				template=chi0_hpc.pbs
+				batchfile=script.pbs
+				holdflag='-h'
+				echo "#! /bin/bash" > ${batchfile}
+				echo "#PBS -N impurity_dos" >> ${batchfile}
+				echo "#PBS -o nout.out" >> ${batchfile}
+				echo "#PBS -e error.err" >> ${batchfile}
+				#echo "#PBS -M kreisel@phys.ufl.edu" >> ${batchfile}
+				echo "#PBS -r n" >> ${batchfile}
+				echo "#PBS -l walltime=12:00:00" >> ${batchfile}
+				echo "#PBS -l nodes=1:ppn=1" >> ${batchfile}
+				echo "#PBS -l pmem=3500mb" >> ${batchfile}
+				echo 'cd $PBS_O_WORKDIR' >> ${batchfile}
+				echo "  parameter1=input_10Band_fese_000GP_exp_ce.dat" >> ${batchfile}
+				echo "  parameter2=" >> ${batchfile}
+				echo "  parameter3=" >> ${batchfile}
+				echo "module load matlab/2013a" >> ${batchfile}
+				echo './run_impurity_dos.sh ${MATLAB} $parameter1 $parameter2 $parameter3 > $parameter1$parameter2$parameter3.out 2>&1' >> ${batchfile}
+				template=${batchfile}
+				releasecommand='qrls  <job_identifier>'
 				break;;
 				* ) echo "Please answer correctly.";;
 			esac
@@ -124,9 +129,13 @@ do
 	if [ "$task" -le "$num_tasks" ]
 	 then
 		 echo "Submitting job..."
-		 sleep 2
+		 sleep 1
 	 	 ${batchcommand} ${submit_script}
 	 else 
-		 echo "Please submit one job ${batchcommand} ${submit_script} when precalculation has been finished."
+		 #echo "Please submit one job ${batchcommand} ${submit_script} when precalculation has been finished."
+		 ${batchcommand} ${holdflag} ${submit_script}
+		 echo "The last job is on hold, please release when precalculation has been finished."
+		 echo ${releasecommand}
+		 # do the actual submitting with holding
  	 fi
 done
