@@ -49,8 +49,9 @@ inputfile=$1
 
 template=$3
 
-batchcommand=sbatch
+batchcommand='sbatch'
 holdflag='--hold'
+subdir='out'
 if [ ! -e "$3" ]
 then
 	echo "Error submit_script_template $3 does not exist, using standart ones:"
@@ -59,7 +60,7 @@ then
 		read -p "[I]TP (Slurm), [H]PC-script " ih
 		case $ih in
 			[iI]* ) 
-				batchfile=script.sh
+				batchfile='script.sh'
 				echo "#! /bin/bash" > ${batchfile}
 				echo "#SBATCH -p dfg" >> ${batchfile}
 				echo "#SBATCH -n 1" >> ${batchfile}
@@ -67,13 +68,13 @@ then
 				echo "  parameter1=standart_input_imp_dos_M_20.mat" >> ${batchfile}
 				echo "  parameter2=" >> ${batchfile}
 				echo "  parameter3=" >> ${batchfile}
-				echo '  run_impurity_dos.sh /home/software/matlabR2012a-64/ $parameter1 $parameter2 $parameter3 > $parameter1$parameter2$parameter3.out 2>&1' >> ${batchfile}
+				echo '  run_impurity_dos.sh /home/software/matlabR2012a-64/ $parameter1 $parameter2 $parameter3 > ./${subdir}/$parameter1$parameter2$parameter3.out 2>&1' >> ${batchfile}
 				releasecommand='scontrol release <job_id>'
 				template=${batchfile}
 				break;;
 			[Hh]* ) 
-				batchcommand=qsub
-				batchfile=script.pbs
+				batchcommand='qsub'
+				batchfile='script.pbs'
 				holdflag='-h'
 				echo "#! /bin/bash" > ${batchfile}
 				echo "#PBS -N impurity_dos" >> ${batchfile}
@@ -89,7 +90,7 @@ then
 				echo "  parameter2=" >> ${batchfile}
 				echo "  parameter3=" >> ${batchfile}
 				echo "module load matlab/2013a" >> ${batchfile}
-				echo './run_impurity_dos.sh ${MATLAB} $parameter1 $parameter2 $parameter3 > $parameter1$parameter2$parameter3.out 2>&1' >> ${batchfile}
+				echo './run_impurity_dos.sh ${MATLAB} $parameter1 $parameter2 $parameter3 > ./${subdir}/$parameter1$parameter2$parameter3.out 2>&1' >> ${batchfile}
 				template=${batchfile}
 				releasecommand='qrls  <job_identifier>'
 				break;;
@@ -99,19 +100,19 @@ then
 	fi
 
 #executable=run_impurity_dos_p.sh
-# create subdirectory number_of_tasks_Casename
+# create subdirectory for the output files
 #case0=`./get_input.sh $1 "Case"`
 #sub_dir='kmeshparallel_'$2
-#if [ ! -d "$sub_dir" ]        
-#then                    
-#	echo "Creating subdirectory $sub_dir."
-#	mkdir $sub_dir
-#fi                                                                                                      
-#if [ ! -d "$sub_dir" ]
-#then                    
-#	echo "Error"
-#	exit
-#fi
+if [ ! -d "$sub_dir" ]
+then                    
+	echo "Creating subdirectory $subdir."
+	mkdir $subdir
+fi                                                                                                      
+if [ ! -d "$subdir" ]
+then                    
+	echo "Error creating subdirectory."
+	exit
+fi
 
 # to do: copy input files into subdirectory
 
@@ -120,7 +121,9 @@ then
 # create number_of_tasks inputfiles in subdirectory
 for (( task=1; task<=num_tasks+1; task++ ))
 do
-	submit_script=${template}'_'${inputfile}'_task_'${task}
+	#submit_script=${template}'_'${inputfile}'_task_'${task}
+	# do not store all submit scripts (only last one that is set on hold)
+	submit_script=${template}'_'${inputfile}
 	cp $template $submit_script
 	replace_input $submit_script parameter1 ${inputfile} space
 	replace_input $submit_script parameter3 ${task} space
