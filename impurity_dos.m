@@ -118,7 +118,7 @@ if (division==0 || part>division)
     greensKSpace = zeros(M, M, nDosSites, nEnergyPoints);
 end;
 
-LDOSfileName0 = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N), '_M_', num2str(M)];
+LDOSfileName0 = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
 % create some sub-directory to avoid many files in one directory
 if division>0
     dirstring=['data_',LDOSfileName0];
@@ -167,7 +167,7 @@ for index=startindex:endindex
     end
     toc;
 end
-LDOSfileName = [LDOSfileName0 '_ita_', num2str(ita)];
+LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita)];
 if part>division
     if division>0
         % read in the precalculated results and sum over
@@ -180,6 +180,9 @@ if part>division
         for index=1:M^2
             iKy= mod(index-1,M)+1;
             iKx= ceil(index/M);
+            if iKy==1
+                disp(['reading k-point',num2str(iKx),' ',num2str(iKy)])
+            end;
             try
                 ekukvk_file=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'.mat'];
                 load(ekukvk_file); 

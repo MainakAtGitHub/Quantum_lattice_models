@@ -1,5 +1,10 @@
 Descriptio how to use Matlab on HPC HiperGator
 
+0) new script that creates inputfile
+manually edit script and execute with one argument:
+write_input_impurity_dos('input_imp_Tom_N_13_Vimp_0_4_M_20.mat')
+(creates one input file that is read by the program)
+
 1) Manually on the dev1 or dev2 nodes
 a) Load module
 $ module load matlab/2013a
@@ -11,10 +16,10 @@ b) setup cache directory (necessary for running compiled programs)
 $ export MCR_CACHE_ROOT=${TMPDIR}
 
 c) compile your program (on dev1 or dev2)
-mcc -R -singleCompThread -m some_prog.m
+mcc -R -singleCompThread -m impurity_dos.m
 
 
-2) Parallelization using queue
+2) Parallelization using queue (on HPC)
 
 a) prepare directory on /lfs/scratch/<username>
 copy following files there
@@ -29,8 +34,14 @@ $ parallelize_qmesh.sh standart_input_imp_dos_M_81.mat 20
 
 This creates submit scripts for run_impurity_dos.sh and submits them.
 Then all k-points are calculated and stored in a sub-directory
+data_<parameterfile>
 
-Finally one has to submit one more job (after all jobs have finished):
+Finally one has to release one more job (after all jobs have finished):
+
+$ qrls  <job_identifier>
+
+Or to resubmit this last job (possibly with new input file to refine the
+k-mesh or use another broadening)
 
 $ qsub chi0_hpc.pbs_<parameterfile>_task_<number_of_tasks+1>
 for example

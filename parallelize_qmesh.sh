@@ -22,7 +22,7 @@ sed -i "$string" $1
 if [ $# -lt 1 ]
 	then
 		echo "Too few arguments"
-	echo "Usage parallize_qmesh.sh parameterfile number_of_tasks submit_script_template"
+	echo "Usage parallelize_qmesh.sh parameterfile number_of_tasks submit_script_template"
 	exit
 fi
 if [ $# -lt 2 ]
@@ -68,6 +68,7 @@ then
 				echo "  parameter1=standart_input_imp_dos_M_20.mat" >> ${batchfile}
 				echo "  parameter2=" >> ${batchfile}
 				echo "  parameter3=" >> ${batchfile}
+				echo "subdir=${subdir}" >> ${batchfile}
 				echo '  run_impurity_dos.sh /home/software/matlabR2012a-64/ $parameter1 $parameter2 $parameter3 > ./${subdir}/$parameter1$parameter2$parameter3.out 2>&1' >> ${batchfile}
 				releasecommand='scontrol release <job_id>'
 				template=${batchfile}
@@ -89,6 +90,7 @@ then
 				echo "  parameter1=input_10Band_fese_000GP_exp_ce.dat" >> ${batchfile}
 				echo "  parameter2=" >> ${batchfile}
 				echo "  parameter3=" >> ${batchfile}
+				echo "subdir=${subdir}" >> ${batchfile}
 				echo "module load matlab/2013a" >> ${batchfile}
 				echo './run_impurity_dos.sh ${MATLAB} $parameter1 $parameter2 $parameter3 > ./${subdir}/$parameter1$parameter2$parameter3.out 2>&1' >> ${batchfile}
 				template=${batchfile}
