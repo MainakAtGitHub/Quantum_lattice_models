@@ -1,4 +1,4 @@
-function c=convert_delta_AK(filename)
+function c=convert_delta_AK(filename,N,nOrb)
 if nargin <2
     N=9;
 end

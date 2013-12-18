@@ -105,9 +105,13 @@ for i = 1:maxLoop
     delta = beta*delta + (1-beta)*deltaCal;
     nAvg = (1/N^2)*(sum(nUp + nDown));
     mu = mu - alpha*(nAvg - n0);
-    nAcc = [nAcc; nAvg];
-    deltaMaxAcc = [deltaMaxAcc; max(max(delta))];
-    deltaMinAcc = [deltaMinAcc; min(min(delta))]; 
+    nAcc = [nAcc; nAvg];   
+    % fix phase of delta (mostly not necessary, but always gives the same
+    % result, largest gap set to positive
+    [deltamax,index]=max(abs(delta(:)));
+    delta=delta*exp(-1i*angle(delta(index)));
+    deltaMaxAcc = [deltaMaxAcc; deltamax];
+    deltaMinAcc = [deltaMinAcc; min(min(real(delta)))]; 
     muAcc = [muAcc; mu];
     deltaDiffAcc = [deltaDiffAcc; deltaDiff];
     disp([i nDiff deltaDiff]);  
