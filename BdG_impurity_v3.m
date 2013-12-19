@@ -1,26 +1,36 @@
 function r=BdG_impurity_v3(inputfile)
 
+% Modified impurity BdG code to include
+% 1. Convergence check parameter as 
+%       (a) nCheck = abs(nCal - n)/n;
+%       (c) deltaCheck = norm(deltaCal - delta)/norm(delta);
+% 2. Randomize mixing parameter
+%       First find beta for converging solution. Now choose a range close
+%       to this beta, say [beta1 beta2] and for each iteration take new
+%       beta to be beta = rand
+
 if nargin <1
     %default Parameters
-N = 9;%input('Enter N   ');
-Vimp = .4;%input('enter impurity potential    ');
-alpha = .25;%input('enter alpha    '); % self-consistency parametser
-beta1 = .6;%input('enter beta1    ');
-beta2 = .9;%input('enter beta1    ');
-deltaTol = 1e-4;%input('enter tolerance for gap convergence    ');
-nTol = 1e-3;%input('enter tolerance for electron density convergence    ');
-maxLoop = 60;%input('enter maxloop     '); % max no of iterations for self consistency
-nOrbitals = 10;
-n0 = 1.2*nOrbitals; % no. of valence electrons per unit cell
-kT = .01;
-TB_file='TB_hamiltonian_FeSe_2D.mat';
+    N = 9;%input('Enter N   ');
+    Vimp = .4;%input('enter impurity potential    ');
+    alpha = .25;%input('enter alpha    '); % self-consistency parametser
+    beta1 = .6;%input('enter beta1    ');
+    beta2 = .9;%input('enter beta1    ');
+    deltaTol = 1e-4;%input('enter tolerance for gap convergence    ');
+    nTol = 1e-3;%input('enter tolerance for electron density convergence    ');
+    maxLoop = 60;%input('enter maxloop     '); % max no of iterations for self consistency
+    nOrbitals = 10;
+    n0 = 1.2*nOrbitals; % no. of valence electrons per unit cell
+    kT = .01;
+    TB_file='TB_hamiltonian_FeSe_2D.mat';
     Gamma_file='Gamma_FeSe_Toms_BS_6Dec13_cut_2.mat';
     BdGfileName = ['BdG_Impurity_FeSe', '_N_', num2str(N),'_Vimp_', num2str(Vimp)];
-  %  casestring='LDOS_FeSe_Milan_Gamma';
+    %  casestring='LDOS_FeSe_Milan_Gamma';
     input_fileName = ['BdG_homogeneous_FeSe_Toms_BS_6Dec13', '_N_', num2str(N),'_GammaCut_',num2str(2),'.mat'];
     input_fileName = ['BdG_Impurity_FeSe_Toms_BS_6Dec13_N_9_Vimp_0.4']
     BdGfileName = ['BdG_Impurity_FeSe_Toms_BS_6Dec13', '_N_', num2str(N),'_Vimp_', num2str(Vimp)];
 else
+    % otherwise read inputfile
     load(inputfile);
 end;
 
@@ -37,7 +47,6 @@ load(input_fileName,'-mat');
 %muH = mu;
 %clear delta mu;
 
-
 % BdG matrix blocks
 nBands = N^2*nOrbitals;
 H0 = lattice_translation(N, TBparameters, latticeVectors);
@@ -45,9 +54,19 @@ SCInteractionMatrix = lattice_translation(N, Gamma, latticeVectorsSC);
 Himp = zeros(size(H0));
 impCell = [ceil(N/2) ceil(N/2)];
 [iRange, jRange] = find_lattice_translation_index(N, nOrbitals, impCell, impCell);
-impPotential = Vimp*eye(nOrbitals/2, nOrbitals/2);
+if numel(Vimp)==1
+    impPotential = Vimp*eye(nOrbitals/2, nOrbitals/2);
+else
+    impPotential = 
 Himp(iRange, jRange) = [impPotential zeros(nOrbitals/2); zeros(nOrbitals/2) zeros(nOrbitals/2)];
 
+% Indices of sites NN and NNN to impurity
+impNNCell = impCell + [0 1];
+[iImpNNRange, jImpNNRange] = find_lattice_translation_index(N, nOrbitals, impNNCell, impCell);
+iNNsiteRange = iImpNNRange(1:nOrbitals/2);
+jNNsiteRange = jImpNNRange(1:nOrbitals/2);
+iNNNsiteRange = iImpNNRange((1+nOrbitals/2):nOrbitals);
+jNNNsiteRange = jNNsiteRange;
 
 %Self consistency iteration
 
@@ -58,6 +77,7 @@ end;
 if ~(exist('nDown','var'))
     nDown = .6*ones(nBands,1);
 end;
+% setup of some "growing" variables
 if ~(exist('nUpAcc','var'))
  nUpAcc = [];
 end;
@@ -78,6 +98,14 @@ if ~(exist('muAcc','var'))
 end;
 if ~(exist('nAcc','var'))
  nAcc=[];
+end;
+% by default mix delta
+if ~(exist('mixdelta','var'))
+    mixdelta=true;
+end;
+% writ out a Warning
+if ~mixdelta
+    disp('Warning: Not mixing delta, only converging nUp, nDown, mu.');
 end;
 
 % setting of Hamiltonian
@@ -102,16 +130,26 @@ for i = 1:maxLoop
     beta =  beta1 + (beta2 - beta1).*rand(1); 
     nUp = beta*nUp + (1-beta)*nUpCal;
     nDown = beta*nDown + (1-beta)*nDownCal;
-    delta = beta*delta + (1-beta)*deltaCal;
+    % new variable for input file: mixdelta to only converge nUp, nDown, mu
+    % with fixing delta (makes only sense if the initial guess for delta is
+    % already good).
+    if mixdelta
+        delta = beta*delta + (1-beta)*deltaCal;
+    end;
     nAvg = (1/N^2)*(sum(nUp + nDown));
     mu = mu - alpha*(nAvg - n0);
     nAcc = [nAcc; nAvg];   
     % fix phase of delta (mostly not necessary, but always gives the same
-    % result, largest gap set to positive
+    % result, largest gap set to be positive
     [deltamax,index]=max(abs(delta(:)));
     delta=delta*exp(-1i*angle(delta(index)));
-    deltaMaxAcc = [deltaMaxAcc; deltamax];
-    deltaMinAcc = [deltaMinAcc; min(min(real(delta)))]; 
+    % second possible observables
+    deltaMaxNN = max(max(abs(delta(iNNsiteRange, jNNsiteRange))));
+    deltaMaxNNN = max(max(abs(delta(iNNNsiteRange, jNNNsiteRange))));
+    %deltaMaxAcc = [deltaMaxAcc; deltamax];
+    %deltaMinAcc = [deltaMinAcc; min(min(real(delta)))]; 
+    deltaMaxAcc = [deltaMaxAcc; deltaMaxNN];
+    deltaMinAcc = [deltaMinAcc; deltaMaxNNN]; 
     muAcc = [muAcc; mu];
     deltaDiffAcc = [deltaDiffAcc; deltaDiff];
     disp([i nDiff deltaDiff]);  

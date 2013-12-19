@@ -8,6 +8,11 @@ subplot(2,2,4); plot(abs(deltaMinAcc)); title('deltaMin'); axis('square');
 
 fig2=figure;% plot(deltaDiffAcc); title('Norm deltaDiff'); axis('square');
 % Create semilogy
+axes1 = axes('Parent',fig2,'YScale','log','YMinorTick','on',...
+    'YMinorGrid','on');
+box(axes1,'on');
+grid(axes1,'on');
+hold(axes1,'all');
 semilogy(deltaDiffAcc);
 
 % Create title

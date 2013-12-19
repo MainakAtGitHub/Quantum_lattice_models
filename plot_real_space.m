@@ -1,18 +1,19 @@
-function f=plot_real_space(inputfile,sqrtscale,tickx,nOrbitals)
+function f=plot_real_space(inputfile,scale,tickx,nOrbitals)
 if nargin < 1
     inputfile='BdG_homogeneous_FeSe_Toms_BS_6Dec13_GammaCut_3_N_9.mat'
 end;
 if nargin <2
-    sqrtscale=true;
+    scale = 's';
 end;
 if nargin < 3 
-    tickx={'$d_{z^2}$','$d_{x^2-y^2}$','$d_{yz}$','$d_{xz}$','$d_{xy}$'}; % orbitals order
+    tickx={'$d_{z^2}$','$d_{x^2-y^2}$','$d_{yz}$','$d_{xz}$','$d_{xy}$'}; % orbitals order for FeSe (Tom)
 end;
 if nargin <4
     nOrbitals=10;
 end;
-load(inputfile); % BdG_homogeneous_FeSe_Toms_BS_6Dec13_GammaCut_3_N_9.mat
-ticks = -10:5:10;
+load(inputfile,'-mat'); % BdG_homogeneous_FeSe_Toms_BS_6Dec13_GammaCut_3_N_9.mat
+% no need to set the ticks any more
+% ticks = -10:5:10;
 
 % extract delta_i0 from delta_ij
 N = sqrt(size(delta,1)/nOrbitals);
@@ -62,18 +63,56 @@ for iOrbital = 1:nOrbitals/2
 end
 delta2Plot = 1000*delta2Plot;
 numl = N;
-global colorred
-colorred=false; % set colorscale
-figure1 = figure;
-global fsz
-fsz = 25; % font
-deltaRealMax = max(abs(real(delta2Plot(:)))); % for setting colormap
-scale = 's';
-if scale == 's'
-    image(sign(real(delta2Plot)).*sqrt(abs(real(delta2Plot)/deltaRealMax))*128+128);
-else
-    image(sign(real(delta2Plot)).*(abs(real(delta2Plot)/deltaRealMax))*128+128);
-end
-colorbar_rwb(figure1,deltaRealMax,ticks);
-label_boxes(5,numl,tickx);
+
+%r=realspaceplot(data2plot,numl,tickx,flnm,scale)
+r=realspaceplot(delta2Plot,numl,tickx,inputfile,'s');
+% figure1=figure
+% 
+% global colorred
+% colorred=false; % set colorscale
+% global fsz
+% fsz = 25; % font
+%  deltaRealMax = max(abs(real(delta2Plot(:)))); % for setting colormap
+% % if scale == 's'
+% %     image(sign(real(delta2Plot)).*sqrt(abs(real(delta2Plot)/deltaRealMax))*128+128);
+% % else
+% %     image(sign(real(delta2Plot)).*(abs(real(delta2Plot)/deltaRealMax))*128+128);
+% % end
+% % colorbar_rwb(figure1,deltaRealMax,ticks);
+% % label_boxes(nOrbitals/2,numl,tickx);
+% 
+% % set the scale
+% lm=log(deltaRealMax)/log(10);
+% mtix=10^(ceil(lm));
+% % do some refinement to avoid only single labels
+% if (ceil(lm)-lm > 0.5)
+%     tx=[-.5:.05:.5];
+% elseif    (ceil(lm)-lm > 0.2)
+%     tx=[-1:0.1:1];
+% else
+%     tx=[-1:0.2:1];
+% end;
+% ticks=mtix*tx; 
+% labels = num2str(repmat(sign(ticks).*(abs(ticks)), 1, 1)', 2);
+% if scale=='s'
+%     image(sign(real(delta2Plot)).*sqrt(abs(real(delta2Plot)/deltaRealMax))*128+128);
+%     ticks=sign(tx).*sqrt(mtix*abs(tx));
+%     deltaRealMax=sqrt(deltaRealMax);
+% else
+%     image(sign(real(delta2Plot)).*(abs(real(delta2Plot)/deltaRealMax))*128+128);
+% end;
+% colorbar_rwb(figure1,deltaRealMax,ticks,labels);
+% label_boxes(nOrbitals/2,numl,tickx);
+% if isunix
+%     k = strfind(inputfile, '/');
+%     if isempty(k)
+%             stringp=['/tmp/',inputfile(1:length(inputfile)-4),'.pdf']
+%     else
+%         stringp=['/tmp/',inputfile(k(length(k))+1:length(inputfile)-4),'.pdf']
+%     end;
+%     %stringp=['/tmp/Gapfunction_realspace_imag.pdf'];
+%     print_pdf(stringp);
+% end;
+
+
 

@@ -58,12 +58,14 @@ switch casename
         BdGfileName = ['BdG_Impurity_FeSe_Toms_BS_6Dec13_N_' num2str(N),'_Vimp_', num2str(Vimp)];
         BdGfileName = 'BdG_Impurity_FeSe_Toms_BS_6Dec13_N_13_Vimp_0.4.mat'
         %  BdGfileName ='BdG_Impurity_FeSe_Toms_BS_6Dec13_N_13_Vimp_0_no_SC.mat';
-        Gamma_file='Gamma_FeSe_Toms_BS_6Dec13_cut_2.mat'
-        Gamma_file='Gamma_FeSe_Toms_BS_6Dec13_GammaCut_3.mat'
+        Gamma_file='Gamma_FeSe_Toms_BS_6Dec13_cut_2.mat';
+        Gamma_file='Gamma_FeSe_Toms_BS_6Dec13_GammaCut_3.mat';
+        Gamma_file='Gammakkp5_FeSe_tom_true_2D_U_095_rlist.mat'
         BdGfileName = ['BdG_Impurity_FeSe_Toms_BS_6Dec13',num2str(maxLoop), '_N_', num2str(N),'_Vimp_', num2str(Vimp)];
-        BdGfileName = ['BdG_Imp_FeSe_new',num2str(maxLoop), '_N_', num2str(N),'_Vimp_', num2str(Vimp)]
-        BdGfileName = ['initial_guess_N_9_l1.mat']
-        BdGfileName = ['initial_guess_N_9_complex.mat']
-        input_fileName = BdGfileName;%['BdG_homogeneous_FeSe_Toms_BS_6Dec13', '_N_', num2str(N),'_GammaCut_',num2str(2),'.mat'];
+        BdGfileName = ['BdG_Imp_FeSe_new',num2str(maxLoop), '_N_', num2str(N),'_Vimp_', num2str(Vimp)];
+        BdGfileName = ['initial_guess_N_9_l1.mat'];
+        BdGfileName = ['initial_guess_N_9_complex.mat'];
+        BdGfileName = ['FeSe_N_9_U_095.mat'];
+        input_fileName = BdGfileName%['BdG_homogeneous_FeSe_Toms_BS_6Dec13', '_N_', num2str(N),'_GammaCut_',num2str(2),'.mat'];
 end;
 save(inputfile)
