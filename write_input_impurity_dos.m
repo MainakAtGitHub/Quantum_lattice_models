@@ -8,8 +8,9 @@ if nargin <1
     outputfile= 'standart_input_imp_dos.mat';
 end;
 
+
 % input parameters (modify as needed!)
-N = 9
+N = 7
 Vimp=0
 %Vimp = 0.4
 %Vimp = 0.8;
@@ -21,8 +22,6 @@ firstEnergy = -1
 lastEnergy = 1
 nEnergyPoints = 2500
 % set some input filenames
-% tight binding model
-TB_file='TB_hamiltonian_FeSe_2D.mat'
 % interactions
 % old input
 % BdGfileName = ['BdG_Impurity_FeSe', '_N_', num2str(N),'_Vimp_', num2str(Vimp)];
@@ -46,6 +45,13 @@ maxLoop = 500;%input('enter maxloop     '); % max no of iterations for self cons
 nOrbitals = 10;
 n0 = 1.2*nOrbitals; % no. of valence electrons per unit cell
 kT = .01;
+compound='FeSe'
+compound='LiFeAs'
+
+switch compound
+    case 'FeSe'
+        % tight binding model
+        TB_file='TB_hamiltonian_FeSe_2D.mat'
 casename='milan';
 casename='tom';
 switch casename
@@ -67,5 +73,10 @@ switch casename
         BdGfileName = ['initial_guess_N_9_complex.mat'];
         BdGfileName = ['FeSe_N_9_U_095.mat'];
         input_fileName = BdGfileName%['BdG_homogeneous_FeSe_Toms_BS_6Dec13', '_N_', num2str(N),'_GammaCut_',num2str(2),'.mat'];
+end;
+   case 'LiFeAs'
+       TB_file='TB_hamiltonian_LiFeAs_10_Orbital_ARPESfitTRansposed.mat';
+       Gamma_file='ChiqData_LiFeAs_10_ARPES_v2_2Dpi.dat_rlistcut2.mat';
+       BdGfileName = ['BdG_LiFeAs_N_',num2str(N),'.mat'];
 end;
 save(inputfile)

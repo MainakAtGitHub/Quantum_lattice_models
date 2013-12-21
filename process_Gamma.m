@@ -45,6 +45,15 @@ for i = -cut:cut
         count = count + 1;
         latticeVectorsSCCut(count,:) = [i j];
         GammaCut(:,:,count) = Gamma(:,:,((latticeVectorsSC(:,1) == i) & (latticeVectorsSC(:,2) == j)));
+        % special care for the edges, assume certain relation of Fe1 and
+        % Fe2 in elementary cell.
+        if ((i==-cut) | (j==cut))
+            GammaCut(1:nOrbitals/2,nOrbitals/2+1:nOrbitals,count)=zeros(nOrbitals/2);
+        end;
+        if ((i==cut) | (j==-cut))
+            GammaCut(nOrbitals/2+1:nOrbitals,1:nOrbitals/2,count)=zeros(nOrbitals/2);
+        end
+
     end
 end
 Gammatemp=Gamma;

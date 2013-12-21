@@ -31,7 +31,15 @@ if nargin <1
     BdGfileName = ['BdG_Impurity_FeSe_Toms_BS_6Dec13', '_N_', num2str(N),'_Vimp_', num2str(Vimp)];
 else
     % otherwise read inputfile
-    load(inputfile);
+    try
+        % old input format with mat-file
+        load(inputfile);
+    catch err
+        % new text-based input format
+        read_input_file=inputfile;
+        read_input;
+        read_input_file
+    end;
 end;
 
 
@@ -41,6 +49,10 @@ load(TB_file)
 % any reason for these double variables?
 latticeVectors = latticeVector;
 load(Gamma_file,'-mat')
+% default: same input as output filename, can be removed later
+if ~(exist('input_fileName','var'))
+    input_fileName=BdGfileName;
+end;
 load(input_fileName,'-mat');
 % not really necessary?
 %deltaH = delta; 
@@ -54,10 +66,13 @@ SCInteractionMatrix = lattice_translation(N, Gamma, latticeVectorsSC);
 Himp = zeros(size(H0));
 impCell = [ceil(N/2) ceil(N/2)];
 [iRange, jRange] = find_lattice_translation_index(N, nOrbitals, impCell, impCell);
+% allow for different potentials
 if numel(Vimp)==1
     impPotential = Vimp*eye(nOrbitals/2, nOrbitals/2);
 else
-    impPotential = 
+    impPotential = diag(Vimp);
+end;
+% debug
 Himp(iRange, jRange) = [impPotential zeros(nOrbitals/2); zeros(nOrbitals/2) zeros(nOrbitals/2)];
 
 % Indices of sites NN and NNN to impurity
@@ -115,13 +130,21 @@ for i = 1:maxLoop
     KE = H - mu*eye(nBands);
     BdGMatrix = [KE -delta; -delta' -KE];
     [eVector eValue] = eig(BdGMatrix);
+    % save some memory for following commands (here we need to save three
+    % full arrays such that we get in MB:
+    % 3*(2*N^2*nOrbitals)^2*8/1024/1024 (3.6G for N=25, 470M for N=15)
+    clear BdGMatrix
     [En,sortIndex] = sort(real(diag(eValue)));
+    % save some memory for following commands
+    clear eValue
     eVector = eVector(:,sortIndex);
     fermi = 1./(1 + exp(En/kT));
     nUpCal = (abs(eVector(1:nBands,:)).^2)*fermi;
     nDownCal = (abs(eVector((nBands + 1):end,:)).^2)*(1 - fermi);
     deltaCal = SCInteractionMatrix.*((eVector(1:nBands,:)*(((eVector((nBands + 1):end,:))').*repmat(fermi,1,nBands))));
-    deltaDiff = norm(deltaCal - delta)/norm(delta);
+    clear eVector
+    % convergence criterium: norm (as defined for vector)
+    deltaDiff = norm(deltaCal(:) - delta(:))/norm(delta(:));
     nDiff = abs((1/N^2)*sum(nUpCal + nDownCal) - n0)/n0;
     if (nDiff < nTol) && (deltaDiff < deltaTol)
        break % go out of loop if self-consistency is achieved
@@ -152,7 +175,7 @@ for i = 1:maxLoop
     deltaMinAcc = [deltaMinAcc; deltaMaxNNN]; 
     muAcc = [muAcc; mu];
     deltaDiffAcc = [deltaDiffAcc; deltaDiff];
-    disp([i nDiff deltaDiff]);  
+    disp([num2str(i),' ndiff= ',num2str(nDiff), ' deltaDiff= ',num2str( deltaDiff)]);  
     save(BdGfileName,'nAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','muAcc','mu', 'deltaTol', 'nTol','nUp','nDown');
 end
 if i < maxLoop

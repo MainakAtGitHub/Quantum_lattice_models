@@ -23,8 +23,16 @@ if nargin <1
     % save variables for next run
     save('standart_input_imp_dos.mat')
 else
-    % set all the values from the inputfile
-    load(inputfile);    
+    % otherwise read inputfile
+    try
+        % old input format with mat-file
+        load(inputfile);
+    catch err
+        % new text-based input format
+        read_input_file=inputfile;
+        read_input;
+        read_input_file
+    end;
 end;
 
 load(TB_file);
@@ -147,10 +155,13 @@ for index=startindex:endindex
         kSpaceHamiltonian = [KESuper -kSpaceGap; -kSpaceGap' -KESuper];
         [eigVector eigValue] = eig(kSpaceHamiltonian);
         [eigValueK sortingIndex] = sort(real(diag(eigValue)));
+        clear eigValue
         eigVectorK = (eigVector(:,sortingIndex));
         Ek_vector=eigValueK((nBands + 1):end);
+        clear eigValueK
         uK = eigVectorK(siteIndices,(nBands + 1):end);
         vK = eigVectorK(nBands + siteIndices,(nBands + 1):end);
+        clear eigVectorK
         % depending on the mode do different things
         if division==0
             % single calculation of full DOS

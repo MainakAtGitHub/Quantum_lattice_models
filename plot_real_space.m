@@ -40,7 +40,10 @@ for i = -(ceil(N/2)-1):(ceil(N/2)-1)
     for j = -(ceil(N/2)-1):(ceil(N/2)-1)
         count = count + 1;
         delta2Fe = delta(:,:,count);
-        latticeVectors1Fe = [latticeVectors1Fe; i+j j-i; i+j j-i+1];
+        % FeSe
+         latticeVectors1Fe = [latticeVectors1Fe; i+j j-i; i+j j-i+1];
+        % LiFeAs (not fixed yet)
+        %latticeVectors1Fe = [latticeVectors1Fe; -j+i i+j; i-j-1 i+j];        
         delta1Fe = [delta1Fe delta2Fe(1:nOrbitals/2,:)];
     end
 end
@@ -66,6 +69,7 @@ numl = N;
 
 %r=realspaceplot(data2plot,numl,tickx,flnm,scale)
 r=realspaceplot(delta2Plot,numl,tickx,inputfile,'s');
+max(abs(delta2Plot(:)))
 % figure1=figure
 % 
 % global colorred
