@@ -5,23 +5,27 @@ function f1=triF(e,a,k,E)
 % e corresponding energies at the corners of triangle
 %------------------------------------------------------
 %sort energies in ascending order to simplify the decission process
-A=sortrows([e,a,k]);
-e=A(:,1);
-a=A(:,2);
-k=A(:,3:size(k,2)+2);
+[e,index]=sortrows(e);
+%e1=B;
+a=a(index,:);
+k=k(index,:);
+%A=sortrows([e,a,k]);
+%e=A(:,1);
+%a=A(:,2);
+%k=A(:,3:size(k,2)+2);
 %define difference vectors
 k12=k(2,:)-k(1,:);
 k13=k(3,:)-k(1,:);
 k23=k(3,:)-k(2,:);
 % calculate the coeficients to approximate the function a over the triangle
-a0=a(1);%(k(1,1)*(k(2,2)*a(3)-a(2)*k(3,2))+k(1,2)*(a(2)*k(3,1)-k(2,1)*a(3))+a(1)*(k(2,1)*k(3,2)-k(2,2)*k(3,1)))/(k12(1)*k13(2)-k12(2)*k13(1));
-a1=-(k12(2)*(a(3)-a(1))-(a(2)-a(1))*k13(2))/(k12(1)*k13(2)-k12(2)*k13(1));
-a2=-((a(2)-a(1))*k13(1)-k12(1)*(a(3)-a(1)))/(k12(1)*k13(2)-k12(2)*k13(1));
+a0=a(1,:);%(k(1,1)*(k(2,2)*a(3)-a(2)*k(3,2))+k(1,2)*(a(2)*k(3,1)-k(2,1)*a(3))+a(1)*(k(2,1)*k(3,2)-k(2,2)*k(3,1)))/(k12(1)*k13(2)-k12(2)*k13(1));
+a1=-(k12(2)*(a(3)-a(1,:))-(a(2,:)-a(1,:))*k13(2))/(k12(1)*k13(2)-k12(2)*k13(1));
+a2=-((a(2,:)-a(1,:))*k13(1)-k12(1)*(a(3,:)-a(1,:)))/(k12(1)*k13(2)-k12(2)*k13(1));
 % calculate the density of states
 i0=triD(e,k,E);
 % calculate the momentum integrals distinguishing the tree cases
 i=triI(e,k,E);
-f1=a0*i0+a1*i(1,:)+a2*i(2,:);
+f1=a0'*i0+a1'*i(1,:)+a2'*i(2,:);
 
 
 function t1=triI(e,k,E)
@@ -72,7 +76,7 @@ else
     %energy above highest energy of triangle: no states
     t=[0;0];
 end;
-end;
+end
 
 function t=triV(E,k12,k13,k23,e)
 lE=length(E);
@@ -93,17 +97,12 @@ E_smaller_e3=(E>e(2)).*(E<=e(3));
     % density of states proportional to length of cutting line in triangle
     % according the forumula similar to Bloechel94
     a=k12'*(E_smaller_e2.*(E-e(1))/(e(2)-e(1)));
-
 %    a=(E-e(1))/(e(2)-e(1))*k12;
     b=k13'*(E_smaller_e2.*(E-e(1))/(e(3)-e(1)));
     t=t+repmat(sqrt(sum((a-b).^2,1)),2,1).*1/2.*(a+b);
-
-
-
     a=k23'*(E_smaller_e3.*(E-e(2))/(e(3)-e(2)));
     b=k13'*(E_smaller_e3.*(E-e(1))/(e(3)-e(1)));
     t=t+1/2*repmat(sqrt(sum((repmat(k12',1,lE).*repmat(E_smaller_e3,2,1)+a-b).^2,1)),2,1).*(repmat(k12',1,lE)+a+b);
-   
 %else
     %energy above highest energy of triangle: no states
 %    t=[0;0];

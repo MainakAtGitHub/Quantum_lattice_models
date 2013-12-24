@@ -195,7 +195,7 @@ end
 if ~tetra
     LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita)];
 else
-    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_tetra']
+    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_tetraf']
 end;
 if part>division
     if division>0
@@ -256,14 +256,17 @@ if part>division
     % do the calculation of dos
     greensRealSpace = zeros(nDosSites, nEnergyPoints);
     disp('calculating GF in real space...');
+    if ~tetra
     for iSite = 1: nDosSites
         disp(['Done ',num2str(iSite),' of ', num2str(nDosSites), 'nDosSites']);
-        if ~tetra
+        %if ~tetra
             for iEnergyPoint = 1:nEnergyPoints            
                 greensRealSpace(iSite, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*...
                     singular_double_quad(1./squeeze(greensKSpace(:, :, iSite, iEnergyPoint)));
             end
-        else
+    end
+        %else
+    else
             disp('...using 2D version of Tetrahedron method');
             mesh1=[0.5:1:(M-0.5)]*2*pi/M;
             [kx,ky] = meshgrid(mesh1, mesh1);
@@ -271,13 +274,14 @@ if part>division
                 for iband=1:nBands
                     disp(['Band ',num2str(iband),' of ',num2str(nBands)]);
                     E=Ekall(:,:,iband);
-                    a=ukall(:,:,iSite,iband).*conj(ukall(:,:,iSite,iband));
-                    greensRealSpace(iSite, :) = greensRealSpace(iSite, :) + f(E,a,kx,ky,energy);
-                    a=vkall(:,:,iSite,iband).*conj(vkall(:,:,iSite,iband));
-                    greensRealSpace(iSite, :) = greensRealSpace(iSite, :) + f(E,a,kx,ky,-energy);
+                    a=ukall(:,:,:,iband).*conj(ukall(:,:,:,iband));
+                    greensRealSpace(:, :) = greensRealSpace(:, :) + f(E,a,kx,ky,energy);
+                    a=vkall(:,:,:,iband).*conj(vkall(:,:,:,iband));
+                    greensRealSpace(:, :) = greensRealSpace(:, :) + f(E,a,kx,ky,-energy);
                 end;
-        end;
-    end
+    end;
+      %  end;
+   % end
     disp('Writing out LDOS ...');
     if tetra
         ldos=greensRealSpace;

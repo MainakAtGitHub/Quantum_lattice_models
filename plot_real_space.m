@@ -30,8 +30,23 @@ for ix = -(ceil(N/2)-1):(ceil(N/2)-1)
         deltaCenter(:,:,count) = delta(iRange, jRange);
     end
 end
-delta = deltaCenter;
 
+% some output to quantify the homogeneous gap
+impCell = [ceil(N/2) ceil(N/2)];
+impNNCell = impCell + [0 1];
+[iImpNNRange, jImpNNRange] = find_lattice_translation_index(N, nOrbitals, impNNCell, impCell);
+iNNsiteRange = iImpNNRange(1:nOrbitals/2);
+jNNsiteRange = jImpNNRange(1:nOrbitals/2);
+iNNNsiteRange = iImpNNRange((1+nOrbitals/2):nOrbitals);
+jNNNsiteRange = jNNsiteRange;
+[iImpNN, jImpNN] = find_lattice_translation_index(N, nOrbitals, impCell, impCell);
+deltaOnsite = max(max(abs(delta(iImpNN, jImpNN))));
+deltaMaxNN = max(max(abs(delta(iNNsiteRange, jNNsiteRange))));
+deltaMaxNNN = max(max(abs(delta(iNNNsiteRange, jNNNsiteRange))));
+% give back three numbers that classify the state
+f=[deltaOnsite, deltaMaxNN, deltaMaxNNN];
+if ~isempty(scale)
+delta = deltaCenter;
 %convert 2Fe to 1Fe cell
 latticeVectors1Fe = [];
 delta1Fe = [];
@@ -64,12 +79,11 @@ for iOrbital = 1:nOrbitals/2
         delta2Plot(((iOrbital-1)*N + 1):iOrbital*N, ((jOrbital-1)*N + 1):jOrbital*N ) = deltaBlock;
     end
 end
+% convert to meV
 delta2Plot = 1000*delta2Plot;
-numl = N;
-
 %r=realspaceplot(data2plot,numl,tickx,flnm,scale)
-r=realspaceplot(delta2Plot,numl,tickx,inputfile,'s');
-max(abs(delta2Plot(:)))
+realspaceplot(delta2Plot,N,tickx,inputfile,scale);
+end
 % figure1=figure
 % 
 % global colorred
@@ -117,6 +131,3 @@ max(abs(delta2Plot(:)))
 %     %stringp=['/tmp/Gapfunction_realspace_imag.pdf'];
 %     print_pdf(stringp);
 % end;
-
-
-
