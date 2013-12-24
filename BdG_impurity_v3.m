@@ -34,7 +34,7 @@ else
     try
         % old input format with mat-file
         load(inputfile);
-    catch err
+    catch %err
         % new text-based input format
         read_input_file=inputfile;
         read_input;

@@ -27,7 +27,7 @@ else
     try
         % old input format with mat-file
         load(inputfile);
-    catch err
+    catch 
         % new text-based input format
         read_input_file=inputfile;
         read_input;
@@ -121,9 +121,21 @@ else
     end
 end
 
+if (~exist('tetra','var'))
+    tetra=false;
+end;
+
 % only allocate this variable if it is really needed
 if (division==0 || part>division)
-    greensKSpace = zeros(M, M, nDosSites, nEnergyPoints);
+    if ~tetra
+        greensKSpace = zeros(M, M, nDosSites, nEnergyPoints);
+    else
+        % some huge arrays to store the result
+        % store the edges twice to calculate the whole area
+        ukall=zeros(M+1,M+1,nDosSites,nBands);
+        vkall=zeros(M+1,M+1,nDosSites,nBands);
+        ekall=zeros(M+1,M+1,nDosSites,nBands);
+    end;
 end;
 
 LDOSfileName0 = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
@@ -140,7 +152,9 @@ for index=startindex:endindex
     iKy= mod(index-1,M)+1;
     iKx= ceil(index/M);
     tic;
-    ekukvk_file=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'.mat'];
+    if division > 0
+        ekukvk_file=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'.mat'];
+    end;
     if (~exist(ekukvk_file, 'file') || division==0)
         disp([iKx iKy]);
         k = [kx(iKx) ky(iKy)];
@@ -178,7 +192,11 @@ for index=startindex:endindex
     end
     toc;
 end
-LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita)];
+if ~tetra
+    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita)];
+else
+    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_tetra']
+end;
 if part>division
     if division>0
         % read in the precalculated results and sum over
@@ -207,9 +225,31 @@ if part>division
             end
             % caeful: double code here, change both when doing any
             % modifications
-            Ek = repmat(Ek_vector, 1, nEnergyPoints) ;
-            greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita )) + ...
-                ((abs(vK)).^2)*(1./(E + Ek + 1i*ita ));
+            if ~tetra
+                Ek = repmat(Ek_vector, 1, nEnergyPoints) ;
+                greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita )) + ...
+                    ((abs(vK)).^2)*(1./(E + Ek + 1i*ita ));
+            else
+                ukall(iKx,iKy,:,:)=uK;
+                vkall(iKx,iKy,:,:)=vK;
+                Ekall(iKx,iKy,:)=Ek_vector;
+                % store the edges twice to construct set of triangles that cover the whole area
+                if iKx==1
+                   ukall(M+1,iKy,:,:)=uK;
+                   vkall(M+1,iKy,:,:)=vK;
+                   eKALL(M+1,iKy,:,:)=Ek_vector;
+                end;
+                if iKy==1
+                   ukall(iKx,M+1,:,:)=uK;
+                   vkall(iKx,M+1,:,:)=vK;
+                   eKALL(iKx,M+1,:,:)=Ek_vector;
+                end;
+                if (iKx==1) && (iKy==1)
+                   ukall(M+1,M+1,:,:)=uK;
+                   vkall(M+1,M+1,:,:)=vK;
+                   eKALL(M+1,M+1,:,:)=Ek_vector;
+                end;
+            end;
         end;
         disp('... done.');
     end
@@ -218,13 +258,32 @@ if part>division
     disp('calculating GF in real space...');
     for iSite = 1: nDosSites
         disp(['Done ',num2str(iSite),' of ', num2str(nDosSites), 'nDosSites']);
-        for iEnergyPoint = 1:nEnergyPoints            
-            greensRealSpace(iSite, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*...
-                singular_double_quad(1./squeeze(greensKSpace(:, :, iSite, iEnergyPoint)));
-        end
+        if ~tetra
+            for iEnergyPoint = 1:nEnergyPoints            
+                greensRealSpace(iSite, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*...
+                    singular_double_quad(1./squeeze(greensKSpace(:, :, iSite, iEnergyPoint)));
+            end
+        else
+            disp('...using 2D version of Tetrahedron method');
+            mesh1=[0.5:1:(M-0.5)]*2*pi/M;
+            [kx,ky] = meshgrid(mesh1, mesh1);
+                % to do: vectorize the code!
+                for iband=1:nBands
+                    disp(['Band ',num2str(iband),' of ',num2str(nBands)]);
+                    E=Ekall(:,:,iband);
+                    a=ukall(:,:,iSite,iband).*conj(ukall(:,:,iSite,iband));
+                    greensRealSpace(iSite, :) = greensRealSpace(iSite, :) + f(E,a,kx,ky,energy);
+                    a=vkall(:,:,iSite,iband).*conj(vkall(:,:,iSite,iband));
+                    greensRealSpace(iSite, :) = greensRealSpace(iSite, :) + f(E,a,kx,ky,-energy);
+                end;
+        end;
     end
     disp('Writing out LDOS ...');
-    ldos = (-(1/pi))*imag(greensRealSpace);
+    if tetra
+        ldos=greensRealSpace;
+    else
+        ldos = (-(1/pi))*imag(greensRealSpace);
+    end;
     orbitalLDOSFarAway = ldos(1:5,:);
     totalLDOSFarAway = sum(orbitalLDOSFarAway,1); %#ok<NASGU>
     orbitalLDOSImp = ldos(6:10,:);
