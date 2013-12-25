@@ -195,7 +195,7 @@ end
 if ~tetra
     LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita)];
 else
-    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_tetraf']
+    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_tetra_corr']
 end;
 if part>division
     if division>0
@@ -268,7 +268,10 @@ if part>division
         %else
     else
             disp('...using 2D version of Tetrahedron method');
-            mesh1=[0.5:1:(M-0.5)]*2*pi/M;
+            % set up a k-mesh that is suitable to cover the whole
+            % Brillouinzone with triangles
+            mesh1=[0.5:1:(M+0.5)]*2*pi/M;
+            % to do: kx,ky can be only a vector to simplify indexing
             [kx,ky] = meshgrid(mesh1, mesh1);
                 % to do: vectorize the code!
                 for iband=1:nBands

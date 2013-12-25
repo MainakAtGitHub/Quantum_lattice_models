@@ -20,7 +20,15 @@ k23=k(3,:)-k(2,:);
 % calculate the coeficients to approximate the function a over the triangle
 a0=a(1,:);%(k(1,1)*(k(2,2)*a(3)-a(2)*k(3,2))+k(1,2)*(a(2)*k(3,1)-k(2,1)*a(3))+a(1)*(k(2,1)*k(3,2)-k(2,2)*k(3,1)))/(k12(1)*k13(2)-k12(2)*k13(1));
 a1=-(k12(2)*(a(3)-a(1,:))-(a(2,:)-a(1,:))*k13(2))/(k12(1)*k13(2)-k12(2)*k13(1));
+% debug code
+if sum(isnan(a1)>0)
+    disp('a0 isnan');
+end;
 a2=-((a(2,:)-a(1,:))*k13(1)-k12(1)*(a(3,:)-a(1,:)))/(k12(1)*k13(2)-k12(2)*k13(1));
+% debug code
+if sum(isnan(a2)>0)
+    disp('a2 isnan');
+end;
 % calculate the density of states
 i0=triD(e,k,E);
 % calculate the momentum integrals distinguishing the tree cases
@@ -103,6 +111,8 @@ E_smaller_e3=(E>e(2)).*(E<=e(3));
     a=k23'*(E_smaller_e3.*(E-e(2))/(e(3)-e(2)));
     b=k13'*(E_smaller_e3.*(E-e(1))/(e(3)-e(1)));
     t=t+1/2*repmat(sqrt(sum((repmat(k12',1,lE).*repmat(E_smaller_e3,2,1)+a-b).^2,1)),2,1).*(repmat(k12',1,lE)+a+b);
+    % remove nan numbers that come from 0*1/(0) if e(1)==e(2) etc.
+    t(isnan(t))=0;
 %else
     %energy above highest energy of triangle: no states
 %    t=[0;0];
