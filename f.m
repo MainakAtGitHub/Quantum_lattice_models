@@ -10,10 +10,10 @@ d1=zeros(size(a,3),length(e));
 for i=1:size(kx,1)-1
 %       Printing Progress to the Command Window
        %testoutput(i,i-1);
-       i1=i;
-       if i1==size(kx,1)-1
-           i1=1;
-       end;
+       %i1=i;
+       %if i1==size(kx,1)-1
+       %    i1=1;
+       %end;
        % use a second variable for the contribution of one row of triangles
        % to reduce the error from the additions
        tmp=0;

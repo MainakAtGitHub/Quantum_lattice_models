@@ -1,12 +1,30 @@
-function f=make_plot_impurity_dos(inputfile)
+function f=make_plot_impurity_dos(inputfile,smooth)
 if nargin <1
     inputfile='LDOS_FeSe_Milan_Gamma_Vimp_4_N_9_M_40_ita_0.003'
 end;
+if nargin < 2
+    if isempty(strfind(inputfile, 'tetra'))
+        smooth=0;
+    else
+        %default: smoothing if "tetra" in filename
+        smooth=1;
+    end
+end
 range=[-0.2 0.2];
 orb={'orbital1','orbital2','orbital3','orbital4','orbital5','total'};
 
 % load input
 load(inputfile,'-mat')
+% some smoothing if necessary
+orbitalLDOSFarAway=sg_smooth(orbitalLDOSFarAway,smooth);
+orbitalLDOSImp=sg_smooth(orbitalLDOSImp,smooth);
+orbitalLDOSImpNN=sg_smooth(orbitalLDOSImpNN,smooth);
+orbitalLDOSImpNNN=sg_smooth(orbitalLDOSImpNNN,smooth);
+% fix negative values (numerical error, smoothing artefacts)
+orbitalLDOSFarAway(orbitalLDOSFarAway<0)=0;
+orbitalLDOSImp(orbitalLDOSImp<0)=0;
+orbitalLDOSImpNN(orbitalLDOSImpNN<0)=0;
+orbitalLDOSImpNNN(orbitalLDOSImpNNN<0)=0;
 % DOS far away (without impurity)
 figure1=figure;
 plot1=plot(energy,[orbitalLDOSFarAway;sum(orbitalLDOSFarAway)]);
