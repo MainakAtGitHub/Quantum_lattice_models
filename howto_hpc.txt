@@ -1,12 +1,60 @@
-Descriptio how to use Matlab on HPC HiperGator
+Descriptioin how to use Matlab on HPC HiperGator and the ITP cluster
 
-0) new script that creates inputfile
-manually edit script and execute with one argument:
-write_input_impurity_dos('input_imp_Tom_N_13_Vimp_0_4_M_20.mat')
-(creates one input file that is read by the program)
 
-1) Manually on the dev1 or dev2 nodes
-a) Load module
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Some notes on the matlab code
+-----------------------------------------------------------------------------------------------------
+0) inputfile
+-----------------------------------------------------------------------------------------------------
+manually edit input script (template can be found at input_template.txt with some hints about the parameters)
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+1) main programs: 
+-----------------------------------------------------------------------------------------------------
+1a) impurity_dos(inputfile, division, part)
+-----------------------------------------------------------------------------------------------------
+Calculation of the density of states with k-mesh (MxM supercells)
+The second and third argument are optional, and is used for the k-mesh parallelization:
+division: number of tasks that will do the calculation
+part: part<= division (used to evoke one of the parallel jobs)
+      part > division (used to calculate the density of states with the precalculated energies and eigenvectors)
+      part < 0 (used to calculate a missing k-point with index "part")
+
+1b) BdG_impurity_v3(inputfile)
+-----------------------------------------------------------------------------------------------------
+Runs a self consistent loop with writing the output to a file specified in "inputfile".
+Details for setting the behavior can be fount in input_template.txt
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2) helper programs
+-----------------------------------------------------------------------------------------------------
+2a) parallelize_qmesh.sh parameterfile number_of_tasks
+starts a parallel calculation of the density of states for a converged BdG result using the inputfile "parameterfile"
+meant to be used on a cluster: currently working on the ITP cluster (please change "dfg" to "housewives" if no access to "dfg" queue is granted) or on the HPC HiPerGator.
+number_of_tasks : number of jobs to be submitted (best, if number_of_tasks is a divisor of MxM), number_of_tasks is routhly the speedup factor (if that number of computing nodes is available to the user)
+
+2b) some matlab scripts
+-----------------------------------------------------------------------------------------------------
+extend_initial_guess.m : to extend a converged impurity result to a larger cell
+plot_BdG_impurity_v3.m : plot the convergence of a (running) BdG calculation
+plot_real_space.m : plot the gap of a (homogeneous) calculation, can be running
+process_Gamma.m : convert the Gamma file from the "mrpapp" project to be usable in BdG code
+make_plot_impurity_dos.m : plot the densities of states for a impurity calculation (has some smoothing options)
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Some instructions for HPC cluster
+-----------------------------------------------------------------------------------------------------
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+1) Manually on the dev1 or dev2 nodes (log into the hpc cluster, 
+-----------------------------------------------------------------------------------------------------
+$ ssh gator.hpc.ufl.edu
+and then into the developper nodes, 
+$ ssh dev1
+
+a) In order to use matlab and the compiler one has to load the corresponding module
 $ module load matlab/2013a
 
 This sets the Matlab directory:
@@ -15,23 +63,30 @@ This sets the Matlab directory:
 b) setup cache directory (necessary for running compiled programs)
 $ export MCR_CACHE_ROOT=${TMPDIR}
 
-c) compile your program (on dev1 or dev2)
-mcc -R -singleCompThread -m impurity_dos.m
+c) compile your program (on dev1 or dev2) directly on the login.
+$ mcc -R -singleCompThread -m impurity_dos.m
 
+For more informations see here:
+http://wiki.hpc.ufl.edu/doc/Matlab
 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 2) Parallelization using queue (on HPC)
+-----------------------------------------------------------------------------------------------------
 
 a) prepare directory on /lfs/scratch/<username>
+-----------------------------------------------------------------------------------------------------
 copy following files there
 I) impurity_dos parallelize_qmesh.sh run_impurity_dos.sh  
 II) *.mat files that contain data (TB model, converged gaps)
 III) created input file standart_input_imp_dos_M_81.mat
 
 b) initiate the parallelization
+-----------------------------------------------------------------------------------------------------
 $ parallelize_qmesh.sh <parameterfile> <number_of_tasks>
 for example
 $ parallelize_qmesh.sh standart_input_imp_dos_M_81.mat 20
 
+(Answer H to prepare the HPC script).
 This creates submit scripts for run_impurity_dos.sh and submits them.
 Then all k-points are calculated and stored in a sub-directory
 data_<parameterfile>
@@ -41,8 +96,55 @@ Finally one has to release one more job (after all jobs have finished):
 $ qrls  <job_identifier>
 
 Or to resubmit this last job (possibly with new input file to refine the
-k-mesh or use another broadening)
+k-mesh or use another broadening or tetrahedron method)
 
 $ qsub chi0_hpc.pbs_<parameterfile>_task_<number_of_tasks+1>
 for example
 $ qsub chi0_hpc.pbs_standart_input_imp_dos_M_81.mat_task_21
+
+c) Some usefull commands to check the queue, please have also a look at the hpc wiki pages
+-----------------------------------------------------------------------------------------------------
+show the status of the jobs
+$ qstat -u <username>
+check the status of a submitted job, find out why it is not running
+$ checkjob <jobID>
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+3) Parallelization using queue on ITP
+-----------------------------------------------------------------------------------------------------
+
+The ITP cluster doesn't use modules, thus the corresponding path is set up manually.
+a) log in
+$ ssh itp.uni-frankfurt.de
+
+b) compile and run matlab remotely
+$ ssh <other client>
+for example
+$ ssh carp
+
+and start matlab to run a script or evoke the compile command.
+
+c) Parallelization also with the same script parallelize_qmesh.sh , but answer "I" to create the corresponding script for ITP and submit it to the queue.
+
+d) Usefull commands to check the queue
+-----------------------------------------------------------------------------------------------------
+$ squeue -u <username>
+shows the submitted jobs and their status
+
+Note: The output of the programs will be available in the ./out directory.
+$ tail ./out/<inputfile>.out
+shows the last lines of the program.
+
+e) Graphical login 
+-----------------------------------------------------------------------------------------------------
+login to the ITP cluster (kampala) is also available within x2go, please have a look here:
+http://th.physik.uni-frankfurt.de/wiki-it/index.php?title=X2GO
+
+Note: Currently, matlab does not work on "kampala", please use another computer to compile and plot results if necessary.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+4) For plotting and checking the result one can
+-----------------------------------------------------------------------------------------------------
+a) copy the result to the local computer
+b) use sshfs to make the files available locally
