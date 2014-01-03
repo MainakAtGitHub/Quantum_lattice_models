@@ -31,25 +31,31 @@ orbitalLDOSImpNNN(orbitalLDOSImpNNN<0)=0;
 figure1=figure;
 plot1=plot(energy,[orbitalLDOSFarAway;sum(orbitalLDOSFarAway)]);
 setlabels(plot1,orb,range);
-print_pdf('/tmp/LDOS_far_away.pdf');
+
+k = findstr(inputfile, '/');
+if ~isempty(k)
+    	inputfile=inputfile(k(numel(k))+1:length(inputfile));
+end;
+
+print_pdf(['/tmp/',inputfile,'_far_away.pdf']);
 
 % impurity DOS
 figure2=figure;
 plot2=plot(energy,[orbitalLDOSImp;sum(orbitalLDOSImp)]);
 setlabels(plot2,orb,range);
-print_pdf('/tmp/LDOS_Imp.pdf');
+print_pdf(['/tmp/',inputfile,'_Imp.pdf']);
 
 % NN dos
 figure3=figure;
 plot3=plot(energy,[orbitalLDOSImpNN;sum(orbitalLDOSImpNN)]);
 setlabels(plot3,orb,range);
-print_pdf('/tmp/LDOS_Imp_NN.pdf');
+print_pdf(['/tmp/',inputfile,'_Imp_NN.pdf']);
 
 % NNN dos
 figure4=figure;
 plot4=plot(energy,[orbitalLDOSImpNNN;sum(orbitalLDOSImpNNN)]);
 setlabels(plot4,orb,range);
-print_pdf('/tmp/LDOS_Imp_NNN.pdf');
+print_pdf(['/tmp/',inputfile,'_Imp_NNN.pdf']);
 
 % compare total dos
 figure5=figure;
@@ -66,7 +72,7 @@ ylabel({'DOS [1/eV]'});
 
 % Create legend
 legend show
-print_pdf('/tmp/LDOS_tot.pdf');
+print_pdf(['/tmp/',inputfile,'_tot.pdf']);
 
 end
 

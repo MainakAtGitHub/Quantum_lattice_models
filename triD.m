@@ -83,5 +83,6 @@ t=zeros(1,lE);
 %else
     %energy above highest energy of triangle: no states
 %    t=0;
+    t(isnan(t))=0;
 end
 end
