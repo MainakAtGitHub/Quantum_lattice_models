@@ -1,5 +1,12 @@
 % script to read the file read_input_file and load all variables that are
 % given there (with support of double variables and strings)
+% some care for sub-directories
+read_input_k = findstr(read_input_file, '/');
+if ~isempty(read_input_k)
+    	read_input_path=inputfile(1:read_input_k(numel(read_input_k)));
+else
+    read_input_path='';
+end;
 fid = fopen(read_input_file);
 tline = fgetl(fid);
 while ischar(tline)
@@ -31,12 +38,12 @@ while ischar(tline)
         eval([variablename,'=number;']);
     else
         %    b) <value> represents a string
-        disp([variablename,'=',value])
-        eval([variablename,'=value;']);
+        disp([variablename,'=',read_input_path,value])
+        eval([variablename,'=[read_input_path,value];']);
     end
     end;
     tline = fgetl(fid);
 end
 fclose(fid);
 % clean up
-clear value variablename tline k_position number fid ans
+clear value variablename tline k_position number fid ans read_input_k read_input_path

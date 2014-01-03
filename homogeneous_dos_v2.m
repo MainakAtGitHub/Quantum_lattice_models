@@ -1,17 +1,33 @@
+function h=homogeneous_dos_v2(inputfile)
+
 % Modified homogeneous_dos.m
 % takes \Delta_ij as input and constructs \Delta_i0.
 
+if nargin <1
+    % load relevant files
+    TB_file='TB_hamiltonian_FeSe_2D.mat'
+    %latticeVectors = latticeVector;
+    BdGfileName='BdG_homogeneous_FeSe_Milan_GammaCut_2_N_9(1).mat'
+    Gamma_file='Gamma_FeSe_Milan_GammaCut_2.mat'
+    M = input('Enter no of k-points   ');% no of K points in x
+    ita = input('Enter ita   '); % broadening
+    firstEnergy = input('Enter starting energy   ');
+    lastEnergy = input('Enter last energy   ');
+    nEnergyPoints = input('Enter no of energy points   ');
+else
+    % load the input file to set the variables, gave up the old .mat file
+    % format
+     read_input_file=inputfile;
+     read_input;
+     read_input_file
+end;
 
-% load relevant files
-load TB_hamiltonian_FeSe_2D.mat
-latticeVectors = latticeVector;
-load BdG_homogeneous_FeSe_Milan_GammaCut_2_N_9(1).mat
-load Gamma_FeSe_Milan_GammaCut_2.mat
-M = input('Enter no of k-points   ');% no of K points in x
-ita = input('Enter ita   '); % broadening
-firstEnergy = input('Enter starting energy   ');
-lastEnergy = input('Enter last energy   ');
-nEnergyPoints = input('Enter no of enery points   ');
+load(TB_file);
+% possibly not necessary?load(BdGfileName);
+
+%latticeVectors = latticeVector;
+load(Gamma_file);
+load(BdGfileName);
 
 
 nOrbitals = size(TBparameters,1);
@@ -27,11 +43,11 @@ end
 delta = deltaCenter;
 
 
-nUnitCells = size(latticeVectors,1);
-TBparameters(:,:,(latticeVectors(:,1)==0) & (latticeVectors(:,2)==0)) = ...
-TBparameters(:,:,(latticeVectors(:,1)==0) & (latticeVectors(:,2)==0)) - mu*eye(nOrbitals);
+nUnitCells = size(latticeVector,1);
+TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) = ...
+TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) - mu*eye(nOrbitals);
 
-
+M=N*M;
 kx = (2*pi/M)*(0:(M - 1)) + pi/M;
 ky = kx;
 delKx = kx(2)-kx(1);
@@ -47,7 +63,7 @@ for iKx = 1:M
             % diagonalizing for normal state DOS
             kSpaceHopping = 0;
             for iUnitCell = 1:nUnitCells
-                iLatticeVector = latticeVectors(iUnitCell,:);
+                iLatticeVector = latticeVector(iUnitCell,:);
                 kSpaceHopping = kSpaceHopping + TBparameters(:,:,iUnitCell)*exp(1i*(iLatticeVector*k'));
             end                        
             [eigVectorNormal eigValueNormal] = eig(kSpaceHopping);
