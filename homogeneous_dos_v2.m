@@ -86,10 +86,14 @@ for iKx = 1:M
         end
         disp(iKx)
 end
+if (~exist('tetra','var'))
+    tetra=false;
+end;
 
 % Normal state DOS
 disp('Computing normal state DOS......')
-greensDiagonalNormal = zeros(nOrbitals,nEnergyPoints);
+greensDiagonalNormal = zeros(nOrbitals,nEnergyPoints);    
+if ~tetra
 countLoop = 0;
 for iEnergyPoint = 1:nEnergyPoints
     for jBand = 1:nOrbitals
@@ -109,6 +113,24 @@ for iEnergyPoint = 1:nEnergyPoints
     disp(countLoop);
 end
 bandDOSNormal = -(1/pi)*imag(greensDiagonalNormal);
+else
+            disp('...using 2D version of Tetrahedron method');
+            % set up a k-mesh that is suitable to cover the whole
+            % Brillouinzone with triangles
+            mesh1=[0.5:1:(M+0.5)]*2*pi/M;
+            % to do: kx,ky can be only a vector to simplify indexing
+            [kx,ky] = meshgrid(mesh1, mesh1);
+                % to do: vectorize the code!
+                for iband=1:nOrbitals
+                    disp(['Band ',num2str(iband),' of ',num2str(nOrbitals)]);
+                    E=kSpaceEigenValuesNormal(:,:,iband);
+                    a=kSpaceEigenVectorsNormal(:,:,:,iband).*conj(kSpaceEigenVectorsNormal(:,:,:,iband));
+                    greensDiagonalNormal(:, :) = greensDiagonalNormal(:, :) + f(E,a,kx,ky,energy);
+                end;
+                
+bandDOSNormal = greensDiagonalNormal;
+
+end;
 totalDOSNormal = sum(bandDOSNormal);
 
 
@@ -120,6 +142,7 @@ u = eigVectorsPlus(:,:,:,1:nOrbitals);
 v = eigVectorsPlus(:,:,:,(nOrbitals+1):end);
 countLoop = 0;
 greensDiagonal = zeros(nOrbitals,nEnergyPoints); 
+if ~tetra
 for iEnergyPoint = 1:nEnergyPoints
     for jBand = 1:nOrbitals
         greensKSpace = 0;
@@ -139,13 +162,49 @@ for iEnergyPoint = 1:nEnergyPoints
         disp(countLoop);
 end
 bandDOS = -(1/pi)*imag(greensDiagonal);
+
+else
+            disp('...using 2D version of Tetrahedron method');
+            % set up a k-mesh that is suitable to cover the whole
+            % Brillouinzone with triangles
+            mesh1=[0.5:1:(M+0.5)]*2*pi/M;
+            % to do: kx,ky can be only a vector to simplify indexing
+            [kx,ky] = meshgrid(mesh1, mesh1);
+                % to do: vectorize the code!
+                for iband=1:nOrbitals
+                    disp(['Band ',num2str(iband),' of ',num2str(nOrbitals)]);
+                    E=squeeze(eigValuesPlus(:,:,iband));
+                                un = squeeze(u(:,:,iband,:));
+                                vn = squeeze(v(:,:,iband,:));
+                    a=un.*conj(un);
+                    greensDiagonal(:, :) = greensDiagonal(:, :) + f(E,a,kx,ky,energy);
+                    a=vn.*conj(vn);
+                    greensDiagonal(:, :) = greensDiagonal(:, :) + f(E,a,kx,ky,-energy);
+                end;
+                bandDOS=greensDiagonal;
+end;
 totalDOS = sum(bandDOS);
 
-save DOS_homogeneous_FeSe_Milan_N_9_GammaCut_2 energy bandDOSNormal bandDOS 
+LDOSfileName0 = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
+
+if ~tetra
+    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita)];
+else
+    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_tetra_corr']
+end;
+
+disp('Writing out k-space calculated DOS ...');
+save(LDOSfileName, 'energy', 'bandDOSNormal', 'bandDOS', '-mat');
+if usejava('jvm') && ~feature('ShowFigureWindows')
+    disp(['please plot the result using plot_homogeneous_dos_v2(',inputfile,')']);
+else
+    %# GUI available
 % Plotting
 figure; 
 plot(energy,(5/nOrbitals)*totalDOSNormal,'k'); hold; plot(energy,(5/nOrbitals)*totalDOS, 'r');
 axis('square'); title('Normal Vs SC dos')
+% Create legend
+legend show
 figure;
 plot(energy, (5/nOrbitals)*totalDOS, 'k');
 hold
@@ -155,3 +214,6 @@ plot(energy, bandDOS(3,:), 'c');
 plot(energy, bandDOS(4,:), 'm');
 plot(energy, bandDOS(5,:), 'b');
 axis('square'); title('Orbital resolved SC dos')
+% Create legend
+legend show
+end
