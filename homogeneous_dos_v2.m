@@ -6,7 +6,6 @@ function h=homogeneous_dos_v2(inputfile)
 if nargin <1
     % load relevant files
     TB_file='TB_hamiltonian_FeSe_2D.mat'
-    %latticeVectors = latticeVector;
     BdGfileName='BdG_homogeneous_FeSe_Milan_GammaCut_2_N_9(1).mat'
     Gamma_file='Gamma_FeSe_Milan_GammaCut_2.mat'
     M = input('Enter no of k-points   ');% no of K points in x
@@ -23,9 +22,6 @@ else
 end;
 
 load(TB_file);
-% possibly not necessary?load(BdGfileName);
-
-%latticeVectors = latticeVector;
 load(Gamma_file);
 load(BdGfileName);
 
