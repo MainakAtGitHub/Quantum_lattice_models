@@ -33,7 +33,7 @@ orbitalLDOSImpNN(orbitalLDOSImpNN<0)=0;
 orbitalLDOSImpNNN(orbitalLDOSImpNNN<0)=0;
 % DOS far away (without impurity)
 figure1=figure;
-plot1=plotrange(energy,[orbitalLDOSFarAway;sum(orbitalLDOSFarAway)]);
+plot1=plot(energy,[orbitalLDOSFarAway;sum(orbitalLDOSFarAway)]);
 setlabels(plot1,orb,range);
 
 k = findstr(inputfile, '/');
@@ -51,19 +51,19 @@ print_pdf(['/tmp/',inputfile,'_Imp.pdf']);
 
 % NN dos
 figure3=figure;
-plot3=plotrange(energy,[orbitalLDOSImpNN;sum(orbitalLDOSImpNN)]);
+plot3=plot(energy,[orbitalLDOSImpNN;sum(orbitalLDOSImpNN)]);
 setlabels(plot3,orb,range);
 print_pdf(['/tmp/',inputfile,'_Imp_NN.pdf']);
 
 % NNN dos
 figure4=figure;
-plot4=plotrange(energy,[orbitalLDOSImpNNN;sum(orbitalLDOSImpNNN)]);
+plot4=plot(energy,[orbitalLDOSImpNNN;sum(orbitalLDOSImpNNN)]);
 setlabels(plot4,orb,range);
 print_pdf(['/tmp/',inputfile,'_Imp_NNN.pdf']);
 
 % compare total dos
 figure5=figure;
-plot5=plotrange(energy,[sum(orbitalLDOSFarAway);sum(orbitalLDOSImp);sum(orbitalLDOSImpNN);sum(orbitalLDOSImpNNN)]);
+plot5=plot(energy,[sum(orbitalLDOSFarAway);sum(orbitalLDOSImp);sum(orbitalLDOSImpNN);sum(orbitalLDOSImpNNN)]);
 set(plot5(1),'DisplayName','tot far away');
 set(plot5(2),'DisplayName','tot impurity');
 set(plot5(3),'DisplayName','tot NN');

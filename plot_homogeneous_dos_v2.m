@@ -31,10 +31,10 @@ else
 end;
 
 if nargin < 2
-    if isempty(strfind(inputfile, 'tetra'))
+    if ~tetra
         smoothenergy=0;
     else
-        %default: smoothing of 2 meV if "tetra" in filename
+        %default: smoothing of 2 meV if "tetra" is set
         smoothenergy=0.002;
     end
 end
@@ -87,7 +87,13 @@ axis('square'); title('Normal Vs SC dos')
 legend show
 xlim(plotrange);
 
-print_pdf(['/tmp/',inputfile,'_normal_SC.pdf']);
+if tetra
+    pdffile1=['/tmp/',inputfile,'_normal_SC_tetra',num2str(smoothenergy),'.pdf']
+else
+    pdffile1=['/tmp/',inputfile,'_normal_SC.pdf']
+end
+
+print_pdf(pdffile1);
 
 fig2=figure;
 totDOS=(5/nOrbitals)*totalDOS;
@@ -115,4 +121,9 @@ ylabel({'DOS [1/eV]'});
 % Create legend
 legend show
 xlim(plotrange);
-print_pdf(['/tmp/',inputfile,'_orbital_DOS_SC.pdf']);
+if tetra
+    pdffile2=['/tmp/',inputfile,'_orbital_SC_tetra',num2str(smoothenergy),'.pdf']
+else
+    pdffile2=['/tmp/',inputfile,'_orbital_SC.pdf']
+end
+print_pdf(pdffile2);

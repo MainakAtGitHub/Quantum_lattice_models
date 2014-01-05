@@ -21,6 +21,12 @@ else
      read_input_file
 end;
 
+if (~exist('Vimp','var'))
+    if abs(Vimp)>0
+        disp('Warning: finite impurity potential, not homogeneous case.')
+    end;
+end;
+
 load(TB_file);
 load(Gamma_file);
 load(BdGfileName);
