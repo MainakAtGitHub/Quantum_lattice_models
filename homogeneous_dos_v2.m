@@ -27,9 +27,9 @@ if (~exist('Vimp','var'))
     end;
 end;
 
-load(TB_file);
-load(Gamma_file);
-load(BdGfileName);
+load(TB_file,'-mat');
+load(Gamma_file,'-mat');
+load(BdGfileName,'-mat');
 
 
 nOrbitals = size(TBparameters,1);
@@ -119,14 +119,14 @@ else
             disp('...using 2D version of Tetrahedron method');
             % set up a k-mesh that is suitable to cover the whole
             % Brillouinzone with triangles
-            mesh1=[0.5:1:(M+0.5)]*2*pi/M;
+            mesh1=[0:1:(M)]*2*pi/M;
             % to do: kx,ky can be only a vector to simplify indexing
             [kx,ky] = meshgrid(mesh1, mesh1);
                 % to do: vectorize the code!
                 for iband=1:nOrbitals
                     disp(['Band ',num2str(iband),' of ',num2str(nOrbitals)]);
                     E=kSpaceEigenValuesNormal(:,:,iband);
-                    a=kSpaceEigenVectorsNormal(:,:,:,iband).*conj(kSpaceEigenVectorsNormal(:,:,:,iband));
+                    a=squeeze(kSpaceEigenVectorsNormal(:,:,iband,:)).*conj(squeeze(kSpaceEigenVectorsNormal(:,:,iband,:)));
                     greensDiagonalNormal(:, :) = greensDiagonalNormal(:, :) + f(E,a,kx,ky,energy);
                 end;
                 
@@ -169,16 +169,16 @@ else
             disp('...using 2D version of Tetrahedron method');
             % set up a k-mesh that is suitable to cover the whole
             % Brillouinzone with triangles
-            mesh1=[0.5:1:(M+0.5)]*2*pi/M;
+            mesh1=[0:1:(M)]*2*pi/M;
             % to do: kx,ky can be only a vector to simplify indexing
             [kx,ky] = meshgrid(mesh1, mesh1);
                 % to do: vectorize the code!
                 for iband=1:nOrbitals
                     disp(['Band ',num2str(iband),' of ',num2str(nOrbitals)]);
-                    E=squeeze(eigValuesPlus(:,:,iband));
-                                un = squeeze(u(:,:,iband,:));
-                                vn = squeeze(v(:,:,iband,:));
-                    a=un.*conj(un);
+		    E=squeeze(eigValuesPlus(:,:,iband));
+		    un = squeeze(u(:,:,iband,:));
+		    vn = squeeze(v(:,:,iband,:));
+		    a=un.*conj(un);
                     greensDiagonal(:, :) = greensDiagonal(:, :) + f(E,a,kx,ky,energy);
                     a=vn.*conj(vn);
                     greensDiagonal(:, :) = greensDiagonal(:, :) + f(E,a,kx,ky,-energy);
@@ -198,7 +198,7 @@ end;
 disp('Writing out k-space calculated DOS ...');
 save(LDOSfileName, 'energy', 'bandDOSNormal', 'bandDOS', '-mat');
 if usejava('jvm') && ~feature('ShowFigureWindows')
-    disp(['please plot the result using plot_homogeneous_dos_v2(',inputfile,')']);
+    disp(['please plot the result using plot_homogeneous_dos_v2(''',LDOSfileName,''')']);
 else
     %# GUI available
 % Plotting
@@ -218,4 +218,4 @@ plot(energy, bandDOS(5,:), 'b');
 axis('square'); title('Orbital resolved SC dos')
 % Create legend
 legend show
-end
+

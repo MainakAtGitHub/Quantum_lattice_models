@@ -19,9 +19,13 @@ if order==0
     % no smoothing
     sdata=data;
 else
+    ldat=size(data);
+	% remove spikes
+    for da=1:ldat(1)
+        data(da,:)=remove_spike(data(da,:));
+    end;
     lcoeff=floor(length(coeff)/2);
     snorm=sum(coeff);
-    ldat=size(data);
     sdata=data;
     for n=lcoeff+1:ldat(2)-lcoeff
         sdata(:,n)=sum(data(:,n-lcoeff:n+lcoeff).*repmat(coeff,ldat(1),1),2)/snorm;
@@ -29,5 +33,16 @@ else
 end
 function c=conv_coeff(n)
 for a=1:n
-    c(a)=(3*n^2-7-20*i^2)/4/(n*(n^2-4))*3;
+    c(a)=(3*n^2-7-20*(a-ceil(n/2))^2)/4/(n*(n^2-4))*3;
+end;
+function data=remove_spike(data)
+pos=find(abs(data)==max(abs(data)));
+ldata=length(data);
+if (pos(1)>2) && (pos(1)<ldata-1)
+    % ignore spikes on the edges
+if (abs(data(pos))>5*abs(data(pos(1)+1)) && abs(data(pos(1)))>5*abs(data(pos(1)-1)))
+	data(pos)=0.5*(data(pos+1)+data(pos-1));
+	disp(['Data point ',num2str(pos),'  corrected']);
+	data=remove_spike(data);
+end;
 end;

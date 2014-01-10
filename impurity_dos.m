@@ -270,7 +270,7 @@ if part>division
             disp('...using 2D version of Tetrahedron method');
             % set up a k-mesh that is suitable to cover the whole
             % Brillouinzone with triangles
-            mesh1=[0.5:1:(M+0.5)]*2*pi/M;
+            mesh1=[0:1:(M)]*2*pi/M;
             % to do: kx,ky can be only a vector to simplify indexing
             [kx,ky] = meshgrid(mesh1, mesh1);
                 % to do: vectorize the code!

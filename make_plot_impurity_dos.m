@@ -2,6 +2,30 @@ function f=make_plot_impurity_dos(inputfile,smoothenergy)
 if nargin <1
     inputfile='LDOS_FeSe_Milan_Gamma_Vimp_4_N_9_M_40_ita_0.003'
 end;
+% support for wildcards
+kstar = strfind(inputfile, '*');
+kquestion=strfind(inputfile, '?');
+if sum(kstar,kquestion)>0
+   inputfilelist=dir(inputfile);
+   [directory,~,~]=fileparts(inputfile);
+   if ~isempty(directory)
+       directory=[directory,'/'];
+   end;
+   sza=size(inputfilelist);
+   for numfile=1:sza(1);
+       disp(['Proccessing ',directory,inputfilelist(numfile).name]);
+       if nargin < 2
+           make_plot_impurity_dos([directory,inputfilelist(numfile).name]);
+       else
+           make_plot_impurity_dos([directory,inputfilelist(numfile).name],smoothenergy);
+       end
+  
+       if sza(1)>5
+           close all;
+       end;
+   end;
+   return;
+end;
 if nargin < 2
     if isempty(strfind(inputfile, 'tetra'))
         smoothenergy=0;
@@ -34,7 +58,7 @@ orbitalLDOSImpNNN(orbitalLDOSImpNNN<0)=0;
 % DOS far away (without impurity)
 figure1=figure;
 plot1=plot(energy,[orbitalLDOSFarAway;sum(orbitalLDOSFarAway)]);
-setlabels(plot1,orb,range);
+setlabels(plot1,orb,plotrange);
 
 k = findstr(inputfile, '/');
 if ~isempty(k)
@@ -45,20 +69,20 @@ print_pdf(['/tmp/',inputfile,'_far_away.pdf']);
 
 % impurity DOS
 figure2=figure;
-plot2=plotrange(energy,[orbitalLDOSImp;sum(orbitalLDOSImp)]);
-setlabels(plot2,orb,range);
+plot2=plot(energy,[orbitalLDOSImp;sum(orbitalLDOSImp)]);
+setlabels(plot2,orb,plotrange);
 print_pdf(['/tmp/',inputfile,'_Imp.pdf']);
 
 % NN dos
 figure3=figure;
 plot3=plot(energy,[orbitalLDOSImpNN;sum(orbitalLDOSImpNN)]);
-setlabels(plot3,orb,range);
+setlabels(plot3,orb,plotrange);
 print_pdf(['/tmp/',inputfile,'_Imp_NN.pdf']);
 
 % NNN dos
 figure4=figure;
 plot4=plot(energy,[orbitalLDOSImpNNN;sum(orbitalLDOSImpNNN)]);
-setlabels(plot4,orb,range);
+setlabels(plot4,orb,plotrange);
 print_pdf(['/tmp/',inputfile,'_Imp_NNN.pdf']);
 
 % compare total dos
@@ -68,7 +92,7 @@ set(plot5(1),'DisplayName','tot far away');
 set(plot5(2),'DisplayName','tot impurity');
 set(plot5(3),'DisplayName','tot NN');
 set(plot5(4),'DisplayName','tot NNN');
-xlim(range);
+xlim(plotrange);
 xlabel({'\omega'});
 
 % Create ylabel
