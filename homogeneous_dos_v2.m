@@ -197,7 +197,7 @@ end;
 
 disp('Writing out k-space calculated DOS ...');
 save(LDOSfileName, 'energy', 'bandDOSNormal', 'bandDOS', '-mat');
-if usejava('jvm') && ~feature('ShowFigureWindows')
+if (usejava('jvm') && ~feature('ShowFigureWindows'))
     disp(['please plot the result using plot_homogeneous_dos_v2(''',LDOSfileName,''')']);
 else
     %# GUI available
@@ -218,4 +218,5 @@ plot(energy, bandDOS(5,:), 'b');
 axis('square'); title('Orbital resolved SC dos')
 % Create legend
 legend show
+end;
 

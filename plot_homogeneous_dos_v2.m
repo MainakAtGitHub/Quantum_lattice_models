@@ -70,10 +70,14 @@ end;
 
 
 % Plotting
-fig1=figure; 
-plot1=plot(energy,[(5/nOrbitals)*totalDOSNormal;(5/nOrbitals)*totalDOS]);
-set(plot1(1),'DisplayName','Normal state','Color',[0 0 0]);
+fig1= figure('Position',[150, 100, 500, 300]);
+plotres=[(5/nOrbitals)*totalDOSNormal;(5/nOrbitals)*totalDOS];
+plot1=plot(energy,plotres);
+set(plot1(1),'LineWidth',2,'LineStyle','--','DisplayName','Normal state','Color',[0 0 0]);
 set(plot1(2),'Color',[1 0 0],'DisplayName','SC state');
+xlim(plotrange);
+ylim_curr = get(gca,'ylim');
+set(gca, 'ylim', [0 ylim_curr(2)]);
 %,'k');
 %hold;
 %plot(energy,(5/nOrbitals)*totalDOS, 'r');
@@ -82,10 +86,9 @@ xlabel({'\omega'});
 
 % Create ylabel
 ylabel({'DOS [1/eV]'});
-axis('square'); title('Normal Vs SC dos')
+%axis('square'); title('Normal Vs SC dos')
 % Create legend
 legend show
-xlim(plotrange);
 
 if tetra
     pdffile1=['/tmp/',inputfile,'_normal_SC_tetra',num2str(smoothenergy),'.pdf']
@@ -95,7 +98,7 @@ end
 
 print_pdf(pdffile1);
 
-fig2=figure;
+fig2= figure('Position',[200, 50, 500, 300]);
 totDOS=(5/nOrbitals)*totalDOS;
 %plot(energy, (5/nOrbitals)*totalDOS, 'k');
 plot1=plot(energy, [totDOS;bandDOS(1:5,:)]);
@@ -105,14 +108,19 @@ plot1=plot(energy, [totDOS;bandDOS(1:5,:)]);
 % plot(energy, bandDOS(4,:), 'm');
 % plot(energy, bandDOS(5,:), 'b');
 
-set(plot1(1),'DisplayName','total','Color',[0 0 0]);
-set(plot1(2),'Color',[1 0 0],'DisplayName','orbital1');
-set(plot1(3),'Color',[0 1 0],'DisplayName','orbital2');
-set(plot1(4),'Color',[0 1 1],'DisplayName','orbital3');
-set(plot1(5),'Color',[1 0 1],'DisplayName','orbital4');
-set(plot1(6),'Color',[0 0 1],'DisplayName','orbital5');
-
-axis('square'); title('Orbital resolved SC dos')
+set(plot1(1),'LineWidth',2,'DisplayName','total',...
+    'Color',[0 0 0]);
+set(plot1(2),'LineStyle',':','Color',[1 0 0],'DisplayName','d_{z^2}');
+set(plot1(3),'LineStyle','-.','Color',[1 0 0],'DisplayName','d_{x^2-y^2}');
+set(plot1(4),'MarkerSize',2,'Marker','o','Color',[0 1 0],...
+    'DisplayName','d_{yz}');
+set(plot1(5),'LineStyle','--','Color',[1 0 0],'DisplayName','d_{xz}');
+set(plot1(6),'Color',[0 0 1],'DisplayName','d_{xy}');
+xlim(plotrange);
+ylim_curr = get(gca,'ylim');
+set(gca, 'ylim', [0 ylim_curr(2)]);
+%axis('square'); 
+%title('Orbital resolved SC dos')
 % Create xlabel
 xlabel({'\omega [eV]'});
 
@@ -120,7 +128,6 @@ xlabel({'\omega [eV]'});
 ylabel({'DOS [1/eV]'});
 % Create legend
 legend show
-xlim(plotrange);
 if tetra
     pdffile2=['/tmp/',inputfile,'_orbital_SC_tetra',num2str(smoothenergy),'.pdf']
 else
