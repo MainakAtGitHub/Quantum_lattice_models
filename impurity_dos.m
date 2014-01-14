@@ -4,7 +4,8 @@ function r=impurity_dos(inputfile, division, part)
 % inputfile : file that contains the parameters
 % division : divide task into division parts
 % part : calculate this part part = 1...division
-
+calcGreens =true;
+save_greens=true;
 % if no inputfile is specified, read in from the command line
 if nargin <1
     % load relevant files
@@ -58,12 +59,15 @@ energy = linspace(firstEnergy, lastEnergy, nEnergyPoints);
 farAwayCell = [1 1];
 impCell = [ceil(N/2) ceil(N/2)];
 impNNCell = impCell + [0 1];
-farAwaySiteIndex = ((farAwayCell(1)-1)*N + farAwayCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
-impSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
-impNNSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + ((nOrbitals/2+1):nOrbitals);
-impNNNSiteIndex = ((impNNCell(1)-1)*N + impNNCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
-siteIndices = [farAwaySiteIndex impSiteIndex impNNSiteIndex impNNNSiteIndex];
-nDosSites = length(siteIndices);
+if ~calcGreens
+    farAwaySiteIndex = ((farAwayCell(1)-1)*N + farAwayCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
+    impSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
+    impNNSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + ((nOrbitals/2+1):nOrbitals);
+    impNNNSiteIndex = ((impNNCell(1)-1)*N + impNNCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
+    siteIndices = [farAwaySiteIndex impSiteIndex impNNSiteIndex impNNNSiteIndex];
+    nDosSites = length(siteIndices);
+else
+end;
 
 % Supercell quantities
 maxHop = max(max(abs(latticeVectorsSC)));
@@ -128,7 +132,11 @@ end;
 % only allocate this variable if it is really needed
 if (division==0 || part>division)
     if ~tetra
-        greensKSpace = zeros(M, M, nDosSites, nEnergyPoints);
+        if ~calcGreens
+            greensKSpace = zeros(M, M, nDosSites, nEnergyPoints);
+        else
+            latticeGreensK = zeros(M, M, nBands, nBands);
+        end
     else
         % some huge arrays to store the result
         % store the edges twice to calculate the whole area
@@ -173,20 +181,27 @@ for index=startindex:endindex
         eigVectorK = (eigVector(:,sortingIndex));
         Ek_vector=eigValueK((nBands + 1):end);
         clear eigValueK
-        uK = eigVectorK(siteIndices,(nBands + 1):end);
-        vK = eigVectorK(nBands + siteIndices,(nBands + 1):end);
-        clear eigVectorK
-        % depending on the mode do different things
-        if division==0
-            % single calculation of full DOS
-            Ek = repmat(Ek_vector, 1, nEnergyPoints) ;
-            greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita )) + ...
-                ((abs(vK)).^2)*(1./(E + Ek + 1i*ita ));
+        if ~calcGreens
+            uK = eigVectorK(siteIndices,(nBands + 1):end);
+            vK = eigVectorK(nBands + siteIndices,(nBands + 1):end);
+            %clear eigVectorK
+            % depending on the mode do different things
+            if division==0
+                % single calculation of full DOS
+                Ek = repmat(Ek_vector, 1, nEnergyPoints) ;
+                greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita )) + ...
+                    ((abs(vK)).^2)*(1./(E + Ek + 1i*ita ));
+            else
+                % save result in one single file
+                % put k_vector in filename to avoid double calculation ?
+                save(ekukvk_file,'uK','vK','Ek_vector');
+            end
         else
-            % save result in one single file
-            % put k_vector in filename to avoid double calculation ?
-            save(ekukvk_file,'uK','vK','Ek_vector');
-        end;
+            uK = eigVectorK(1:nBands,(nBands+1):end);
+            vK = eigVectorK((nBands+1):end,(nBands+1):end);
+            EnRep = repmat(Ek_vector',nBands,1);
+            latticeGreensK(iKx, iKy, :, :) = (uK./(E - EnRep + 1i*ita))*(uK') + (vK./(E + EnRep + 1i*ita))*(vK');
+        end
     else
         disp([ekukvk_file,' already calculated, skipping.' ])
     end
@@ -226,9 +241,12 @@ if part>division
             % caeful: double code here, change both when doing any
             % modifications
             if ~tetra
+                if ~ldos
                 Ek = repmat(Ek_vector, 1, nEnergyPoints) ;
                 greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita )) + ...
                     ((abs(vK)).^2)*(1./(E + Ek + 1i*ita ));
+                else
+                end;
             else
                 ukall(iKx,iKy,:,:)=uK;
                 vkall(iKx,iKy,:,:)=vK;
@@ -254,19 +272,46 @@ if part>division
         disp('... done.');
     end
     % do the calculation of dos
-    greensRealSpace = zeros(nDosSites, nEnergyPoints);
-    disp('calculating GF in real space...');
-    if ~tetra
-    for iSite = 1: nDosSites
-        disp(['Done ',num2str(iSite),' of ', num2str(nDosSites), 'nDosSites']);
-        %if ~tetra
-            for iEnergyPoint = 1:nEnergyPoints            
-                greensRealSpace(iSite, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*...
-                    singular_double_quad(1./squeeze(greensKSpace(:, :, iSite, iEnergyPoint)));
+    if ~calcGreens
+        greensRealSpace = zeros(nDosSites, nEnergyPoints);
+        disp('calculating GF in real space...');
+        if ~tetra
+        for iSite = 1: nDosSites
+            disp(['Done ',num2str(iSite),' of ', num2str(nDosSites), 'nDosSites']);
+            %if ~tetra
+                for iEnergyPoint = 1:nEnergyPoints            
+                    greensRealSpace(iSite, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*...
+                        singular_double_quad(1./squeeze(greensKSpace(:, :, iSite, iEnergyPoint)));
+                end
+        end
+            %else
+        else
+                disp('...using 2D version of Tetrahedron method');
+                % set up a k-mesh that is suitable to cover the whole
+                % Brillouinzone with triangles
+                mesh1=[0.5:1:(M+0.5)]*2*pi/M;
+                % to do: kx,ky can be only a vector to simplify indexing
+                [kx,ky] = meshgrid(mesh1, mesh1);
+                    % to do: vectorize the code!
+                    for iband=1:nBands
+                        disp(['Band ',num2str(iband),' of ',num2str(nBands)]);
+                        E=Ekall(:,:,iband);
+                        a=ukall(:,:,:,iband).*conj(ukall(:,:,:,iband));
+                        greensRealSpace(:, :) = greensRealSpace(:, :) + f(E,a,kx,ky,energy);
+                        a=vkall(:,:,:,iband).*conj(vkall(:,:,:,iband));
+                        greensRealSpace(:, :) = greensRealSpace(:, :) + f(E,a,kx,ky,-energy);
+                    end;
+        end;
+    else
+        latticeGreens = zeros(nBands, nBands);
+        for i = 1:nBands
+            for j = 1:nBands
+                latticeGreens(i, j) = (1/(2*pi))^2*delKx*delKy*singular_double_quad(1./squeeze(latticeGreensK(:,:,i,j)));
             end
+        end
     end
         %else
-    else
+    if tetra
             disp('...using 2D version of Tetrahedron method');
             % set up a k-mesh that is suitable to cover the whole
             % Brillouinzone with triangles
@@ -291,6 +336,7 @@ if part>division
     else
         ldos = (-(1/pi))*imag(greensRealSpace);
     end;
+    if ~calc_ldos
     orbitalLDOSFarAway = ldos(1:5,:);
     totalLDOSFarAway = sum(orbitalLDOSFarAway,1); %#ok<NASGU>
     orbitalLDOSImp = ldos(6:10,:);
@@ -301,5 +347,10 @@ if part>division
     totalLDOSImpNNN = sum(orbitalLDOSImpNNN,1);%#ok<NASGU>
     % to be done: change filename to general string
     save(LDOSfileName, 'energy', 'orbitalLDOSFarAway', 'orbitalLDOSImp', 'orbitalLDOSImpNN', 'orbitalLDOSImpNNN');
+    else
+    end;
+    if save_greens
+        save([LDOSfileName,'greens'],'latticeGreens');
+    end;
 end
 r=1;
