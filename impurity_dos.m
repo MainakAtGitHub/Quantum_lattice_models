@@ -145,7 +145,7 @@ if (division==0 || part>division)
         % store the edges twice to calculate the whole area
         ukall=zeros(M+1,M+1,nDosSites,nBands);
         vkall=zeros(M+1,M+1,nDosSites,nBands);
-        ekall=zeros(M+1,M+1,nDosSites,nBands);
+        Ekall=zeros(M+1,M+1,nDosSites,nBands);
     end;
 end;
 
@@ -272,21 +272,21 @@ if part>division
                 vkall(iKx,iKy,:,:)=vK;
                 Ekall(iKx,iKy,:)=Ek_vector;
                 % store the edges twice to construct set of triangles that cover the whole area
-                if iKx==1
-                   ukall(M+1,iKy,:,:)=uK;
-                   vkall(M+1,iKy,:,:)=vK;
-                   Ekall(M+1,iKy,:,:)=Ek_vector;
-                end;
-                if iKy==1
-                   ukall(iKx,M+1,:,:)=uK;
-                   vkall(iKx,M+1,:,:)=vK;
-                   Ekall(iKx,M+1,:,:)=Ek_vector;
-                end;
-                if (iKx==1) && (iKy==1)
-                   ukall(M+1,M+1,:,:)=uK;
-                   vkall(M+1,M+1,:,:)=vK;
-                   Ekall(M+1,M+1,:,:)=Ek_vector;
-                end;
+%                 if iKx==1
+%                    ukall(M+1,iKy,:,:)=uK;
+%                    vkall(M+1,iKy,:,:)=vK;
+%                    Ekall(M+1,iKy,:,:)=Ek_vector;
+%                 end;
+%                 if iKy==1
+%                    ukall(iKx,M+1,:,:)=uK;
+%                    vkall(iKx,M+1,:,:)=vK;
+%                    Ekall(iKx,M+1,:,:)=Ek_vector;
+%                 end;
+%                 if (iKx==1) && (iKy==1)
+%                    ukall(M+1,M+1,:,:)=uK;
+%                    vkall(M+1,M+1,:,:)=vK;
+%                    Ekall(M+1,M+1,:,:)=Ek_vector;
+%                 end;
             end;
         end;
         disp('... done.');

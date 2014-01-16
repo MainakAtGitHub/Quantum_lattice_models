@@ -4,6 +4,7 @@ if nargin < 1
 end;
 % input
 lattice=true;
+bluecolor=true;
 fsz=14;
 set(0,'DefaultAxesFontSize',fsz)
 load(ldosfile,'-mat')
@@ -55,7 +56,7 @@ axes1 = axes('Parent',figure1,'YDir','reverse',...
 %hold(axes1,'all');
 %box(axes1,'on');
 
-pcolor=false;
+pcolorplot=false;
 cptn='LDOS [1/eV]';
 % zoom the figure to show only plotN points
 diffN=N-plotN;
@@ -63,7 +64,7 @@ ldos2plot=ldos2plot(1+diffN/2:N-diffN/2,1+diffN/2:N-diffN/2);
 N=plotN;
 n = ceil(N/2);
 % plotting (using pcolor)
-if pcolor
+if pcolorplot
     ldos2plot = flipud(ldos2plot);
     ldos2plot(:,N+1) = 0;
     ldos2plot(N+1,:) = 0;
@@ -84,11 +85,27 @@ else
     set(yh,'position',[posy(1) posy(2)+dp])
 end;
 axis('square');
-title(['E = ',num2str(E*1000), ' meV']);
+title(['\omega = ',num2str(E*1000), ' meV']);
 xlabel('\Delta x')
 ylabel('\Delta y')
 % colorbar schemes
+
 cb=colorbar;
+if bluecolor
+    %color1=[1 0 0]; % red
+%color2=[0 0 0]; % black
+color2=[1 1 1]; % white
+color3=[0 0 1]; % blue
+input1=[0 1 10];
+colormatrix=[color2;color3; color3];
+maxabsekkn=1;
+x=0:maxabsekkn/255:maxabsekkn;
+r=interp1(input1*maxabsekkn,colormatrix(:,1),x);
+g=interp1(input1*maxabsekkn,colormatrix(:,2),x);
+b=interp1(input1*maxabsekkn,colormatrix(:,3),x);
+set(figure1,'Colormap', [r',g',b']);
+end;
+
 % set caption to colorbar
 if ~strcmp(cptn,'')
     zlab = get(cb,'ylabel');
@@ -113,7 +130,7 @@ if lattice
               scatter(xse(:),yse(:),pointsize,'v','MarkerEdgeColor','k',...
               'MarkerFaceColor','y',...
               'LineWidth',lnwth);
-          scatter(n ,n,pointsize*3,'h','MarkerEdgeColor','k',...
+          scatter(n ,n,pointsize*3.2,'h','MarkerEdgeColor','k',...
               'MarkerFaceColor','g',...
               'LineWidth',lnwth);
 end;

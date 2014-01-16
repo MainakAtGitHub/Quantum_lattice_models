@@ -1,28 +1,61 @@
-% inputs
-nOrbitals = 10;
-M = 5;
-ita = .001;
-E = -.0084;
-xGridRange = -80:60;
-yGridRange = -60:80;
-zGridRange = [0 21 4 22];
-load lattice_greens_supercell_FeSe_N_15_M_9_U_0955_Vimp_5_E_minPt0084.mat
-load wannier_FeSe_4d_matrix_v2
+function r=ldos_map(inputfile,ldosflnm)
 
+% inputs
+%nOrbitals = 10;
+%M = 5;
+%ita = .001;
+read_input_file=inputfile;
+read_input;
+read_input_file
+if (~exist('xrange','var'))
+    xrange=3
+end;
+if (~exist('zGridRange','var'))
+    zGridRange = [0 21 4 22]
+end;
+if (~exist('wannier_filename','var'))
+    wannier_filename='wannier_FeSe_4d_matrix_v2.mat'
+end;
+if (~exist('Greensenergy','var'))
+    Greensenergy=0.0084
+end;
+E = Greensenergy;
+% some double code with impurity_dos (please check, if making
+% modifications)
+if nargin < 2
+LDOSfileName0 = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
+LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita),'_e_',num2str(E)];
+else
+    % input of another filename also accepted
+    LDOSfileName=ldosflnm
+end;
+    
+load(LDOSfileName,'-mat')
+%load('./calc/U_0955/LDOS_FeSe_Tom__Vimp_5_N_15_M_10_ita_0.001_e_-0.0084','-mat');
+%lattice_greens_supercell_FeSe_N_15_M_9_U_0955_Vimp_5_E_minPt0084.mat
+shift = [51 51 41];
+sizeWannier = [101 101 81];
+RDiscrete = [40 40 80];
+load(wannier_filename,'-mat');
 
 nBands = size(latticeGreens,1);
 N = sqrt(nBands/nOrbitals);
 
 % Local greens function
 % Wannier vector
-RDiscrete = [40 40 80];
-shift = [51 51 41];
-sizeWannier = [101 101 81];
-fileName = ['supercell_local_ldos_FeSe_U_0955_Vimp_5','_N_',num2str(N),'_M_',num2str(M),'_E_',num2str(E),'_ita_',num2str(ita)];
+yrange=xrange;
+%xGridRange = -80:60;
+xGridRange = -RDiscrete(1)/2*(xrange+1):RDiscrete(1)/2*xrange;
+%yGridRange = -60:80;
+yGridRange = -RDiscrete(1)/2*yrange:RDiscrete(1)/2*(yrange+1);
+
+%fileName = ['supercell_local_ldos_FeSe_U_0955_Vimp_5','_N_',num2str(N),'_M_',num2str(M),'_E_',num2str(E),'_ita_',num2str(ita)];
 for zGridPoint = zGridRange
+    disp(['Calculating ',num2str(zGridPoint), 'of (',num2str(zGridRange(1)),'..',num2str(zGridRange(numel(zGridRange))),')']);
     loacalLdos = zeros(length(xGridRange),length(yGridRange));
     countLoopX = 0;
     for xGridPoint = xGridRange
+        disp(['Calculating ',num2str(xGridPoint), 'of (',num2str(xGridRange(1)),'..',num2str(xGridRange(numel(xGridRange))),')']);
         countLoopX = countLoopX + 1;
         countLoopY = 0;
         for yGridPoint = yGridRange
@@ -52,7 +85,7 @@ for zGridPoint = zGridRange
             loacalLdos(countLoopX,countLoopY) = (-1/pi)*imag(wAcc'*(latticeGreens*wAcc));
         end
     end
-    fileName = ['supercell_spatial_ldos_FeSe_N_15_M_5_U_0955_Vimp_50_E_-0.0084_ita_0.001', '_z_', num2str(zGridPoint),'.mat'];
-    save([fileName2,'_z_',num2str(zGridPoint),'.mat'],'loacalLdos','xGridRange','yGridRange');
+    % output of result
+    save([LDOSfileName,'_z_',num2str(zGridPoint)],'loacalLdos','xGridRange','yGridRange');
 end
 

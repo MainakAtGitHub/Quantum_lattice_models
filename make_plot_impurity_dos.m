@@ -100,7 +100,7 @@ xlim(plotrange);
 xlabel({'\omega'});
 
 % Create ylabel
-ylabel({'DOS [1/eV]'});
+ylabel({'LDOS [1/eV]'});
 
 % Create legend
 legend show
