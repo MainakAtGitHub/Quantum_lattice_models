@@ -4,8 +4,7 @@ function r=impurity_dos(inputfile, division, part)
 % inputfile : file that contains the parameters
 % division : divide task into division parts
 % part : calculate this part part = 1...division
-calcGreens =true;
-save_greens=true;
+calcGreens =true; % set default to calculation of Greens function
 % if no inputfile is specified, read in from the command line
 if nargin <1
     % load relevant files
@@ -52,8 +51,6 @@ delKy = delKx;
 kx_ind=[0:(M-1);ones(1,M)*M];
 kx_ind=kx_ind./repmat(gcd(kx_ind(1,:),kx_ind(2,:)),2,1);
 ky_ind=kx_ind;
-% find the
-energy = linspace(firstEnergy, lastEnergy, nEnergyPoints);
 
 % lattice range for impurity, nn, nnn and far away sites
 farAwayCell = [1 1];
@@ -84,7 +81,13 @@ HImpurity(iRange, jRange) = [impPotential zeros(nOrbitals/2); zeros(nOrbitals/2)
 nSuperCells = size(superLatticeVectors,1);
 % variable not used ?
 %nUnitCellsDelta = size(superDeltaVectors,1);
+if ~calcGreens
+    % find the
+energy = linspace(firstEnergy, lastEnergy, nEnergyPoints);
 E = repmat(energy,nBands,1);
+else
+    E=Greensenergy;
+end;
 
 % orphan later
 if ~exist('casestring','var')
@@ -148,8 +151,8 @@ end;
 
 LDOSfileName0 = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
 % create some sub-directory to avoid many files in one directory
+dirstring=['data_',LDOSfileName0];
 if division>0
-    dirstring=['data_',LDOSfileName0];
     if ~(exist(dirstring,'dir'))
         mkdir(dirstring)
     end;
@@ -160,9 +163,11 @@ for index=startindex:endindex
     iKy= mod(index-1,M)+1;
     iKx= ceil(index/M);
     tic;
-    if division > 0
+    if ~calcGreens
         ekukvk_file=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'.mat'];
-    end;
+    else
+        ekukvk_file=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'GF.mat'];
+    end
     if (~exist(ekukvk_file, 'file') || division==0)
         disp([iKx iKy]);
         k = [kx(iKx) ky(iKy)];
@@ -198,19 +203,28 @@ for index=startindex:endindex
             end
         else
             uK = eigVectorK(1:nBands,(nBands+1):end);
-            vK = eigVectorK((nBands+1):end,(nBands+1):end);
-            EnRep = repmat(Ek_vector',nBands,1);
-            latticeGreensK(iKx, iKy, :, :) = (uK./(E - EnRep + 1i*ita))*(uK') + (vK./(E + EnRep + 1i*ita))*(vK');
+            vK = eigVectorK((nBands+1):end,(nBands+1):end);        
+            if division==0
+                EnRep = repmat(Ek_vector',nBands,1);
+                latticeGreensK(iKx, iKy, :, :) = (uK./(E - EnRep + 1i*ita))*(uK') + (vK./(E + EnRep + 1i*ita))*(vK');
+            else
+                save(ekukvk_file,'uK','vK','Ek_vector');
+            end;
+
         end
     else
         disp([ekukvk_file,' already calculated, skipping.' ])
     end
     toc;
 end
+if ~calcGreens
 if ~tetra
     LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita)];
 else
     LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_tetra_corr']
+end;
+else
+    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita),'_e_',num2str(E)];
 end;
 if part>division
     if division>0
@@ -228,7 +242,11 @@ if part>division
                 disp(['reading k-point',num2str(iKx),' ',num2str(iKy)])
             end;
             try
-                ekukvk_file=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'.mat'];
+                if ~calcGreens
+                    ekukvk_file=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'.mat'];
+                else
+                    ekukvk_file=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'GF.mat'];
+                end
                 load(ekukvk_file); 
             catch exception
                 % missing k-point (or wrong input as number of k-points)
@@ -241,11 +259,13 @@ if part>division
             % caeful: double code here, change both when doing any
             % modifications
             if ~tetra
-                if ~ldos
-                Ek = repmat(Ek_vector, 1, nEnergyPoints) ;
-                greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita )) + ...
-                    ((abs(vK)).^2)*(1./(E + Ek + 1i*ita ));
+                if ~calcGreens
+                    Ek = repmat(Ek_vector, 1, nEnergyPoints) ;
+                    greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita )) + ...
+                        ((abs(vK)).^2)*(1./(E + Ek + 1i*ita ));
                 else
+                    EnRep = repmat(Ek_vector',nBands,1);
+                    latticeGreensK(iKx, iKy, :, :) = (uK./(E - EnRep + 1i*ita))*(uK') + (vK./(E + EnRep + 1i*ita))*(vK');
                 end;
             else
                 ukall(iKx,iKy,:,:)=uK;
@@ -255,17 +275,17 @@ if part>division
                 if iKx==1
                    ukall(M+1,iKy,:,:)=uK;
                    vkall(M+1,iKy,:,:)=vK;
-                   eKALL(M+1,iKy,:,:)=Ek_vector;
+                   Ekall(M+1,iKy,:,:)=Ek_vector;
                 end;
                 if iKy==1
                    ukall(iKx,M+1,:,:)=uK;
                    vkall(iKx,M+1,:,:)=vK;
-                   eKALL(iKx,M+1,:,:)=Ek_vector;
+                   Ekall(iKx,M+1,:,:)=Ek_vector;
                 end;
                 if (iKx==1) && (iKy==1)
                    ukall(M+1,M+1,:,:)=uK;
                    vkall(M+1,M+1,:,:)=vK;
-                   eKALL(M+1,M+1,:,:)=Ek_vector;
+                   Ekall(M+1,M+1,:,:)=Ek_vector;
                 end;
             end;
         end;
@@ -306,6 +326,7 @@ if part>division
         latticeGreens = zeros(nBands, nBands);
         for i = 1:nBands
             for j = 1:nBands
+                disp(['Integrating Bands (',num2str(i),' ,:) of ', num2str(nBands),'.']);
                 latticeGreens(i, j) = (1/(2*pi))^2*delKx*delKy*singular_double_quad(1./squeeze(latticeGreensK(:,:,i,j)));
             end
         end
@@ -331,26 +352,24 @@ if part>division
       %  end;
    % end
     disp('Writing out LDOS ...');
-    if tetra
-        ldos=greensRealSpace;
+    if ~calcGreens
+        if tetra
+            ldos=greensRealSpace;
+        else
+            ldos = (-(1/pi))*imag(greensRealSpace);
+        end;
+        orbitalLDOSFarAway = ldos(1:5,:);
+        totalLDOSFarAway = sum(orbitalLDOSFarAway,1); %#ok<NASGU>
+        orbitalLDOSImp = ldos(6:10,:);
+        totalLDOSImp = sum(orbitalLDOSImp,1);%#ok<NASGU>
+        orbitalLDOSImpNN = ldos(11:15,:);
+        totalLDOSImpNN = sum(orbitalLDOSImpNN,1);%#ok<NASGU>
+        orbitalLDOSImpNNN = ldos(16:20,:);
+        totalLDOSImpNNN = sum(orbitalLDOSImpNNN,1);%#ok<NASGU>
+        % to be done: change filename to general string
+        save(LDOSfileName, 'energy', 'orbitalLDOSFarAway', 'orbitalLDOSImp', 'orbitalLDOSImpNN', 'orbitalLDOSImpNNN');
     else
-        ldos = (-(1/pi))*imag(greensRealSpace);
-    end;
-    if ~calc_ldos
-    orbitalLDOSFarAway = ldos(1:5,:);
-    totalLDOSFarAway = sum(orbitalLDOSFarAway,1); %#ok<NASGU>
-    orbitalLDOSImp = ldos(6:10,:);
-    totalLDOSImp = sum(orbitalLDOSImp,1);%#ok<NASGU>
-    orbitalLDOSImpNN = ldos(11:15,:);
-    totalLDOSImpNN = sum(orbitalLDOSImpNN,1);%#ok<NASGU>
-    orbitalLDOSImpNNN = ldos(16:20,:);
-    totalLDOSImpNNN = sum(orbitalLDOSImpNNN,1);%#ok<NASGU>
-    % to be done: change filename to general string
-    save(LDOSfileName, 'energy', 'orbitalLDOSFarAway', 'orbitalLDOSImp', 'orbitalLDOSImpNN', 'orbitalLDOSImpNNN');
-    else
-    end;
-    if save_greens
-        save([LDOSfileName,'greens'],'latticeGreens');
+        save(LDOSfileName,'latticeGreens','N','nOrbitals','E');
     end;
 end
 r=1;

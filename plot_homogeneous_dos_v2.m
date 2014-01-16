@@ -47,7 +47,7 @@ LDOSfileName0 = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
 if ~tetra
     LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita)];
 else
-    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_tetra_corr']
+    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_tetra_corr1']
 end;
 
 disp('reading k-space calculated DOS ...');
@@ -71,9 +71,10 @@ end;
 
 % Plotting
 fig1= figure('Position',[150, 100, 500, 300]);
+%hold on
 plotres=[(5/nOrbitals)*totalDOSNormal;(5/nOrbitals)*totalDOS];
 plot1=plot(energy,plotres);
-set(plot1(1),'LineWidth',2,'LineStyle','--','DisplayName','Normal state','Color',[0 0 0]);
+set(plot1(1),'LineWidth',2,'LineStyle','-','DisplayName','Normal state','Color',[0 0 0]);
 set(plot1(2),'Color',[1 0 0],'DisplayName','SC state');
 xlim(plotrange);
 ylim_curr = get(gca,'ylim');
@@ -82,7 +83,7 @@ set(gca, 'ylim', [0 ylim_curr(2)]);
 %hold;
 %plot(energy,(5/nOrbitals)*totalDOS, 'r');
 % Create xlabel
-xlabel({'\omega'});
+xlabel({'\omega [eV]'});
 
 % Create ylabel
 ylabel({'DOS [1/eV]'});
@@ -98,10 +99,13 @@ end
 
 print_pdf(pdffile1);
 
+coloruf1=[250 	70 	22 ]/255;
+coloruf2= [0 	48 	135]/255;
+
 fig2= figure('Position',[200, 50, 500, 300]);
 totDOS=(5/nOrbitals)*totalDOS;
 %plot(energy, (5/nOrbitals)*totalDOS, 'k');
-plot1=plot(energy, [totDOS;bandDOS(1:5,:)]);
+plot1=plot(energy, [totDOS;bandDOS(1:5,:);(5/nOrbitals)*totalDOSNormal]);
 %, 'r');
 % plot(energy, bandDOS(2,:), 'g');
 % plot(energy, bandDOS(3,:), 'c');
@@ -116,6 +120,8 @@ set(plot1(4),'MarkerSize',2,'Marker','o','Color',[0 1 0],...
     'DisplayName','d_{yz}');
 set(plot1(5),'LineStyle','--','Color',[1 0 0],'DisplayName','d_{xz}');
 set(plot1(6),'Color',[0 0 1],'DisplayName','d_{xy}');
+set(plot1(7),'LineWidth',2,'LineStyle',':','Color',[0 0 0],'DisplayName','normal state');
+
 xlim(plotrange);
 ylim_curr = get(gca,'ylim');
 set(gca, 'ylim', [0 ylim_curr(2)]);

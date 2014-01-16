@@ -110,6 +110,7 @@ for iEnergyPoint = 1:nEnergyPoints
             greensKSpaceNormal = greensKSpaceNormal + greensKSpaceIBand;
         end
         greensDiagonalNormal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*singular_double_quad(1./greensKSpaceNormal);
+        %greensDiagonalNormal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*sum(sum(greensKSpaceNormal));
     end
     countLoop = countLoop + 1;
     disp(countLoop);
@@ -119,7 +120,7 @@ else
             disp('...using 2D version of Tetrahedron method');
             % set up a k-mesh that is suitable to cover the whole
             % Brillouinzone with triangles
-            mesh1=[0:1:(M)]*2*pi/M;
+            mesh1=[0:1:(M)+.5]*2*pi/M;
             % to do: kx,ky can be only a vector to simplify indexing
             [kx,ky] = meshgrid(mesh1, mesh1);
                 % to do: vectorize the code!
@@ -159,6 +160,7 @@ for iEnergyPoint = 1:nEnergyPoints
             greensKSpace = greensKSpace + greensKSpaceIBand;
         end
         greensDiagonal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*singular_double_quad(1./greensKSpace);
+        %greensDiagonal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*sum(sum(greensKSpace));
     end
         countLoop = countLoop + 1;
         disp(countLoop);
@@ -169,7 +171,7 @@ else
             disp('...using 2D version of Tetrahedron method');
             % set up a k-mesh that is suitable to cover the whole
             % Brillouinzone with triangles
-            mesh1=[0:1:(M)]*2*pi/M;
+            mesh1=[0:1:(M)+.5]*2*pi/M;
             % to do: kx,ky can be only a vector to simplify indexing
             [kx,ky] = meshgrid(mesh1, mesh1);
                 % to do: vectorize the code!
@@ -192,7 +194,7 @@ LDOSfileName0 = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
 if ~tetra
     LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita)];
 else
-    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_tetra_corr']
+    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_tetra_corr1']
 end;
 
 disp('Writing out k-space calculated DOS ...');

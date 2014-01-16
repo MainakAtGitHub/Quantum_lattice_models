@@ -38,9 +38,9 @@ f1=a0'*i0+a1'*i(1,:)+a2'*i(2,:);
 
 function t1=triI(e,k,E)
 %define difference vectors
-k12=k(2,:)-k(1,:);
-k13=k(3,:)-k(1,:);
-k23=k(3,:)-k(2,:);
+%k12=k(2,:)-k(1,:);
+%k13=k(3,:)-k(1,:);
+%k23=k(3,:)-k(2,:);
 %calculate the gradient on the triangle (is constant over triangle)
  if e(2)==e(1)&&e(3)==e(2)&&e(3)==e(1)
      %avoid numerical problems with flat dispersion
@@ -73,9 +73,9 @@ if E <= e(1)
 elseif E <= e(2)
     % density of states proportional to length of cutting line in triangle
     % according the forumula similar to Bloechel94
-    a=(E-e(1))/(e(2)-e(1))*k12;
+    av=(E-e(1))/(e(2)-e(1))*k12;
     b=(E-e(1))/(e(3)-e(1))*k13;
-    t=norm(a-b)*1/2*(a+b)';
+    t=norm(av-b)*1/2*(av+b)';
 elseif E < e(3)
     c=(E-e(2))/(e(3)-e(2))*k23;
     b=(E-e(1))/(e(3)-e(1))*k13;
@@ -104,13 +104,13 @@ E_smaller_e3=(E>e(2)).*(E<=e(3));
 %elseif E <= e(2)
     % density of states proportional to length of cutting line in triangle
     % according the forumula similar to Bloechel94
-    a=k12'*(E_smaller_e2.*(E-e(1))/(e(2)-e(1)));
+    av=k12'*(E_smaller_e2.*(E-e(1))/(e(2)-e(1)));
 %    a=(E-e(1))/(e(2)-e(1))*k12;
     b=k13'*(E_smaller_e2.*(E-e(1))/(e(3)-e(1)));
-    t=t+repmat(sqrt(sum((a-b).^2,1)),2,1).*1/2.*(a+b);
-    a=k23'*(E_smaller_e3.*(E-e(2))/(e(3)-e(2)));
+    t=t+repmat(sqrt(sum((av-b).^2,1)),2,1).*1/2.*(av+b);
+    av=k23'*(E_smaller_e3.*(E-e(2))/(e(3)-e(2)));
     b=k13'*(E_smaller_e3.*(E-e(1))/(e(3)-e(1)));
-    t=t+1/2*repmat(sqrt(sum((repmat(k12',1,lE).*repmat(E_smaller_e3,2,1)+a-b).^2,1)),2,1).*(repmat(k12',1,lE)+a+b);
+    t=t+1/2*repmat(sqrt(sum((repmat(k12',1,lE).*repmat(E_smaller_e3,2,1)+av-b).^2,1)),2,1).*(repmat(k12',1,lE)+av+b);
     % remove nan numbers that come from 0*1/(0) if e(1)==e(2) etc.
     t(isnan(t))=0;
 %else

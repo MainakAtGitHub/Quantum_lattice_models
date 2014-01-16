@@ -1,8 +1,22 @@
+function p=plot_lattice_ldos(ldosfile)
+if nargin < 1
+    ldosfile='lattice_greens_supercell_FeSe_N_15_M_9_U_0955_Vimp_5_E_minPt0084.mat';
+end;
 % input
-load lattice_greens_supercell_FeSe_N_15_M_9_U_0955_Vimp_5_E_minPt0084.mat
-N = 15;
-E = .0084;
-nOrbitals = 10;
+lattice=true;
+fsz=14;
+set(0,'DefaultAxesFontSize',fsz)
+load(ldosfile,'-mat')
+%lattice_greens_supercell_FeSe_N_15_M_9_U_0955_Vimp_5_E_minPt0084.mat
+if ~(exist('N','var'))
+    N = 11;
+end;
+if ~(exist('E','var'))
+    E = .0084;
+end;
+if ~(exist('nOrbitals','var'))
+    nOrbitals = 10;
+end;
 
 
 % total LDOS at Fe sites
@@ -26,15 +40,74 @@ for i=1:(n-1)
     diag(Fe2LDOS(i:(N-i),n+i), 2*i-1) + diag(Fe2LDOS(i:(N-i),n-i+1), -(2*i-1));
 end
 
+figure1=figure;
+axes1 = axes('Parent',figure1,'YDir','reverse',...
+    'PlotBoxAspectRatio',[1 1 1],...
+    'Layer','top');
+ %   'XTickLabel',{'-5','-4','-3','-2','-1','0','1','2','3','4','5'},...
+  %  'YTickLabel',{'-5','-4','-3','-2','-1','0','1','2','3','4','5'},...
+%hold(axes1,'all');
+%box(axes1,'on');
 
-% plotting
-ldos2plotAppended = flipud(ldos2plot);
-ldos2plotAppended(:,N+1) = 0;
-ldos2plotAppended(N+1,:) = 0;
-figure;
-pcolor(ldos2plotAppended);
+pcolor=false;
+cptn='LDOS [1/eV]';
+% plotting (using pcolor)
+if pcolor
+    ldos2plot = flipud(ldos2plot);
+    ldos2plot(:,N+1) = 0;
+    ldos2plot(N+1,:) = 0;
+    pcolor(ldos2plot,'Parent',axes1);
+else
+    image(ldos2plot,'Parent',axes1,'CDataMapping','scaled');
+    tickx_num=(-n+1:1:n-1);
+    tickx=cellstr(num2str(tickx_num(:)));
+    %tickx={'-5','-4','-3','-2','-1','0','1','2','3','4','5'};
+    label_boxes_ldos(numel(tickx),tickx);
+    % move the labels out of the ticks
+    dp=.5;
+    yh=get(axes1,'ylabel');
+    posy=get(yh,'position');
+    set(yh,'position',[posy(1)-dp posy(2)])
+        yh=get(axes1,'xlabel');
+    posy=get(yh,'position');
+    set(yh,'position',[posy(1) posy(2)+dp])
+end;
 axis('square');
-title(['E = ',num2str(E), ' eV']);
-xlabel('x')
-ylabel('y')
-colorbar
+title(['E = ',num2str(E*1000), ' meV']);
+xlabel('\Delta x')
+ylabel('\Delta y')
+cb=colorbar;
+% set caption to colorbar
+if ~strcmp(cptn,'')
+    zlab = get(cb,'ylabel');
+    set(zlab,'String',cptn,'FontSize',fsz);
+end;
+if lattice
+    [x,y]=meshgrid(1:N);
+    hold on;
+    pointsize=18;
+    lnwth=0.6;
+    scatter(x(:),y(:),pointsize,'MarkerEdgeColor','k',...
+              'MarkerFaceColor','r',...
+              'LineWidth',lnwth);
+              [x,y]=meshgrid(1:N-1);
+          xse=x(mod(x(:)+y(:),2)==0)+0.5;
+          yse=y(mod(x(:)+y(:),2)==0)+0.5;
+              scatter(xse(:),yse(:),pointsize,'v','MarkerEdgeColor','k',...
+              'MarkerFaceColor','y',...
+              'LineWidth',lnwth);
+                    xse=x(mod(x(:)+y(:),2)==1)+0.5;
+          yse=y(mod(x(:)+y(:),2)==1)+0.5;
+              scatter(xse(:),yse(:),pointsize,'^','MarkerEdgeColor','k',...
+              'MarkerFaceColor','y',...
+              'LineWidth',lnwth);
+          scatter(n ,n,pointsize*3,'h','MarkerEdgeColor','k',...
+              'MarkerFaceColor','g',...
+              'LineWidth',lnwth);
+end;
+
+if isunix
+    % create pdf of figure
+    [~,filename,extension]=fileparts(ldosfile);
+    print_pdf(['/tmp/',filename,extension,'.pdf'])
+end;

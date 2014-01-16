@@ -2,6 +2,9 @@ function f=make_plot_impurity_dos(inputfile,smoothenergy)
 if nargin <1
     inputfile='LDOS_FeSe_Milan_Gamma_Vimp_4_N_9_M_40_ita_0.003'
 end;
+plotall=false;
+coloruf1=[250 	70 	22 ]/255;
+coloruf2= [0 	48 	135]/255;
 % support for wildcards
 kstar = strfind(inputfile, '*');
 kquestion=strfind(inputfile, '?');
@@ -56,7 +59,7 @@ orbitalLDOSImp(orbitalLDOSImp<0)=0;
 orbitalLDOSImpNN(orbitalLDOSImpNN<0)=0;
 orbitalLDOSImpNNN(orbitalLDOSImpNNN<0)=0;
 % DOS far away (without impurity)
-figure1=figure;
+figure1=figure('Position',[200, 50, 500, 300]);
 plot1=plot(energy,[orbitalLDOSFarAway;sum(orbitalLDOSFarAway)]);
 setlabels(plot1,orb,plotrange);
 
@@ -66,32 +69,33 @@ if ~isempty(k)
 end;
 
 print_pdf(['/tmp/',inputfile,'_far_away.pdf']);
-
+if plotall
 % impurity DOS
-figure2=figure;
+figure2=figure('Position',[200, 50, 500, 300]);
 plot2=plot(energy,[orbitalLDOSImp;sum(orbitalLDOSImp)]);
 setlabels(plot2,orb,plotrange);
 print_pdf(['/tmp/',inputfile,'_Imp.pdf']);
 
 % NN dos
-figure3=figure;
+figure3=figure('Position',[200, 50, 500, 300]);
 plot3=plot(energy,[orbitalLDOSImpNN;sum(orbitalLDOSImpNN)]);
 setlabels(plot3,orb,plotrange);
 print_pdf(['/tmp/',inputfile,'_Imp_NN.pdf']);
 
 % NNN dos
-figure4=figure;
+figure4=figure('Position',[200, 50, 500, 300]);
 plot4=plot(energy,[orbitalLDOSImpNNN;sum(orbitalLDOSImpNNN)]);
 setlabels(plot4,orb,plotrange);
 print_pdf(['/tmp/',inputfile,'_Imp_NNN.pdf']);
-
+end;
 % compare total dos
-figure5=figure;
+figure5= figure('Position',[200, 50, 500, 300]);
+
 plot5=plot(energy,[sum(orbitalLDOSFarAway);sum(orbitalLDOSImp);sum(orbitalLDOSImpNN);sum(orbitalLDOSImpNNN)]);
-set(plot5(1),'DisplayName','tot far away');
-set(plot5(2),'DisplayName','tot impurity');
-set(plot5(3),'DisplayName','tot NN');
-set(plot5(4),'DisplayName','tot NNN');
+set(plot5(1),'DisplayName','tot far away','LineStyle','-','Color',[0 0 0]);
+set(plot5(2),'DisplayName','tot impurity','LineStyle','--','Color',[0 0 0],'LineWidth',1);
+set(plot5(3),'DisplayName','tot NN','LineStyle','-','Color',coloruf1);
+set(plot5(4),'DisplayName','tot NNN','LineStyle','-','Color',coloruf2);
 xlim(plotrange);
 xlabel({'\omega'});
 
