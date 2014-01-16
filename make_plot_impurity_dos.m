@@ -92,10 +92,10 @@ end;
 figure5= figure('Position',[200, 50, 500, 300]);
 
 plot5=plot(energy,[sum(orbitalLDOSFarAway);sum(orbitalLDOSImp);sum(orbitalLDOSImpNN);sum(orbitalLDOSImpNNN)]);
-set(plot5(1),'DisplayName','tot far away','LineStyle','-','Color',[0 0 0]);
-set(plot5(2),'DisplayName','tot impurity','LineStyle','--','Color',[0 0 0],'LineWidth',1);
-set(plot5(3),'DisplayName','tot NN','LineStyle','-','Color',coloruf1);
-set(plot5(4),'DisplayName','tot NNN','LineStyle','-','Color',coloruf2);
+set(plot5(1),'DisplayName','tot far away','LineStyle','-','LineWidth',2,'Color',[0 0 0]);
+set(plot5(2),'DisplayName','tot impurity','LineStyle','--','LineWidth',2,'Color',[0 0 0]);
+set(plot5(3),'DisplayName','tot NN','LineStyle','-','LineWidth',2,'Color',coloruf1);
+set(plot5(4),'DisplayName','tot NNN','LineStyle','-','LineWidth',2,'Color',coloruf2);
 xlim(plotrange);
 xlabel({'\omega'});
 

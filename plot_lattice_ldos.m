@@ -1,4 +1,4 @@
-function p=plot_lattice_ldos(ldosfile)
+function p=plot_lattice_ldos(ldosfile,plotN)
 if nargin < 1
     ldosfile='lattice_greens_supercell_FeSe_N_15_M_9_U_0955_Vimp_5_E_minPt0084.mat';
 end;
@@ -10,6 +10,12 @@ load(ldosfile,'-mat')
 %lattice_greens_supercell_FeSe_N_15_M_9_U_0955_Vimp_5_E_minPt0084.mat
 if ~(exist('N','var'))
     N = 11;
+end;
+if nargin <2
+    plotN=N;
+end;
+if plotN>N
+    plotN=N
 end;
 if ~(exist('E','var'))
     E = .0084;
@@ -51,6 +57,11 @@ axes1 = axes('Parent',figure1,'YDir','reverse',...
 
 pcolor=false;
 cptn='LDOS [1/eV]';
+% zoom the figure to show only plotN points
+diffN=N-plotN;
+ldos2plot=ldos2plot(1+diffN/2:N-diffN/2,1+diffN/2:N-diffN/2);
+N=plotN;
+n = ceil(N/2);
 % plotting (using pcolor)
 if pcolor
     ldos2plot = flipud(ldos2plot);
@@ -64,7 +75,7 @@ else
     %tickx={'-5','-4','-3','-2','-1','0','1','2','3','4','5'};
     label_boxes_ldos(numel(tickx),tickx);
     % move the labels out of the ticks
-    dp=.5;
+    dp=0.05*N;
     yh=get(axes1,'ylabel');
     posy=get(yh,'position');
     set(yh,'position',[posy(1)-dp posy(2)])
@@ -76,6 +87,7 @@ axis('square');
 title(['E = ',num2str(E*1000), ' meV']);
 xlabel('\Delta x')
 ylabel('\Delta y')
+% colorbar schemes
 cb=colorbar;
 % set caption to colorbar
 if ~strcmp(cptn,'')
@@ -85,7 +97,7 @@ end;
 if lattice
     [x,y]=meshgrid(1:N);
     hold on;
-    pointsize=18;
+    pointsize=80;
     lnwth=0.6;
     scatter(x(:),y(:),pointsize,'MarkerEdgeColor','k',...
               'MarkerFaceColor','r',...
@@ -93,12 +105,12 @@ if lattice
               [x,y]=meshgrid(1:N-1);
           xse=x(mod(x(:)+y(:),2)==0)+0.5;
           yse=y(mod(x(:)+y(:),2)==0)+0.5;
-              scatter(xse(:),yse(:),pointsize,'v','MarkerEdgeColor','k',...
+              scatter(xse(:),yse(:),pointsize,'^','MarkerEdgeColor','k',...
               'MarkerFaceColor','y',...
               'LineWidth',lnwth);
                     xse=x(mod(x(:)+y(:),2)==1)+0.5;
           yse=y(mod(x(:)+y(:),2)==1)+0.5;
-              scatter(xse(:),yse(:),pointsize,'^','MarkerEdgeColor','k',...
+              scatter(xse(:),yse(:),pointsize,'v','MarkerEdgeColor','k',...
               'MarkerFaceColor','y',...
               'LineWidth',lnwth);
           scatter(n ,n,pointsize*3,'h','MarkerEdgeColor','k',...
@@ -109,5 +121,5 @@ end;
 if isunix
     % create pdf of figure
     [~,filename,extension]=fileparts(ldosfile);
-    print_pdf(['/tmp/',filename,extension,'.pdf'])
+    print_pdf(['/tmp/',filename,extension,'cut',num2str(N),'.pdf'])
 end;
