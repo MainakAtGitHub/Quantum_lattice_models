@@ -62,14 +62,20 @@ then
 			[iI]* ) 
 				batchfile='script.sh'
 				echo "#! /bin/bash" > ${batchfile}
-				echo "#SBATCH -p dfg" >> ${batchfile}
+				# check for available queue for current user
+				numdfg=`sinfo | grep dfg | wc -l`
+				if [ "$numdfg" -eq "0" ]
+					echo "#SBATCH -p housewives" >> ${batchfile}
+				else
+					echo "#SBATCH -p dfg" >> ${batchfile}
+				fi
 				echo "#SBATCH -n 1" >> ${batchfile}
 				echo "#SBATCH --mem-per-cpu=3800" >> ${batchfile}
 				echo "  parameter1=standart_input_imp_dos_M_20.mat" >> ${batchfile}
 				echo "  parameter2=" >> ${batchfile}
 				echo "  parameter3=" >> ${batchfile}
 				echo "subdir=${subdir}" >> ${batchfile}
-				echo '  run_impurity_dos.sh /home/software/matlabR2012a-64/ $parameter1 $parameter2 $parameter3 > ./${subdir}/$parameter1$parameter2$parameter3.out 2>&1' >> ${batchfile}
+				echo '  ./run_impurity_dos.sh /home/software/matlabR2012a-64/ $parameter1 $parameter2 $parameter3 > ./${subdir}/$parameter1$parameter2$parameter3.out 2>&1' >> ${batchfile}
 				releasecommand='scontrol release <job_id>'
 				template=${batchfile}
 				break;;
