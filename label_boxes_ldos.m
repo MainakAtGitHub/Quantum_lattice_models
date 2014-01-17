@@ -3,7 +3,7 @@ set(gca,'Xtick',0.5:numl:5*numl+0.5);
 set(gca,'XtickLabel','')
 set(gca,'Ytick',0.5:numl:5*numl+0.5);
 set(gca,'YtickLabel','')
-grid on
+%grid on
 axis square
                 h = gca;
 ticky=tickx;

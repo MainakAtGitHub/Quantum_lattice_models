@@ -92,18 +92,7 @@ ylabel('\Delta y')
 
 cb=colorbar;
 if bluecolor
-    %color1=[1 0 0]; % red
-%color2=[0 0 0]; % black
-color2=[1 1 1]; % white
-color3=[0 0 1]; % blue
-input1=[0 1 10];
-colormatrix=[color2;color3; color3];
-maxabsekkn=1;
-x=0:maxabsekkn/255:maxabsekkn;
-r=interp1(input1*maxabsekkn,colormatrix(:,1),x);
-g=interp1(input1*maxabsekkn,colormatrix(:,2),x);
-b=interp1(input1*maxabsekkn,colormatrix(:,3),x);
-set(figure1,'Colormap', [r',g',b']);
+ bluemap(figure1)
 end;
 
 % set caption to colorbar
@@ -116,7 +105,11 @@ if lattice
     hold on;
     pointsize=80;
     lnwth=0.6;
-    scatter(x(:),y(:),pointsize,'MarkerEdgeColor','k',...
+    % cut of the central point
+    floor(N^2/2)
+    x1=[x(1:floor(N^2/2)),x(floor(N^2/2)+2:N^2)];
+    y1=[y(1:floor(N^2/2)),y(floor(N^2/2)+2:N^2)]; 
+    scatter(x1(:),y1(:),pointsize,'MarkerEdgeColor','k',...
               'MarkerFaceColor','r',...
               'LineWidth',lnwth);
               [x,y]=meshgrid(1:N-1);

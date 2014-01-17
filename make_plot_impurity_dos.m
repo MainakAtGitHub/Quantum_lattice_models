@@ -1,8 +1,10 @@
-function f=make_plot_impurity_dos(inputfile,smoothenergy)
+function f=make_plot_impurity_dos(inputfile,smoothenergy,plotall)
 if nargin <1
     inputfile='LDOS_FeSe_Milan_Gamma_Vimp_4_N_9_M_40_ita_0.003'
 end;
-plotall=false;
+if nargin <3
+    plotall=false;
+end;
 coloruf1=[250 	70 	22 ]/255;
 coloruf2= [0 	48 	135]/255;
 % support for wildcards
@@ -68,25 +70,33 @@ if ~isempty(k)
     	inputfile=inputfile(k(numel(k))+1:length(inputfile));
 end;
 
-print_pdf(['/tmp/',inputfile,'_far_away.pdf']);
 if plotall
+if isunix
+    print_pdf(['/tmp/',inputfile,'_far_away.pdf']);
+end;
 % impurity DOS
 figure2=figure('Position',[200, 50, 500, 300]);
 plot2=plot(energy,[orbitalLDOSImp;sum(orbitalLDOSImp)]);
 setlabels(plot2,orb,plotrange);
-print_pdf(['/tmp/',inputfile,'_Imp.pdf']);
+if isunix
+    print_pdf(['/tmp/',inputfile,'_Imp.pdf']);
+end;
 
 % NN dos
 figure3=figure('Position',[200, 50, 500, 300]);
 plot3=plot(energy,[orbitalLDOSImpNN;sum(orbitalLDOSImpNN)]);
 setlabels(plot3,orb,plotrange);
-print_pdf(['/tmp/',inputfile,'_Imp_NN.pdf']);
+if isunix
+    print_pdf(['/tmp/',inputfile,'_Imp_NN.pdf']);
+end;
 
 % NNN dos
 figure4=figure('Position',[200, 50, 500, 300]);
 plot4=plot(energy,[orbitalLDOSImpNNN;sum(orbitalLDOSImpNNN)]);
 setlabels(plot4,orb,plotrange);
-print_pdf(['/tmp/',inputfile,'_Imp_NNN.pdf']);
+if isunix
+    print_pdf(['/tmp/',inputfile,'_Imp_NNN.pdf']);
+end;
 end;
 % compare total dos
 figure5= figure('Position',[200, 50, 500, 300]);
@@ -104,7 +114,30 @@ ylabel({'LDOS [1/eV]'});
 
 % Create legend
 legend show
-print_pdf(['/tmp/',inputfile,'_tot.pdf']);
+if isunix
+    print_pdf(['/tmp/',inputfile,'_tot.pdf']);
+end;
+
+
+%peak detection plot 
+figure6= figure('Position',[200, 50, 500, 300]);
+data=[sum(orbitalLDOSImpNNN)./sum(orbitalLDOSImpNN);1./sum(orbitalLDOSImpNNN).*sum(orbitalLDOSImpNN)];
+plot6=plot(energy,data);
+set(plot6(1),'DisplayName','NNN/NN','Color',coloruf2);
+set(plot6(2),'DisplayName','NN/NNN','Color',coloruf1);
+xlim(2*plotrange);
+ylim([0,max(data(:))]);
+xlabel({'\omega'});
+
+% Create ylabel
+ylabel({'LDOS rel'});
+
+% Create legend
+legend1 = legend(gca,'show');
+set(legend1,'Location','Best');
+if isunix
+    print_pdf(['/tmp/',inputfile,'_rel.pdf']);
+end;
 
 end
 
@@ -117,7 +150,7 @@ xlim(range);
 xlabel({'\omega [eV]'});
 
 % Create ylabel
-ylabel({'DOS [1/eV]'});
+ylabel({'LDOS [1/eV]'});
 
 % Create legend
 legend show

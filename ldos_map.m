@@ -64,21 +64,21 @@ for zGridPoint = zGridRange
             wAcc = []; 
             for l = -(ceil(N/2)-1):(ceil(N/2)-1)
                 for m = -(ceil(N/2)-1):(ceil(N/2)-1)
-                    for orbital = 1:nOrbitals
-                        R = [l m 0];
-                        latticeVector = RDiscrete.*R;
-                        wannierArgument = r - latticeVector;                       
-                        shiftedArgument = wannierArgument + shift; % translate wannier origin                                     
-                        % check whether this argument is in range or not
-                        if (((shiftedArgument) <= sizeWannier) & ((shiftedArgument) >= [1 1 1]))
-                            % yes in range, now find the value
-                            %wannierValue = wannierI(shiftedArgument);
-                            w = wannierValues(shiftedArgument(1),shiftedArgument(2),shiftedArgument(3),orbital);
-                        else
-                            % not in range, set it to zero
-                            w = 0;
-                        end
-                        wAcc = [wAcc; w];
+                    R = [l m 0];
+                    latticeVector = RDiscrete.*R;
+                    wannierArgument = r - latticeVector;
+                    shiftedArgument = wannierArgument + shift; % translate wannier origin
+                    % check whether this argument is in range or not
+                    if (((shiftedArgument) <= sizeWannier) & ((shiftedArgument) >= [1 1 1]))
+                        % yes in range, now find the value
+                        %wannierValue = wannierI(shiftedArgument);
+                        %for orbital = 1:nOrbitals
+                            w = squeeze(wannierValues(shiftedArgument(1),shiftedArgument(2),shiftedArgument(3),:));
+                            wAcc = [wAcc; w];
+                        %end;
+                    else
+                        % not in range, set it to zero
+                        wAcc = [wAcc; zeros(nOrbitals,1)];
                     end
                 end
             end
