@@ -19,6 +19,9 @@ end;
 if (~exist('Greensenergy','var'))
     Greensenergy=0.0084
 end;
+if (~exist('diagonal_GF','var'))
+    diagonal_GF=false;
+end;
 E = Greensenergy;
 % some double code with impurity_dos (please check, if making
 % modifications)
@@ -31,6 +34,12 @@ else
 end;
     
 load(LDOSfileName,'-mat')
+if diagonal_GF
+    diagonal_string='diag';
+    latticeGreens=diag(diag(latticeGreens));
+else
+    diagonal_string='';
+end;
 %load('./calc/U_0955/LDOS_FeSe_Tom__Vimp_5_N_15_M_10_ita_0.001_e_-0.0084','-mat');
 %lattice_greens_supercell_FeSe_N_15_M_9_U_0955_Vimp_5_E_minPt0084.mat
 shift = [51 51 41];
@@ -86,6 +95,6 @@ for zGridPoint = zGridRange
         end
     end
     % output of result
-    save([LDOSfileName,'_z_',num2str(zGridPoint)],'loacalLdos','xGridRange','yGridRange');
+    save([LDOSfileName,'_z_',num2str(zGridPoint),diagonal_string],'loacalLdos','xGridRange','yGridRange');
 end
 

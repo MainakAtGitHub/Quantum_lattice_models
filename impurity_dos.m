@@ -325,8 +325,8 @@ if part>division
     else
         latticeGreens = zeros(nBands, nBands);
         for i = 1:nBands
+            disp(['Integrating Bands (',num2str(i),' ,:) of ', num2str(nBands),'.']);
             for j = 1:nBands
-                disp(['Integrating Bands (',num2str(i),' ,:) of ', num2str(nBands),'.']);
                 latticeGreens(i, j) = (1/(2*pi))^2*delKx*delKy*singular_double_quad(1./squeeze(latticeGreensK(:,:,i,j)));
             end
         end
