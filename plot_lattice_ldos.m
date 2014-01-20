@@ -5,7 +5,7 @@ end;
 % input
 lattice=true;
 bluecolor=true;
-fsz=14;
+fsz=20;
 set(0,'DefaultAxesFontSize',fsz)
 load(ldosfile,'-mat')
 %lattice_greens_supercell_FeSe_N_15_M_9_U_0955_Vimp_5_E_minPt0084.mat
