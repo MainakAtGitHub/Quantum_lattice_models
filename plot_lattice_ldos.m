@@ -103,7 +103,7 @@ end;
 if lattice
     [x,y]=meshgrid(1:N);
     hold on;
-    pointsize=80;
+    pointsize=160;
     lnwth=0.6;
     % cut of the central point
     floor(N^2/2)

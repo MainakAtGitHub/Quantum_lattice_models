@@ -1,8 +1,14 @@
-function p=plot_ldos_map(ldosfile)
-% to be modified for differen Wannier mesh
+function p=plot_ldos_map(ldosfile,scale,datarealmax,cut)
+if nargin < 2
+    % default no sqrt scale!
+    scale=''
+end;
+% to be modified for different Wannier mesh
 RDiscrete = [40 40 80];
 load wannier_FeSe_4d_matrix_v2
 load(ldosfile,'-mat')
+axistype='arrows';
+axistype='lines';
 zGridPoint = 0;
 E = .0084;
 localLdos = loacalLdos;
@@ -37,44 +43,97 @@ figure1= figure('Position',[200, 50, 400, 300],'PaperUnits','centimeter','PaperP
 % range=3
 %axes1 = axes('Parent',figure1,'PlotBoxAspectRatio',[1 1 1],'CameraViewAngle',3.88994451795861);
 %range=5
-axes1 = axes('Parent',figure1,'PlotBoxAspectRatio',[1 1 1],'CameraViewAngle',2.8,'FontSize',fntsz);
+axes1 = axes('Parent',figure1,'PlotBoxAspectRatio',[1 1 1],'CameraViewAngle',3.05,'FontSize',fntsz);
 xlim(axes1,[min(X(:)) max(X(:))]);
 ylim(axes1,[min(Y(:)) max(Y(:))]);
 grid(axes1,'on');
 hold(axes1,'all');
-surf(X,Y,localLdos','LineStyle','none','FaceColor','interp');
-% view from 1 Fe zone!
-view(axes1,[45 90]);
+if nargin < 3
+    datarealmax=max(abs(localLdos(:)));
+else
+    if isnan(datarealmax)
+            datarealmax=max(abs(localLdos(:)));
+    end
+end;
+lm=log(datarealmax)/log(10);
+mtix=10^(ceil(lm));
+% do some refinement to avoid only single labels
+if (ceil(lm)-lm > 0.5)
+    tx=[0:.025:.5]*2;
+elseif    (ceil(lm)-lm > 0.2)
+    tx=[0:0.05:1];
+else
+    tx=[0:0.1:1];
+end;
+ticks=mtix*tx; 
+labels = num2str(repmat(sign(ticks).*(abs(ticks)), 1, 1)', 2);
+if scale=='s'
+    surf(X,Y,sqrt(abs(localLdos')),'LineStyle','none','FaceColor','interp');
+    ticks=sign(tx).*sqrt(mtix*abs(tx));
+    datarealmax=sqrt(datarealmax);
+else
+    surf(X,Y,abs(localLdos'),'LineStyle','none','FaceColor','interp');
+    datarealmax=datarealmax;
+end;
  bluemap(figure1)
 %view([0 90])
 %pcolor(X,Y,localLdos');
 %axis('square')
-colorbar;
+    h = colorbar;
+    ticks_res=round(ticks/datarealmax*256);
+    % eliminate the same ticks_res
+    ticksres1=ticks_res(1);
+    labels1=labels(1,:);
+    for n=2:length(ticks_res)
+        if ticks_res(n)> ticksres1(length(ticksres1))
+            ticksres1=[ticksres1,ticks_res(n)];
+            labels1=[labels1;labels(n,:)];
+        end
+    end;
+
+        allAxesInFigure = findall(figure1,'type','axes');
+        set(allAxesInFigure,'CLim',[0 datarealmax],'FontSize',fntsz); 
+% view from 1 Fe zone!
+view(axes1,[45 90]);
+    set(h, 'YTick', ticksres1*datarealmax/256);
+set(h, 'YTickLabel', labels1);
 %titleName = ['E = ', num2str(E), ', z = ', num2str(z), ' Bohr'];
 %title(titleName);
 xlabel('x (Bohr)');
 ylabel('y (Bohr)');
 thickness=0.4;
 ratio=0.8;
-lgth=12;
-offset=[-10,10];
+lgth=0.3*RDiscrete(1);
+offset(1)=-0.25*RDiscrete(1);
+offset(2)=0.25*RDiscrete(2);
+z=[1 1]*datarealmax;
+switch axistype
+    case 'arrows'
+% insert coordinate system manually (arrows)
 x=[0,lgth]+offset(1);
 y=[0,lgth]+offset(2);
-z=[1 1]*max(localLdos(:));
+z=[1 1]*datarealmax;
 h1=arrow3d(x,y,z,ratio,thickness);
 text(1.1*x(2),1.1*y(2),z(2),'$x$','FontSize',1.5*fntsz,'Interpreter','latex')
 set(h1,'facecolor',[1 0 0])
 x=[0,-lgth]+offset(1);
 y=[0,lgth]+offset(2);
-z=[1 1]*max(localLdos(:));
 h1=arrow3d(x,y,z,ratio,thickness);
 text(1.1*x(2),1.1*y(2),z(2),'$y$','FontSize',1.5*fntsz,'Interpreter','latex')
-% label the coordinate axes
+% put in z-component and energy as text
 set(h1,'facecolor',[1 0 0])
+    case 'lines'
+        x=8*[-RDiscrete(1),RDiscrete(2)]+offset(1);
+y=8*[-RDiscrete(1),RDiscrete(2)]+offset(2);
+        plot3(x,y,z,'r');
+        x=8*[RDiscrete(1),-RDiscrete(2)]+offset(1);
+y=8*[-RDiscrete(1),RDiscrete(2)]+offset(2);
+        plot3(x,y,z,'r');
+end
 zposstring=['z=',sprintf('%1.3G',zpos/RDiscrete(3)),' c'];
 % Create textbox
 annotation(figure1,'textbox',...
-        [0.0415264090747962 0.921052631578947 0.473511184910166 0.0690451293797412],...
+        [0.08 0.921052631578947 0.473511184910166 0.0690451293797412],...
     'String',{zposstring},...
     'FitBoxToText','off',...
     'LineStyle','none','FontSize',fntsz);
@@ -87,6 +146,15 @@ annotation(figure1,'textbox',...
     'FitBoxToText','off',...
     'LineStyle','none','FontSize',fntsz);
  set(gca,'FontSize', 16);
+if exist('cut','var')
+    % plot black box with corresponding cut
+    boxx=[-1,0,1,0,-1];
+    boxy=[0,1,0,-1,0];
+    z=[1 1 1 1 1]*datarealmax;
+    boxx=cut/2*RDiscrete(1)*boxx+offset(1);
+    boxy=cut/2*RDiscrete(2)*boxy+offset(2);
+            plot3(boxx,boxy,z,'k');
+end;
 if isunix
     % create pdf of figure
     [~,filename,extension]=fileparts(ldosfile);
