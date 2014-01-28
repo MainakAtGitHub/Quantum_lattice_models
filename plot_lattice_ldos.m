@@ -1,4 +1,4 @@
-function p=plot_lattice_ldos(ldosfile,plotN)
+function p=plot_lattice_ldos(ldosfile,plotN,datarealmax)
 if nargin < 1
     ldosfile='lattice_greens_supercell_FeSe_N_15_M_9_U_0955_Vimp_5_E_minPt0084.mat';
 end;
@@ -14,6 +14,11 @@ if ~(exist('N','var'))
 end;
 if nargin <2
     plotN=N;
+end;
+xylabels=true;
+if plotN<0
+    plotN=-plotN;
+    xylabels=false;
 end;
 if plotN>N
     plotN=N
@@ -63,6 +68,14 @@ diffN=N-plotN;
 ldos2plot=ldos2plot(1+diffN/2:N-diffN/2,1+diffN/2:N-diffN/2);
 N=plotN;
 n = ceil(N/2);
+showcolorbar=true;
+if nargin < 3
+    datarealmax=max(ldos2plot(:));
+end;
+if datarealmax<0
+    datarealmax=-datarealmax;
+    showcolorbar=false;
+end;
 % plotting (using pcolor)
 if pcolorplot
     ldos2plot = flipud(ldos2plot);
@@ -74,27 +87,35 @@ else
     tickx_num=(-n+1:1:n-1);
     tickx=cellstr(num2str(tickx_num(:)));
     %tickx={'-5','-4','-3','-2','-1','0','1','2','3','4','5'};
-    label_boxes_ldos(numel(tickx),tickx);
-    % move the labels out of the ticks
-    dp=0.05*N;
-    yh=get(axes1,'ylabel');
-    posy=get(yh,'position');
-    set(yh,'position',[posy(1)-dp posy(2)])
+    if ~xylabels
+        for i=1:numel(tickx)
+            tickx{i}='';
+        end;
+    end;
+        label_boxes_ldos(numel(tickx),tickx);
+        % move the labels out of the ticks
+        dp=0.05*N;
+        yh=get(axes1,'ylabel');
+        posy=get(yh,'position');
+        set(yh,'position',[posy(1)-dp posy(2)])
         yh=get(axes1,'xlabel');
-    posy=get(yh,'position');
-    set(yh,'position',[posy(1) posy(2)+dp])
+        posy=get(yh,'position');
+        set(yh,'position',[posy(1) posy(2)+dp])
+        if xylabels
+            xlabel('\Delta x')
+            ylabel('\Delta y')
+        end;      
 end;
 axis('square');
 title(['\omega = ',num2str(E*1000), ' meV']);
-xlabel('\Delta x')
-ylabel('\Delta y')
 % colorbar schemes
 
 cb=colorbar;
 if bluecolor
  bluemap(figure1)
 end;
-
+caxis([0,datarealmax])
+caxis
 % set caption to colorbar
 if ~strcmp(cptn,'')
     zlab = get(cb,'ylabel');
@@ -131,5 +152,10 @@ end;
 if isunix
     % create pdf of figure
     [~,filename,extension]=fileparts(ldosfile);
-    print_pdf(['/tmp/',filename,extension,'cut',num2str(N),'.pdf'])
+    if ~showcolorbar
+                    set(cb,'visible','off');
+    end;
+    %print_pdf(['/tmp/',filename,extension,'cut',num2str(N),'.pdf'])
+    print_eps(['/tmp/',filename,extension,'cut',num2str(N),'.eps'])
+    
 end;

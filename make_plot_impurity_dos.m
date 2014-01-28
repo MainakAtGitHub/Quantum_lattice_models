@@ -1,4 +1,4 @@
-function f=make_plot_impurity_dos(inputfile,smoothenergy,plotall)
+function f=make_plot_impurity_dos(inputfile,smoothenergy,plotall,omega0)
 if nargin <1
     inputfile='LDOS_FeSe_Milan_Gamma_Vimp_4_N_9_M_40_ita_0.003'
 end;
@@ -45,7 +45,7 @@ if (~exist('plotrange','var'))
 end;
 
 orb={'orbital1','orbital2','orbital3','orbital4','orbital5','total'};
-
+fsz=14;
 % load input
 load(inputfile,'-mat')
 % some smoothing if necessary
@@ -62,6 +62,7 @@ orbitalLDOSImpNN(orbitalLDOSImpNN<0)=0;
 orbitalLDOSImpNNN(orbitalLDOSImpNNN<0)=0;
 % DOS far away (without impurity)
 figure1=figure('Position',[200, 50, 500, 300]);
+set(0,'DefaultAxesFontSize',fsz)
 plot1=plot(energy,[orbitalLDOSFarAway;sum(orbitalLDOSFarAway)]);
 setlabels(plot1,orb,plotrange);
 
@@ -76,6 +77,7 @@ if isunix
 end;
 % impurity DOS
 figure2=figure('Position',[200, 50, 500, 300]);
+set(0,'DefaultAxesFontSize',fsz)
 plot2=plot(energy,[orbitalLDOSImp;sum(orbitalLDOSImp)]);
 setlabels(plot2,orb,plotrange);
 if isunix
@@ -84,6 +86,7 @@ end;
 
 % NN dos
 figure3=figure('Position',[200, 50, 500, 300]);
+set(0,'DefaultAxesFontSize',fsz)
 plot3=plot(energy,[orbitalLDOSImpNN;sum(orbitalLDOSImpNN)]);
 setlabels(plot3,orb,plotrange);
 if isunix
@@ -92,6 +95,7 @@ end;
 
 % NNN dos
 figure4=figure('Position',[200, 50, 500, 300]);
+set(0,'DefaultAxesFontSize',fsz)
 plot4=plot(energy,[orbitalLDOSImpNNN;sum(orbitalLDOSImpNNN)]);
 setlabels(plot4,orb,plotrange);
 if isunix
@@ -99,7 +103,9 @@ if isunix
 end;
 end;
 % compare total dos
-figure5= figure('Position',[200, 50, 500, 300]);
+%figure5= figure('Position',[200, 50, 500, 300]);
+figure5= figure('Position',[150, 100, 500, 300]);
+set(0,'DefaultAxesFontSize',fsz)
 
 plot5=plot(energy,[sum(orbitalLDOSFarAway);sum(orbitalLDOSImp);sum(orbitalLDOSImpNN);sum(orbitalLDOSImpNNN)]);
 set(plot5(1),'DisplayName','tot far away','LineStyle','-','LineWidth',2,'Color',[0 0 0]);
@@ -107,13 +113,21 @@ set(plot5(2),'DisplayName','tot impurity','LineStyle','--','LineWidth',2,'Color'
 set(plot5(3),'DisplayName','tot NN','LineStyle','-','LineWidth',2,'Color',coloruf1);
 set(plot5(4),'DisplayName','tot NNN','LineStyle','-','LineWidth',2,'Color',coloruf2);
 xlim(plotrange);
-xlabel({'\omega'});
+xlabel({'\omega [eV]'});
 
 % Create ylabel
 ylabel({'LDOS [1/eV]'});
 
 % Create legend
 legend show
+if exist('omega0','var')
+    % put in vertical bars at the energies omega0
+    %your point goes here
+    l1=line([omega0 omega0],get(gca,'YLim'),'LineWidth',2,'Color',1-coloruf1);
+        l2=line(-[omega0 omega0],get(gca,'YLim'),'LineWidth',2,'Color',1-coloruf2);
+uistack(l1,'bottom')
+uistack(l2,'bottom')
+end;
 if isunix
     print_pdf(['/tmp/',inputfile,'_tot.pdf']);
 end;

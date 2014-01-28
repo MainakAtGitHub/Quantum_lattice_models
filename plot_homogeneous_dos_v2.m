@@ -68,9 +68,11 @@ if ~isempty(k)
     	inputfile=inputfile(k(numel(k))+1:length(inputfile));
 end;
 
+fsz=14;
 
 % Plotting
 fig1= figure('Position',[150, 100, 500, 300]);
+set(0,'DefaultAxesFontSize',fsz)
 %hold on
 plotres=[(5/nOrbitals)*totalDOSNormal;(5/nOrbitals)*totalDOS];
 plot1=plot(energy,plotres);
@@ -103,6 +105,7 @@ coloruf1=[250 	70 	22 ]/255;
 coloruf2= [0 	48 	135]/255;
 
 fig2= figure('Position',[200, 50, 500, 300]);
+set(0,'DefaultAxesFontSize',fsz)
 totDOS=(5/nOrbitals)*totalDOS;
 %plot(energy, (5/nOrbitals)*totalDOS, 'k');
 plot1=plot(energy, [totDOS;bandDOS(1:5,:);(5/nOrbitals)*totalDOSNormal]);

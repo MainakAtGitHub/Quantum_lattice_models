@@ -3,6 +3,14 @@ if nargin < 2
     % default no sqrt scale!
     scale=''
 end;
+if nargin <4
+    cut=5
+end;
+nolabel=false;
+if cut<0
+    nolabel=true;
+    cut=-cut;
+end;
 % to be modified for different Wannier mesh
 RDiscrete = [40 40 80];
 load wannier_FeSe_4d_matrix_v2
@@ -43,7 +51,7 @@ figure1= figure('Position',[200, 50, 400, 300],'PaperUnits','centimeter','PaperP
 % range=3
 %axes1 = axes('Parent',figure1,'PlotBoxAspectRatio',[1 1 1],'CameraViewAngle',3.88994451795861);
 %range=5
-axes1 = axes('Parent',figure1,'PlotBoxAspectRatio',[1 1 1],'CameraViewAngle',3.05,'FontSize',fntsz);
+axes1 = axes('Parent',figure1,'PlotBoxAspectRatio',[1 1 1],'CameraViewAngle',1.6,'FontSize',fntsz);
 xlim(axes1,[min(X(:)) max(X(:))]);
 ylim(axes1,[min(Y(:)) max(Y(:))]);
 grid(axes1,'on');
@@ -60,7 +68,7 @@ mtix=10^(ceil(lm));
 % do some refinement to avoid only single labels
 if (ceil(lm)-lm > 0.5)
     tx=[0:.025:.5]*2;
-elseif    (ceil(lm)-lm > 0.2)
+elseif    (ceil(lm)-lm > 0.35)
     tx=[0:0.05:1];
 else
     tx=[0:0.1:1];
@@ -76,6 +84,7 @@ else
     datarealmax=datarealmax;
 end;
  bluemap(figure1)
+
 %view([0 90])
 %pcolor(X,Y,localLdos');
 %axis('square')
@@ -90,11 +99,12 @@ end;
             labels1=[labels1;labels(n,:)];
         end
     end;
-
+ caxis([0,datarealmax])
         allAxesInFigure = findall(figure1,'type','axes');
         set(allAxesInFigure,'CLim',[0 datarealmax],'FontSize',fntsz); 
 % view from 1 Fe zone!
 view(axes1,[45 90]);
+caxis([-eps,datarealmax])
     set(h, 'YTick', ticksres1*datarealmax/256);
 set(h, 'YTickLabel', labels1);
 %titleName = ['E = ', num2str(E), ', z = ', num2str(z), ' Bohr'];
@@ -109,27 +119,55 @@ offset(2)=0.25*RDiscrete(2);
 z=[1 1]*datarealmax;
 switch axistype
     case 'arrows'
-% insert coordinate system manually (arrows)
-x=[0,lgth]+offset(1);
-y=[0,lgth]+offset(2);
-z=[1 1]*datarealmax;
-h1=arrow3d(x,y,z,ratio,thickness);
-text(1.1*x(2),1.1*y(2),z(2),'$x$','FontSize',1.5*fntsz,'Interpreter','latex')
-set(h1,'facecolor',[1 0 0])
-x=[0,-lgth]+offset(1);
-y=[0,lgth]+offset(2);
-h1=arrow3d(x,y,z,ratio,thickness);
-text(1.1*x(2),1.1*y(2),z(2),'$y$','FontSize',1.5*fntsz,'Interpreter','latex')
-% put in z-component and energy as text
-set(h1,'facecolor',[1 0 0])
+        % insert coordinate system manually (arrows)
+        x=[0,lgth]+offset(1);
+        y=[0,lgth]+offset(2);
+        z=[1 1]*datarealmax;
+        h1=arrow3d(x,y,z,ratio,thickness);
+        text(1.1*x(2),1.1*y(2),z(2),'$x$','FontSize',1.5*fntsz,'Interpreter','latex')
+        set(h1,'facecolor',[1 0 0])
+        x=[0,-lgth]+offset(1);
+        y=[0,lgth]+offset(2);
+        h1=arrow3d(x,y,z,ratio,thickness);
+        text(1.1*x(2),1.1*y(2),z(2),'$y$','FontSize',1.5*fntsz,'Interpreter','latex')
+        % put in z-component and energy as text
+        set(h1,'facecolor',[1 0 0])
     case 'lines'
-        x=8*[-RDiscrete(1),RDiscrete(2)]+offset(1);
-y=8*[-RDiscrete(1),RDiscrete(2)]+offset(2);
+        x=cut/4*[-RDiscrete(1),RDiscrete(2)]+offset(1);
+        y=cut/4*[-RDiscrete(1),RDiscrete(2)]+offset(2);
         plot3(x,y,z,'r');
-        x=8*[RDiscrete(1),-RDiscrete(2)]+offset(1);
-y=8*[-RDiscrete(1),RDiscrete(2)]+offset(2);
+        x=cut/4*[RDiscrete(1),-RDiscrete(2)]+offset(1);
+        y=cut/4*[-RDiscrete(1),RDiscrete(2)]+offset(2);
         plot3(x,y,z,'r');
+        if exist('cut','var')
+    % plot black box with corresponding cut and cuttof the image with white
+    % boxes
+    boxx=[-1, 0, 1, 0,-1];
+    boxy=[ 0, 1, 0,-1, 0];
+    z=[1 1 1 1 1]*datarealmax*1.02;
+    boxx=cut/2*RDiscrete(1)*boxx+offset(1);
+    boxy=cut/2*RDiscrete(2)*boxy+offset(2);
+    plot3(boxx,boxy,z*1.02,'k');
+    boxscale=3;
+    boxcolor='white';
+    % plot white box
+    boxx1=[ 0 1 boxscale  0 0]*cut/2*RDiscrete(1)+offset(1);
+    boxy1=[-1 0 0 -boxscale -1]*cut/2*RDiscrete(2)+offset(2);
+    patch(boxx1,boxy1,z,boxcolor,'LineStyle','none');
+    boxx1=[-1  0  0 -boxscale -1]*cut/2*RDiscrete(1)+offset(1);
+    boxy1=[ 0 -1 -boxscale  0  0]*cut/2*RDiscrete(2)+offset(2);
+    patch(boxx1,boxy1,z,boxcolor,'LineStyle','none');
+    boxx1=[0 -1 -boxscale 0 0]*cut/2*RDiscrete(1)+offset(1);
+    boxy1=[1  0  0 boxscale 1]*cut/2*RDiscrete(2)+offset(2);
+    patch(boxx1,boxy1,z,boxcolor,'LineStyle','none');
+    boxx1=[1 0 0 boxscale 1]*cut/2*RDiscrete(1)+offset(1);
+    boxy1=[0 1 boxscale 0 0]*cut/2*RDiscrete(2)+offset(2);
+    patch(boxx1,boxy1,z,boxcolor,'LineStyle','none');
+    xlim(boxscale*RDiscrete(1)*cut/2*[ -1 1]);
+    ylim(boxscale*RDiscrete(2)*cut/2*[ -1 1]);
+        end;
 end
+if ~nolabel
 zposstring=['z=',sprintf('%1.3G',zpos/RDiscrete(3)),' c'];
 % Create textbox
 annotation(figure1,'textbox',...
@@ -146,18 +184,27 @@ annotation(figure1,'textbox',...
     'FitBoxToText','off',...
     'LineStyle','none','FontSize',fntsz);
  set(gca,'FontSize', 16);
-if exist('cut','var')
-    % plot black box with corresponding cut
-    boxx=[-1,0,1,0,-1];
-    boxy=[0,1,0,-1,0];
-    z=[1 1 1 1 1]*datarealmax;
-    boxx=cut/2*RDiscrete(1)*boxx+offset(1);
-    boxy=cut/2*RDiscrete(2)*boxy+offset(2);
-            plot3(boxx,boxy,z,'k');
 end;
 if isunix
     % create pdf of figure
     [~,filename,extension]=fileparts(ldosfile);
-    print('-djpeg', ['/tmp/',filename,extension,'.jpg'],'-r200');
+    if nolabel
+            set(h,'visible','off');
+            print('-dpng', ['/tmp/',filename,extension,'.png'],'-r200');
+    else
+        print('-djpeg', ['/tmp/',filename,extension,'.jpg'],'-r200');
+    end;
 %print_pdf(['/tmp/',filename,extension,'cut',num2str(N),'.pdf'])
+if nolabel
+    % print also just the colorbar
+    childr = get(axes1,'children');
+    set(childr,'visible','off');
+    set(axes1,'visible','off');
+    set(h,'visible','on');
+    %print('-djpeg', ['/tmp/',filename,extension,'colorbar.jpg'],'-r200');
+    print_pdf(['/tmp/',filename,extension,'colorbar.pdf']);
+    set(childr,'visible','on');
+    set(axes1,'visible','on');
+    set(h,'visible','on');
+end
 end;

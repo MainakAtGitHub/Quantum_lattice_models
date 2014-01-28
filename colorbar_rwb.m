@@ -1,4 +1,4 @@
-function colorbar_rwb(figure1,maxabsekkn,ticks,labels)
+function h=colorbar_rwb(figure1,maxabsekkn,ticks,labels,abs)
 global colorred
     global fsz;
  if isempty(fsz)
@@ -8,6 +8,9 @@ color1=[1 0 0]; % red
 %color2=[0 0 0]; % black
 color2=[1 1 1]; % white
 color3=[0 0 1]; % blue
+if ~exist('colorred','var')
+    colorrred=false;
+end;
 if ~colorred
     input=[-10 -1 0 1 10]+.5;
     colormatrix=[color1; color1;color2;color3; color3];
@@ -29,7 +32,11 @@ b=interp1(input*maxabsekkn,colormatrix(:,3),x);
         allAxesInFigure = findall(figure1,'type','axes');
 if nargin >2
     h = colorbar;
-    ticks_res=round(ticks/maxabsekkn*128+128);
+    if exist('abs','var')
+        ticks_res=ticks;
+    else
+        ticks_res=round(ticks/maxabsekkn*128+128);
+    end
     if nargin < 4
         labels = num2str(repmat(ticks, 1, 1)', 2);
     end

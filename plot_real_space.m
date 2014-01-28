@@ -11,6 +11,7 @@ end;
 if nargin <4
     nOrbitals=10;
 end;
+fsz=20;
 load(inputfile,'-mat'); % BdG_homogeneous_FeSe_Toms_BS_6Dec13_GammaCut_3_N_9.mat
 % no need to set the ticks any more
 % ticks = -10:5:10;
@@ -82,7 +83,8 @@ end
 % convert to meV
 delta2Plot = 1000*delta2Plot;
 %r=realspaceplot(data2plot,numl,tickx,flnm,scale)
-realspaceplot(delta2Plot,N,tickx,inputfile,scale);
+cptn='\Delta_{RR''}^{\mu\nu} [meV]';
+[~,h]=realspaceplot(delta2Plot,N,tickx,inputfile,scale,cptn);
 end
 % figure1=figure
 % 

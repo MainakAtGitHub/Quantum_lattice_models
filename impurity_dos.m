@@ -163,12 +163,19 @@ for index=startindex:endindex
     iKy= mod(index-1,M)+1;
     iKx= ceil(index/M);
     tic;
-    if ~calcGreens
-        ekukvk_file=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'.mat'];
-    else
-        ekukvk_file=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'GF.mat'];
-    end
-    if (~exist(ekukvk_file, 'file') || division==0)
+    ekukvk_file=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'.mat'];
+    ekukvk_fileGF=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'GF.mat'];
+    calculate=true;
+    if exist(ekukvk_fileGF, 'file') % no need to calculate this k-point
+        calculate=false;
+    end;
+    if (exist(ekukvk_file,'file') && ~calcGreens) % no need to calculate this k-point if only ldos should be calculated
+        calculate=false;
+    end;
+    if division==0
+        calculate=true;
+    end;
+    if calculate
         disp([iKx iKy]);
         k = [kx(iKx) ky(iKy)];
         kSpaceHopping = 0;
@@ -208,7 +215,7 @@ for index=startindex:endindex
                 EnRep = repmat(Ek_vector',nBands,1);
                 latticeGreensK(iKx, iKy, :, :) = (uK./(E - EnRep + 1i*ita))*(uK') + (vK./(E + EnRep + 1i*ita))*(vK');
             else
-                save(ekukvk_file,'uK','vK','Ek_vector');
+                save(ekukvk_fileGF,'uK','vK','Ek_vector');
             end;
 
         end
@@ -242,19 +249,31 @@ if part>division
                 disp(['reading k-point',num2str(iKx),' ',num2str(iKy)])
             end;
             try
-                if ~calcGreens
                     ekukvk_file=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'.mat'];
-                else
-                    ekukvk_file=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'GF.mat'];
-                end
-                load(ekukvk_file); 
+                    ekukvk_fileGF=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'GF.mat'];
+                    if calcGreens
+                        load(ekukvk_fileGF); 
+                    else
+                        try
+                            load(ekukvk_file);
+                        catch exception
+                            load(ekukvk_fileGF); 
+                            uK = uK(siteIndices,(nBands + 1):end);
+                            vK = vK(nBands + siteIndices,(nBands + 1):end);
+                        end
+                    end;
             catch exception
                 % missing k-point (or wrong input as number of k-points)
                 % First can happen if one job crashes; catch this by
                 % calculating on the fly
                 disp('Missing k-point, recalculating on the fly.')
                 impurity_dos(inputfile, division, -index);
-                load(ekukvk_file);
+                if calcGreens
+                    load(ekukvk_fileGF);
+                else
+                    load(ekukvk_file);
+                end;
+
             end
             % caeful: double code here, change both when doing any
             % modifications

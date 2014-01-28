@@ -5,8 +5,11 @@ set(gca,'Ytick',0.5:numl:5*numl+0.5);
 set(gca,'YtickLabel','')
 %grid on
 axis square
-                h = gca;
-ticky=tickx;
+h = gca;
+% reverse order of x and y labels
+for i=1:numel(tickx)
+    ticky{numel(tickx)-i+1}=tickx{i};
+end;
 tickposy =   [1:numl];
 tickposx =   [1:numl];
 %Convert the cell labels to a character string

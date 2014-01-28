@@ -1,4 +1,4 @@
-function figure1=realspaceplot(data2plot,numl,tickx,flnm,scale)
+function [figure1,h]=realspaceplot(data2plot,numl,tickx,flnm,scale,cptn)
 if nargin < 4
     scale='s';
 end;
@@ -36,8 +36,15 @@ if scale=='s'
 else
     image(sign(real(data2plot)).*(abs(real(data2plot)/datarealmax))*128+128);
 end;
-colorbar_rwb(figure1,datarealmax,ticks,labels);
+h=colorbar_rwb(figure1,datarealmax,ticks,labels);
 label_boxes(numel(tickx),numl,tickx);
+if exist('cptn','var')
+% set caption to colorbar
+if ~strcmp(cptn,'')
+    zlab = get(h,'ylabel');
+    set(zlab,'String',cptn,'FontSize',fsz);
+end;
+end;
 if nargin >4
 if isunix
     k = strfind(flnm, '/');
