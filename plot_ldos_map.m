@@ -19,7 +19,10 @@ axistype='arrows';
 axistype='lines';
 zGridPoint = 0;
 E = .0084;
-localLdos = loacalLdos;
+if exist('loacalLdos','var')
+    localLdos = loacalLdos;  
+    clear loacalLdos;
+end;
 a = 7.23;
 fntsz=16;
 %z = zGrid(41 + zGridPoint);

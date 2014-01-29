@@ -26,8 +26,9 @@ E = Greensenergy;
 % some double code with impurity_dos (please check, if making
 % modifications)
 if nargin < 2
-LDOSfileName0 = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
-LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita),'_e_',num2str(E)];
+    set_ldosfilename;
+%LDOSfileName0 = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
+%LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita),'_e_',num2str(E)];
 else
     % input of another filename also accepted
     LDOSfileName=ldosflnm
@@ -61,7 +62,7 @@ yGridRange = -RDiscrete(1)/2*yrange:RDiscrete(1)/2*(yrange+1);
 %fileName = ['supercell_local_ldos_FeSe_U_0955_Vimp_5','_N_',num2str(N),'_M_',num2str(M),'_E_',num2str(E),'_ita_',num2str(ita)];
 for zGridPoint = zGridRange
     disp(['Calculating ',num2str(zGridPoint), 'of (',num2str(zGridRange(1)),'..',num2str(zGridRange(numel(zGridRange))),')']);
-    loacalLdos = zeros(length(xGridRange),length(yGridRange));
+    localLdos = zeros(length(xGridRange),length(yGridRange));
     countLoopX = 0;
     for xGridPoint = xGridRange
         disp(['Calculating ',num2str(xGridPoint), 'of (',num2str(xGridRange(1)),'..',num2str(xGridRange(numel(xGridRange))),')']);
@@ -91,10 +92,10 @@ for zGridPoint = zGridRange
                     end
                 end
             end
-            loacalLdos(countLoopX,countLoopY) = (-1/pi)*imag(wAcc'*(latticeGreens*wAcc));
+            localLdos(countLoopX,countLoopY) = (-1/pi)*imag(wAcc'*(latticeGreens*wAcc));
         end
     end
     % output of result
-    save([LDOSfileName,'_z_',num2str(zGridPoint),diagonal_string],'loacalLdos','xGridRange','yGridRange');
+    ldosmapfilename=[LDOSfileName,'_z_',num2str(zGridPoint),diagonal_string];
+    save(ldosmapfilename,'localLdos','xGridRange','yGridRange');
 end
-
