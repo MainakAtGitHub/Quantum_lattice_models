@@ -19,7 +19,7 @@ k13=k(3,:)-k(1,:);
 k23=k(3,:)-k(2,:);
 % calculate the coeficients to approximate the function a over the triangle
 a0=a(1,:);%(k(1,1)*(k(2,2)*a(3)-a(2)*k(3,2))+k(1,2)*(a(2)*k(3,1)-k(2,1)*a(3))+a(1)*(k(2,1)*k(3,2)-k(2,2)*k(3,1)))/(k12(1)*k13(2)-k12(2)*k13(1));
-a1=-(k12(2)*(a(3)-a(1,:))-(a(2,:)-a(1,:))*k13(2))/(k12(1)*k13(2)-k12(2)*k13(1));
+a1=-(k12(2)*(a(3,:)-a(1,:))-(a(2,:)-a(1,:))*k13(2))/(k12(1)*k13(2)-k12(2)*k13(1));
 % debug code
 if sum(isnan(a1)>0)
     disp('a0 isnan');

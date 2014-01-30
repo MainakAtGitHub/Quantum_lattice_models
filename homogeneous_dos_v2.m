@@ -1,8 +1,10 @@
-function h=homogeneous_dos_v2(inputfile)
+function h=homogeneous_dos_v2(inputfile,calcSC)
 
 % Modified homogeneous_dos.m
 % takes \Delta_ij as input and constructs \Delta_i0.
-
+if ~exist('calcSC','var')
+    calcSC=true;
+end;
 if nargin <1
     % load relevant files
     TB_file='TB_hamiltonian_FeSe_2D.mat'
@@ -28,11 +30,10 @@ if (~exist('Vimp','var'))
 end;
 
 load(TB_file,'-mat');
-load(Gamma_file,'-mat');
-load(BdGfileName,'-mat');
-
-
 nOrbitals = size(TBparameters,1);
+if calcSC
+    load(Gamma_file,'-mat');
+    load(BdGfileName,'-mat');
 N = sqrt(size(delta,1)/nOrbitals);
 nUnitCellsDelta = size(latticeVectorsSC,1);
 deltaCenter = zeros(nOrbitals, nOrbitals, size(latticeVectorsSC,1));
@@ -43,6 +44,9 @@ for i = 1:nUnitCellsDelta
     deltaCenter(:,:,i) = delta(iRange, jRange);
 end
 delta = deltaCenter;
+else
+    mu=0;
+end;
 
 
 nUnitCells = size(latticeVector,1);
@@ -74,6 +78,7 @@ for iKx = 1:M
             kSpaceEigenValuesNormal(iKx, iKy, :) = eigValueKNormal;
             kSpaceEigenVectorsNormal(iKx, iKy, :,:) =  eigVectorKNormal;
             % diagonalizing for SC state DOS
+            if calcSC
             kSpaceGap = 0;
             for iUnitCellDelta = 1:nUnitCellsDelta
                 iLatticeVectorDelta = latticeVectorsSC(iUnitCellDelta,:);
@@ -85,6 +90,7 @@ for iKx = 1:M
             eigVectorK = (eigVector(:,sortingIndex))';
             kSpaceEigenValues(iKx, iKy, :) = eigValueK;
             kSpaceEigenVectors(iKx, iKy, :,:) =  eigVectorK;
+            end;
         end
         disp(iKx)
 end
@@ -96,7 +102,6 @@ end;
 disp('Computing normal state DOS......')
 greensDiagonalNormal = zeros(nOrbitals,nEnergyPoints);    
 if ~tetra
-countLoop = 0;
 for iEnergyPoint = 1:nEnergyPoints
     for jBand = 1:nOrbitals
         greensKSpaceNormal = 0;
@@ -112,8 +117,9 @@ for iEnergyPoint = 1:nEnergyPoints
         greensDiagonalNormal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*singular_double_quad(1./greensKSpaceNormal);
         %greensDiagonalNormal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*sum(sum(greensKSpaceNormal));
     end
-    countLoop = countLoop + 1;
-    disp(countLoop);
+    if  mod(iEnergyPoint,10)==0
+        disp(['Done ',num2str(iEnergyPoint), ' of ',num2str(nEnergyPoints)]);
+    end;
 end
 bandDOSNormal = -(1/pi)*imag(greensDiagonalNormal);
 else
@@ -136,7 +142,7 @@ bandDOSNormal = greensDiagonalNormal;
 end;
 totalDOSNormal = sum(bandDOSNormal);
 
-
+if calcSC
 % SC state dos
 disp('Computing SC state DOS......')
 eigValuesPlus = kSpaceEigenValues(:,:,(nOrbitals + 1):end); % choose positive branch of spectrum
@@ -190,7 +196,10 @@ end;
 totalDOS = sum(bandDOS);
 
 LDOSfileName0 = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
-
+else
+    LDOSfileName0 = [casestring,'normal_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
+    bandDOS=[];
+end;
 if ~tetra
     LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita)];
 else
