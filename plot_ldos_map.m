@@ -1,4 +1,4 @@
-function p=plot_ldos_map(ldosfile,scale,datarealmax,cut)
+function [figure1,datarealmax]=plot_ldos_map(ldosfile,scale,datarealmax,cut)
 if nargin < 2
     % default no sqrt scale!
     scale=''
@@ -12,7 +12,7 @@ if cut<0
     cut=-cut;
 end;
 % to be modified for different Wannier mesh
-RDiscrete = [40 40 80];
+RDiscrete = [40 40 80]; % default value, correct value should be in "ldosfile"
 load wannier_FeSe_4d_matrix_v2
 load(ldosfile,'-mat')
 axistype='arrows';
@@ -26,26 +26,10 @@ end;
 a = 7.23;
 fntsz=16;
 %z = zGrid(41 + zGridPoint);
-k = strfind(ldosfile, '_z_');
-ke = strfind(ldosfile, '_e_');
-zstring1=ldosfile(k+3:length(ldosfile));
-estring1=ldosfile(ke+3:k-1);
-% works for both the normal calculation and the diag calculation
-% should be programmed more sofisticated
-try
-    if zstring1(1)=='-'
-        zpos=-str2num(num2str(zstring1(2:sum(isstrprop(zstring1, 'digit'))+1)));
-    else
-                zpos=str2num(num2str(zstring1(1:sum(isstrprop(zstring1, 'digit')))));
-    end
-catch
-    zpos=input('could not find correct z-value, please enter: ','s');
-end;
-try
-        E=str2num(estring1);
-catch
-    E=input('could not find correct energy value, please enter: ','s');
-end;
+% take out numbers from filename
+[~, zpos, ~]=getnumber(ldosfile,'_z_');
+[~, E,~]=getnumber(ldosfile,'_e_');
+
 [X, Y] = meshgrid(xGridRange,yGridRange);
 % Create figure
 figure1= figure('Position',[200, 50, 400, 300],'PaperUnits','centimeter','PaperPosition',[4 1 12 9]);

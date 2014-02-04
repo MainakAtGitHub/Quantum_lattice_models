@@ -34,7 +34,14 @@ else
         read_input_file
     end;
 end;
-
+sqstring='';
+if ~(exist('singular_quad','var'))
+    singular_quad=true;
+end;
+if ~singular_quad
+        sqstring='sum';
+end;
+[dirprefix,~,~] = fileparts(inputfile);
 load(TB_file);
 % possibly not necessary?
 %latticeVectors = latticeVector;
@@ -86,7 +93,12 @@ if ~calcGreens
 energy = linspace(firstEnergy, lastEnergy, nEnergyPoints);
 E = repmat(energy,nBands,1);
 else
-    E=Greensenergy;
+    if ~(exist('Greensenergy','var'))
+        disp('No Greensenergy given, setting to 0.');
+        E=0;
+    else
+        E=Greensenergy;
+    end
 end;
 
 % orphan later
@@ -145,13 +157,15 @@ if (division==0 || part>division)
         % store the edges twice to calculate the whole area
         ukall=zeros(M+1,M+1,nDosSites,nBands);
         vkall=zeros(M+1,M+1,nDosSites,nBands);
-        Ekall=zeros(M+1,M+1,nDosSites,nBands);
+        Ekall=zeros(M+1,M+1,nBands);
     end;
 end;
-
+% split casestring from directories
+[~,cs1,cs2] = fileparts(casestring);
+casestring=[cs1,cs2];
 LDOSfileName0 = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
 % create some sub-directory to avoid many files in one directory
-dirstring=['data_',LDOSfileName0];
+dirstring=[dirprefix,'data_',LDOSfileName0];
 if division>0
     if ~(exist(dirstring,'dir'))
         mkdir(dirstring)
@@ -226,12 +240,12 @@ for index=startindex:endindex
 end
 if ~calcGreens
 if ~tetra
-    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita)];
+    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita),sqstring];
 else
     LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_tetra_corr']
 end;
 else
-    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita),'_e_',num2str(E)];
+    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita),'_e_',num2str(E),sqstring];
 end;
 if part>division
     if division>0
@@ -318,9 +332,12 @@ if part>division
         for iSite = 1: nDosSites
             disp(['Done ',num2str(iSite),' of ', num2str(nDosSites), 'nDosSites']);
             %if ~tetra
-                for iEnergyPoint = 1:nEnergyPoints            
-                    greensRealSpace(iSite, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*...
-                        singular_double_quad(1./squeeze(greensKSpace(:, :, iSite, iEnergyPoint)));
+                for iEnergyPoint = 1:nEnergyPoints
+                    if singular_quad
+                        greensRealSpace(iSite, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*singular_double_quad(1./squeeze(greensKSpace(:, :, iSite, iEnergyPoint)));
+                    else
+                        greensRealSpace(iSite, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*sum(sum(squeeze(greensKSpace(:, :, iSite, iEnergyPoint))));
+                    end;
                 end
         end
             %else
@@ -346,31 +363,41 @@ if part>division
         for i = 1:nBands
             disp(['Integrating Bands (',num2str(i),' ,:) of ', num2str(nBands),'.']);
             for j = 1:nBands
-                latticeGreens(i, j) = (1/(2*pi))^2*delKx*delKy*singular_double_quad(1./squeeze(latticeGreensK(:,:,i,j)));
+                if singular_quad
+                    latticeGreens(i, j) = (1/(2*pi))^2*delKx*delKy*singular_double_quad(1./squeeze(latticeGreensK(:,:,i,j)));
+                else
+                    latticeGreens(i, j) = (1/(2*pi))^2*delKx*delKy*sum(sum(squeeze(latticeGreensK(:,:,i,j))));
+                end
             end
         end
     end
         %else
-    if tetra
-            disp('...using 2D version of Tetrahedron method');
-            % set up a k-mesh that is suitable to cover the whole
-            % Brillouinzone with triangles
-            mesh1=[0:1:(M)]*2*pi/M;
-            % to do: kx,ky can be only a vector to simplify indexing
-            [kx,ky] = meshgrid(mesh1, mesh1);
-                % to do: vectorize the code!
-                for iband=1:nBands
-                    disp(['Band ',num2str(iband),' of ',num2str(nBands)]);
-                    E=Ekall(:,:,iband);
-                    a=ukall(:,:,:,iband).*conj(ukall(:,:,:,iband));
-                    greensRealSpace(:, :) = greensRealSpace(:, :) + f(E,a,kx,ky,energy);
-                    a=vkall(:,:,:,iband).*conj(vkall(:,:,:,iband));
-                    greensRealSpace(:, :) = greensRealSpace(:, :) + f(E,a,kx,ky,-energy);
-                end;
-    end;
+%     if tetra % obsolete (already above!)
+%             disp('...using 2D version of Tetrahedron method');
+%             % set up a k-mesh that is suitable to cover the whole
+%             % Brillouinzone with triangles
+%             mesh1=[0:1:(M)]*2*pi/M;
+%             % to do: kx,ky can be only a vector to simplify indexing
+%             [kx,ky] = meshgrid(mesh1, mesh1);
+%                 % to do: vectorize the code!
+%                 for iband=1:nBands
+%                     disp(['Band ',num2str(iband),' of ',num2str(nBands)]);
+%                     E=Ekall(:,:,iband);
+%                     a=ukall(:,:,:,iband).*conj(ukall(:,:,:,iband));
+%                     greensRealSpace(:, :) = greensRealSpace(:, :) + f(E,a,kx,ky,energy);
+%                     a=vkall(:,:,:,iband).*conj(vkall(:,:,:,iband));
+%                     greensRealSpace(:, :) = greensRealSpace(:, :) + f(E,a,kx,ky,-energy);
+%                 end;
+%     end;
       %  end;
    % end
     disp('Writing out LDOS ...');
+    if isempty(dirprefix)
+        outputfilename=[LDOSfileName];
+    else
+        outputfilename=[dirprefix,filesep,LDOSfileName];
+    end;
+
     if ~calcGreens
         if tetra
             ldos=greensRealSpace;
@@ -386,9 +413,9 @@ if part>division
         orbitalLDOSImpNNN = ldos(16:20,:);
         totalLDOSImpNNN = sum(orbitalLDOSImpNNN,1);%#ok<NASGU>
         % to be done: change filename to general string
-        save(LDOSfileName, 'energy', 'orbitalLDOSFarAway', 'orbitalLDOSImp', 'orbitalLDOSImpNN', 'orbitalLDOSImpNNN');
+        save(outputfilename, 'energy', 'orbitalLDOSFarAway', 'orbitalLDOSImp', 'orbitalLDOSImpNN', 'orbitalLDOSImpNNN');
     else
-        save(LDOSfileName,'latticeGreens','N','nOrbitals','E');
+        save(outputfilename,'latticeGreens','N','nOrbitals','E');
     end;
 end
 r=1;

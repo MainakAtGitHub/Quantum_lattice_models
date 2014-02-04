@@ -28,7 +28,12 @@ if (~exist('Vimp','var'))
         disp('Warning: finite impurity potential, not homogeneous case.')
     end;
 end;
-
+if ~(exist('singular_quad','var'))
+    singular_quad=true;
+end;
+if ~singular_quad
+        sqstring='sum';
+end;
 load(TB_file,'-mat');
 nOrbitals = size(TBparameters,1);
 if calcSC
@@ -114,8 +119,11 @@ for iEnergyPoint = 1:nEnergyPoints
             greensKSpaceIBand = ((abs(bn)).^2)./(E + 1i*ita - En);
             greensKSpaceNormal = greensKSpaceNormal + greensKSpaceIBand;
         end
-        greensDiagonalNormal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*singular_double_quad(1./greensKSpaceNormal);
-        %greensDiagonalNormal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*sum(sum(greensKSpaceNormal));
+        if singular_quad 
+            greensDiagonalNormal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*singular_double_quad(1./greensKSpaceNormal);
+        else
+            greensDiagonalNormal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*sum(sum(greensKSpaceNormal));
+        end;
     end
     if  mod(iEnergyPoint,10)==0
         disp(['Done ',num2str(iEnergyPoint), ' of ',num2str(nEnergyPoints)]);
@@ -165,11 +173,14 @@ for iEnergyPoint = 1:nEnergyPoints
             greensKSpaceIBand = ((abs(un)).^2)./(E + 1i*ita - En) + ((abs(vn)).^2)./(E + 1i*ita + En);
             greensKSpace = greensKSpace + greensKSpaceIBand;
         end
-        greensDiagonal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*singular_double_quad(1./greensKSpace);
-        %greensDiagonal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*sum(sum(greensKSpace));
+        if singular_quad
+            greensDiagonal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*singular_double_quad(1./greensKSpace);
+        else
+            greensDiagonal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*sum(sum(greensKSpace));
+        end;
     end
         countLoop = countLoop + 1;
-        disp(countLoop);
+                disp(['Done ',num2str(countLoop), ' of ',num2str(nEnergyPoints)]);
 end
 bandDOS = -(1/pi)*imag(greensDiagonal);
 
@@ -201,7 +212,7 @@ else
     bandDOS=[];
 end;
 if ~tetra
-    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita)];
+    LDOSfileName = [LDOSfileName0,sqstring, '_M_', num2str(M),'_ita_', num2str(ita)];
 else
     LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_tetra_corr1']
 end;

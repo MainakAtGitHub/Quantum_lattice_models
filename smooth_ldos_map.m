@@ -50,7 +50,7 @@ end;
 % smooth data
         disp(['smoothing...']);
 %[localldos3s,s] = smoothn(localldos3,smoothparameter);
-localldos3s=smooth_g(localldos3,smoothparameter);
+localldos3s=smooth_g(localldos3,smoothparameter,[0,0,0]);
 % write out data
 for z=1:sizeWannier(3)
     disp(['Writing out ',num2str(z), 'of ',num2str(sizeWannier(3))]);

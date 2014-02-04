@@ -44,9 +44,11 @@ end;
 %load('./calc/U_0955/LDOS_FeSe_Tom__Vimp_5_N_15_M_10_ita_0.001_e_-0.0084','-mat');
 %lattice_greens_supercell_FeSe_N_15_M_9_U_0955_Vimp_5_E_minPt0084.mat
 shift = [51 51 41];
-sizeWannier = [101 101 81];
+%sizeWannier = [101 101 81];
 RDiscrete = [40 40 80];
 load(wannier_filename,'-mat');
+szw=size(wannierValues);
+sizeWannier=szw(1:3);
 
 nBands = size(latticeGreens,1);
 N = sqrt(nBands/nOrbitals);
@@ -97,5 +99,6 @@ for zGridPoint = zGridRange
     end
     % output of result
     ldosmapfilename=[LDOSfileName,'_z_',num2str(zGridPoint),diagonal_string];
-    save(ldosmapfilename,'localLdos','xGridRange','yGridRange');
+    % save the output together with geometry information necessary to plot
+    save(ldosmapfilename,'localLdos','xGridRange','yGridRange','shift','sizeWannier','RDiscrete');
 end

@@ -38,14 +38,17 @@ if nargin < 2
         smoothenergy=0.002;
     end
 end
-
+sqstring='';
+if (exist('singular_quad','var'))
+    sqstring='sum';
+end;
 
 % special convention for homogeneous DOS
 M=N*M;
 LDOSfileName0 = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
 
 if ~tetra
-    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita)];
+    LDOSfileName = [LDOSfileName0,sqstring , '_M_', num2str(M),'_ita_', num2str(ita)];
 else
     LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_tetra_corr1']
 end;
@@ -140,6 +143,6 @@ legend show
 if tetra
     pdffile2=['/tmp/',inputfile,'_orbital_SC_tetra',num2str(smoothenergy),'.pdf']
 else
-    pdffile2=['/tmp/',inputfile,'_orbital_SC.pdf']
+    pdffile2=['/tmp/',inputfile,sqstring,'_orbital_SC.pdf']
 end
 print_pdf(pdffile2);
