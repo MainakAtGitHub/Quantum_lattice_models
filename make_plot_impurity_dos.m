@@ -47,7 +47,11 @@ end;
 orb={'orbital1','orbital2','orbital3','orbital4','orbital5','total'};
 fsz=14;
 % load input
-load(inputfile,'-mat')
+try
+    load(inputfile,'-mat')
+catch
+    load(inputfile)
+end;
 % some smoothing if necessary
 de=energy(2)-energy(1);
 smooth=floor(smoothenergy/de);
@@ -130,6 +134,26 @@ uistack(l2,'bottom')
 end;
 if isunix
     print_pdf(['/tmp/',inputfile,'_tot.pdf']);
+    if smoothenergy>0
+        peakdistance=ceil(20*smoothenergy/de);
+    else
+        peakdistance=20;
+    end;
+    energyrange=find((2*plotrange(1)<energy)+(2*plotrange(2)>energy)-1==1);
+    % identify some peaks and show the positions in the plot
+    [imppks,implocs]=findpeaks(sum(orbitalLDOSImp(:,energyrange)),'MINPEAKDISTANCE',peakdistance,'SORTSTR','descend','NPEAKS',40);
+    [NNpks,NNlocs]=findpeaks(sum(orbitalLDOSImpNN(:,energyrange)),'MINPEAKDISTANCE',peakdistance,'SORTSTR','descend','NPEAKS',40);
+    [NNNpks,NNNlocs]=findpeaks(sum(orbitalLDOSImpNNN(:,energyrange)),'MINPEAKDISTANCE',peakdistance,'SORTSTR','descend','NPEAKS',40);
+    [farpks,farlocs]=findpeaks(sum(orbitalLDOSFarAway(:,energyrange)),'MINPEAKDISTANCE',peakdistance,'SORTSTR','descend','NPEAKS',40);
+    hold on
+    energyw=energy(energyrange);
+    plot(energyw(implocs),imppks,'k^','markerfacecolor',[1 0 0])
+    plot(energyw(NNlocs),NNpks,'kv','markerfacecolor',coloruf1)
+    plot(energyw(NNNlocs),NNNpks,'k*','markerfacecolor',coloruf2)
+    plot(energyw(farlocs),farpks,'ko','markerfacecolor',[0 1 0])
+    xlim(2*plotrange);
+    f={[energyw(implocs);imppks],[energyw(NNlocs);NNpks],[energyw(NNNlocs);NNNpks],[energyw(farlocs);farpks]};
+    % give back the peak positions of the 5 largest peaks
 end;
 
 

@@ -6,6 +6,7 @@ function I = singular_quad(B)
 % OUTPUT:   Integral(1/B) lim: p to q
 % v1.1 3/26/2012
 % Ref: Tight binding models for amorphous systems ; M L Roth
+% http://prb.aps.org/abstract/PRB/v7/i10/p4321_1
 
 
 % M = round((length(B)-1)/2);

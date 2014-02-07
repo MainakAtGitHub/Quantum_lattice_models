@@ -155,7 +155,7 @@ if isunix
     if ~showcolorbar
                     set(cb,'visible','off');
     end;
-    %print_pdf(['/tmp/',filename,extension,'cut',num2str(N),'.pdf'])
-    print_eps(['/tmp/',filename,extension,'cut',num2str(N),'.eps'])
+    print_pdf(['/tmp/',filename,extension,'cut',num2str(N),'.pdf'])
+    %print_eps(['/tmp/',filename,extension,'cut',num2str(N),'.eps'])
     
 end;
