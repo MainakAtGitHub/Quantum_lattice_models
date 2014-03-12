@@ -47,13 +47,18 @@ end;
 % input files
 load(TB_file)
 % any reason for these double variables?
-latticeVectors = latticeVector;
+% latticeVectors = latticeVector;
 load(Gamma_file,'-mat')
 % default: same input as output filename, can be removed later
-if ~(exist('input_fileName','var'))
-    input_fileName=BdGfileName;
+%if ~(exist('input_fileName','var'))
+%    input_fileName=BdGfileName;
+%end;
+load(BdGfileName,'-mat');
+if ~exist('sublattice','var')
+    % sublattice= {-1,0,1} to define whether there are two sites per
+    % elementary cell and which site is first
+    sublattice=1;
 end;
-load(input_fileName,'-mat');
 % not really necessary?
 %deltaH = delta; 
 %muH = mu;
@@ -61,44 +66,67 @@ load(input_fileName,'-mat');
 
 % BdG matrix blocks
 nBands = N^2*nOrbitals;
-H0 = lattice_translation(N, TBparameters, latticeVectors);
+H0 = lattice_translation(N, TBparameters, latticeVector);
 SCInteractionMatrix = lattice_translation(N, Gamma, latticeVectorsSC);
 Himp = zeros(size(H0));
 impCell = [ceil(N/2) ceil(N/2)];
 [iRange, jRange] = find_lattice_translation_index(N, nOrbitals, impCell, impCell);
-% allow for different potentials
-if numel(Vimp)==1
-    impPotential = Vimp*eye(nOrbitals/2, nOrbitals/2);
-else
-    impPotential = diag(Vimp);
-end;
-% debug
-Himp(iRange, jRange) = [impPotential zeros(nOrbitals/2); zeros(nOrbitals/2) zeros(nOrbitals/2)];
-
-% Indices of sites NN and NNN to impurity
 impNNCell = impCell + [0 1];
 [iImpNNRange, jImpNNRange] = find_lattice_translation_index(N, nOrbitals, impNNCell, impCell);
-iNNsiteRange = iImpNNRange(1:nOrbitals/2);
-jNNsiteRange = jImpNNRange(1:nOrbitals/2);
-iNNNsiteRange = iImpNNRange((1+nOrbitals/2):nOrbitals);
-jNNNsiteRange = jNNsiteRange;
 
+switch sublattice
+    case 1
+        % default with first iron in right upper corner (FeSe)
+        % allow for different potentials
+        if numel(Vimp)==1
+            impPotential = Vimp*eye(nOrbitals/2, nOrbitals/2);
+        else
+            impPotential = diag(Vimp);
+        end;
+        % to do: setup correct impurity potential
+        Himp(iRange, jRange) = [impPotential zeros(nOrbitals/2); zeros(nOrbitals/2) zeros(nOrbitals/2)];
+        
+        % Indices of sites NN and NNN to impurity
+        iNNsiteRange = iImpNNRange(1:nOrbitals/2);
+        jNNsiteRange = jImpNNRange(1:nOrbitals/2);
+        iNNNsiteRange = iImpNNRange((1+nOrbitals/2):nOrbitals);
+        jNNNsiteRange = jNNsiteRange;
+    case -1
+        % to be implemented
+    case 0
+        % no sublattice (5 orbital)
+        if numel(Vimp)==1
+            Himp(iRange, jRange) = Vimp*eye(nOrbitals, nOrbitals);
+        else
+            Himp(iRange, jRange) = diag(Vimp);
+        end;    
+        iNNsiteRange = iImpNNRange(1:nOrbitals);
+        jNNsiteRange = jImpNNRange(1:nOrbitals);
+        impNNNCell = impCell + [1 1];
+        [iImpNNNRange, jImpNNNRange] = find_lattice_translation_index(N, nOrbitals, impNNNCell, impCell);
+        iNNNsiteRange = iImpNNNRange(1:nOrbitals);
+        jNNNsiteRange = jImpNNNRange(1:nOrbitals);
+end;
 %Self consistency iteration
 
 % % initial guess
 if ~(exist('nUp','var'))
-    nUp = .6*ones(nBands,1);
+    fillup=0.5*n0/nOrbitals;
+    nUp = fillup*ones(nBands,1);
 end;
 if ~(exist('nDown','var'))
-    nDown = .6*ones(nBands,1);
+    filldown=0.5*n0/nOrbitals;
+    nDown = filldown*ones(nBands,1);
 end;
 % setup of some "growing" variables
-if ~(exist('nUpAcc','var'))
- nUpAcc = [];
-end;
-if ~(exist('nDownAcc','var'))
- nDownAcc = [];
-end;
+
+% not needed for long time, remove
+%if ~(exist('nUpAcc','var'))
+% nUpAcc = [];
+%end;
+%if ~(exist('nDownAcc','var'))
+% nDownAcc = [];
+%end;
 if ~(exist('deltaMaxAcc','var'))
  deltaMaxAcc = [];
 end;
@@ -118,7 +146,7 @@ end;
 if ~(exist('mixdelta','var'))
     mixdelta=true;
 end;
-% writ out a Warning
+% write out a warning
 if ~mixdelta
     disp('Warning: Not mixing delta, only converging nUp, nDown, mu.');
 end;
@@ -128,7 +156,7 @@ H = H0 + Himp;
 % BdG iterations
 for i = 1:maxLoop
     KE = H - mu*eye(nBands);
-    BdGMatrix = [KE -delta; -delta' -KE];
+     BdGMatrix = [KE -delta; -delta' -KE];
     [eVector eValue] = eig(BdGMatrix);
     % save some memory for following commands (here we need to save three
     % full arrays such that we get in MB:
@@ -175,7 +203,7 @@ for i = 1:maxLoop
     deltaMinAcc = [deltaMinAcc; deltaMaxNNN]; 
     muAcc = [muAcc; mu];
     deltaDiffAcc = [deltaDiffAcc; deltaDiff];
-    disp([num2str(i),' ndiff= ',num2str(nDiff), ' deltaDiff= ',num2str( deltaDiff)]);  
+    disp([num2str(i),' ndiff= ',num2str(nDiff), ' deltaDiff= ',num2str( deltaDiff), ' deltaMaxNN= ',num2str(deltaMaxNN)]);  
     save(BdGfileName,'nAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','muAcc','mu', 'deltaTol', 'nTol','nUp','nDown');
 end
 if i < maxLoop
@@ -190,8 +218,8 @@ end
 figure;
 subplot(2,2,1); plot(nAcc); title('nAcc'); axis('square');
 subplot(2,2,2); plot(muAcc); title('mu'); axis('square');
-subplot(2,2,3); plot(deltaMaxAcc); title('deltaMax'); axis('square');
-subplot(2,2,4); plot(deltaMinAcc); title('deltaMin'); axis('square');
+subplot(2,2,3); plot(deltaMaxAcc); title('deltaMaxNN'); axis('square');
+subplot(2,2,4); plot(deltaMinAcc); title('deltaMaxNNN'); axis('square');
 figure; plot(deltaDiffAcc); title('Norm deltaDiff'); axis('square');
 
 

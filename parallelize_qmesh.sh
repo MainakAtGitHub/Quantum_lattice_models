@@ -65,6 +65,7 @@ then
 				# check for available queue for current user
 				numdfg=`sinfo | grep dfg | wc -l`
 				if [ "$numdfg" -eq "0" ]
+				then
 					echo "#SBATCH -p housewives" >> ${batchfile}
 				else
 					echo "#SBATCH -p dfg" >> ${batchfile}

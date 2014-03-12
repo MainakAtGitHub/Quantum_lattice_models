@@ -44,7 +44,7 @@ if (~exist('plotrange','var'))
     plotrange=[-0.2 0.2];
 end;
 
-orb={'orbital1','orbital2','orbital3','orbital4','orbital5','total'};
+
 fsz=14;
 % load input
 try
@@ -52,6 +52,11 @@ try
 catch
     load(inputfile)
 end;
+szdata=size(orbitalLDOSFarAway);
+nOrbitals=szdata(1);
+orb={'orbital1','orbital2','orbital3','orbital4','orbital5','total'};
+orb={'d_{z^2}','d_{x^2-y^2}','d_{yz}','d_{xz}','d_{xy}','total'}; % labels for Tom's FeSe model
+orb={orb{1:nOrbitals},orb{6}};
 % some smoothing if necessary
 de=energy(2)-energy(1);
 smooth=floor(smoothenergy/de);
@@ -67,7 +72,7 @@ orbitalLDOSImpNNN(orbitalLDOSImpNNN<0)=0;
 % DOS far away (without impurity)
 figure1=figure('Position',[200, 50, 500, 300]);
 set(0,'DefaultAxesFontSize',fsz)
-plot1=plot(energy,[orbitalLDOSFarAway;sum(orbitalLDOSFarAway)]);
+plot1=plot(energy,[orbitalLDOSFarAway;sum(orbitalLDOSFarAway,1)]);
 setlabels(plot1,orb,plotrange);
 
 k = findstr(inputfile, '/');
@@ -82,7 +87,7 @@ end;
 % impurity DOS
 figure2=figure('Position',[200, 50, 500, 300]);
 set(0,'DefaultAxesFontSize',fsz)
-plot2=plot(energy,[orbitalLDOSImp;sum(orbitalLDOSImp)]);
+plot2=plot(energy,[orbitalLDOSImp;sum(orbitalLDOSImp,1)]);
 setlabels(plot2,orb,plotrange);
 if isunix
     print_pdf(['/tmp/',inputfile,'_Imp.pdf']);
@@ -91,7 +96,7 @@ end;
 % NN dos
 figure3=figure('Position',[200, 50, 500, 300]);
 set(0,'DefaultAxesFontSize',fsz)
-plot3=plot(energy,[orbitalLDOSImpNN;sum(orbitalLDOSImpNN)]);
+plot3=plot(energy,[orbitalLDOSImpNN;sum(orbitalLDOSImpNN,1)]);
 setlabels(plot3,orb,plotrange);
 if isunix
     print_pdf(['/tmp/',inputfile,'_Imp_NN.pdf']);
@@ -100,7 +105,7 @@ end;
 % NNN dos
 figure4=figure('Position',[200, 50, 500, 300]);
 set(0,'DefaultAxesFontSize',fsz)
-plot4=plot(energy,[orbitalLDOSImpNNN;sum(orbitalLDOSImpNNN)]);
+plot4=plot(energy,[orbitalLDOSImpNNN;sum(orbitalLDOSImpNNN,1)]);
 setlabels(plot4,orb,plotrange);
 if isunix
     print_pdf(['/tmp/',inputfile,'_Imp_NNN.pdf']);
@@ -111,7 +116,7 @@ end;
 figure5= figure('Position',[150, 100, 500, 300]);
 set(0,'DefaultAxesFontSize',fsz)
 
-plot5=plot(energy,[sum(orbitalLDOSFarAway);sum(orbitalLDOSImp);sum(orbitalLDOSImpNN);sum(orbitalLDOSImpNNN)]);
+plot5=plot(energy,[sum(orbitalLDOSFarAway,1);sum(orbitalLDOSImp,1);sum(orbitalLDOSImpNN,1);sum(orbitalLDOSImpNNN,1)]);
 set(plot5(1),'DisplayName','tot far away','LineStyle','-','LineWidth',2,'Color',[0 0 0]);
 set(plot5(2),'DisplayName','tot impurity','LineStyle','--','LineWidth',2,'Color',[0 0 0]);
 set(plot5(3),'DisplayName','tot NN','LineStyle','-','LineWidth',2,'Color',coloruf1);
@@ -141,10 +146,10 @@ if isunix
     end;
     energyrange=find((2*plotrange(1)<energy)+(2*plotrange(2)>energy)-1==1);
     % identify some peaks and show the positions in the plot
-    [imppks,implocs]=findpeaks(sum(orbitalLDOSImp(:,energyrange)),'MINPEAKDISTANCE',peakdistance,'SORTSTR','descend','NPEAKS',40);
-    [NNpks,NNlocs]=findpeaks(sum(orbitalLDOSImpNN(:,energyrange)),'MINPEAKDISTANCE',peakdistance,'SORTSTR','descend','NPEAKS',40);
-    [NNNpks,NNNlocs]=findpeaks(sum(orbitalLDOSImpNNN(:,energyrange)),'MINPEAKDISTANCE',peakdistance,'SORTSTR','descend','NPEAKS',40);
-    [farpks,farlocs]=findpeaks(sum(orbitalLDOSFarAway(:,energyrange)),'MINPEAKDISTANCE',peakdistance,'SORTSTR','descend','NPEAKS',40);
+    [imppks,implocs]=findpeaks(sum(orbitalLDOSImp(:,energyrange),1),'MINPEAKDISTANCE',peakdistance,'SORTSTR','descend','NPEAKS',40);
+    [NNpks,NNlocs]=findpeaks(sum(orbitalLDOSImpNN(:,energyrange),1),'MINPEAKDISTANCE',peakdistance,'SORTSTR','descend','NPEAKS',40);
+    [NNNpks,NNNlocs]=findpeaks(sum(orbitalLDOSImpNNN(:,energyrange),1),'MINPEAKDISTANCE',peakdistance,'SORTSTR','descend','NPEAKS',40);
+    [farpks,farlocs]=findpeaks(sum(orbitalLDOSFarAway(:,energyrange),1),'MINPEAKDISTANCE',peakdistance,'SORTSTR','descend','NPEAKS',40);
     hold on
     energyw=energy(energyrange);
     plot(energyw(implocs),imppks,'k^','markerfacecolor',[1 0 0])
@@ -159,11 +164,11 @@ end;
 
 %peak detection plot 
 figure6= figure('Position',[200, 50, 500, 300]);
-data=[sum(orbitalLDOSImpNNN)./sum(orbitalLDOSImpNN);1./sum(orbitalLDOSImpNNN).*sum(orbitalLDOSImpNN)];
+data=[sum(orbitalLDOSImpNNN)./sum(orbitalLDOSImpNN,1);1./sum(orbitalLDOSImpNNN,1).*sum(orbitalLDOSImpNN,1)];
 plot6=plot(energy,data);
 set(plot6(1),'DisplayName','NNN/NN','Color',coloruf2);
 set(plot6(2),'DisplayName','NN/NNN','Color',coloruf1);
-xlim(2*plotrange);
+xlim(plotrange);
 ylim([0,max(data(:))]);
 xlabel({'\omega'});
 
@@ -180,7 +185,8 @@ end;
 end
 
 function setlabels(plot,orb,range)
-for i=1:6
+szorb=size(orb,2);
+for i=1:szorb
 set(plot(i),'DisplayName',orb{i});
 end;
 xlim(range);

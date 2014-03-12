@@ -1,4 +1,4 @@
-function f=plot_real_space(inputfile,scale,tickx,nOrbitals)
+function f=plot_real_space(inputfile,scale,tickx,nOrbitals,sublattice)
 if nargin < 1
     inputfile='BdG_homogeneous_FeSe_Toms_BS_6Dec13_GammaCut_3_N_9.mat'
 end;
@@ -10,6 +10,9 @@ if nargin < 3
 end;
 if nargin <4
     nOrbitals=10;
+end;
+if nargin <5
+    sublattice=1;
 end;
 fsz=20;
 load(inputfile,'-mat'); % BdG_homogeneous_FeSe_Toms_BS_6Dec13_GammaCut_3_N_9.mat
@@ -48,6 +51,7 @@ deltaMaxNNN = max(max(abs(delta(iNNNsiteRange, jNNNsiteRange))));
 f=[deltaOnsite, deltaMaxNN, deltaMaxNNN];
 if ~isempty(scale)
 delta = deltaCenter;
+if ~sublattice==0
 %convert 2Fe to 1Fe cell
 latticeVectors1Fe = [];
 delta1Fe = [];
@@ -56,10 +60,14 @@ for i = -(ceil(N/2)-1):(ceil(N/2)-1)
     for j = -(ceil(N/2)-1):(ceil(N/2)-1)
         count = count + 1;
         delta2Fe = delta(:,:,count);
-        % FeSe
-         latticeVectors1Fe = [latticeVectors1Fe; i+j j-i; i+j j-i+1];
-        % LiFeAs (not fixed yet)
-        %latticeVectors1Fe = [latticeVectors1Fe; -j+i i+j; i-j-1 i+j];        
+        switch sublattice
+            case 1
+                % FeSe
+                latticeVectors1Fe = [latticeVectors1Fe; i+j j-i; i+j j-i+1];
+            case -1
+                % LiFeAs (not fixed yet)
+                latticeVectors1Fe = [latticeVectors1Fe; i+j j-i; i+j j-i-1];        
+        end;
         delta1Fe = [delta1Fe delta2Fe(1:nOrbitals/2,:)];
     end
 end
@@ -67,8 +75,15 @@ end
 % reshape delta
 delta1Fe =  reshape(delta1Fe,nOrbitals/2, nOrbitals/2, 2*N^2);
 delta2Plot = zeros(nOrbitals/2*N, nOrbitals/2*N);
-for iOrbital = 1:nOrbitals/2
-    for jOrbital = 1:nOrbitals/2
+effOrbitals=nOrbitals/2;
+else
+    delta1Fe=reshape(delta,nOrbitals,nOrbitals,N^2);
+    delta2Plot = zeros(nOrbitals*N, nOrbitals*N);
+    effOrbitals=nOrbitals;
+    latticeVectors1Fe=latticeVectorsDelta;
+end
+for iOrbital = 1:effOrbitals
+    for jOrbital = 1:effOrbitals
         deltaBlock = zeros(N,N);
         for i = 1:N
             for j = 1:N
@@ -84,7 +99,14 @@ end
 delta2Plot = 1000*delta2Plot;
 %r=realspaceplot(data2plot,numl,tickx,flnm,scale)
 cptn='\Delta_{RR''}^{\mu\nu} [meV]';
-[~,h]=realspaceplot(delta2Plot,N,tickx,inputfile,scale,cptn);
+[~,h,stringp]=realspaceplot(delta2Plot,N,tickx,inputfile,scale,cptn);
+if isunix
+    % save delta in format as Gamma
+    nup1=nUp(1:nOrbitals);
+    ndown1=nDown(1:nOrbitals);
+    strng=[stringp(1:length(stringp)-4),'_delta_hom.mat',]
+    save(strng,'delta1Fe','latticeVectors1Fe','nup1','ndown1','mu');
+end;
 end
 % figure1=figure
 % 

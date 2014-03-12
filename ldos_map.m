@@ -4,6 +4,8 @@ function r=ldos_map(inputfile,ldosflnm)
 %nOrbitals = 10;
 %M = 5;
 %ita = .001;
+% default for FeSe
+sublattice=1;
 read_input_file=inputfile;
 read_input;
 read_input_file
@@ -57,9 +59,15 @@ N = sqrt(nBands/nOrbitals);
 % Wannier vector
 yrange=xrange;
 %xGridRange = -80:60;
-xGridRange = -RDiscrete(1)/2*(xrange+1):RDiscrete(1)/2*xrange;
-%yGridRange = -60:80;
-yGridRange = -RDiscrete(1)/2*yrange:RDiscrete(1)/2*(yrange+1);
+if sublattice==1
+    xGridRange = -RDiscrete(1)/2*(xrange+1):RDiscrete(1)/2*xrange;
+    %yGridRange = -60:80;
+    yGridRange = -RDiscrete(2)/2*yrange:RDiscrete(2)/2*(yrange+1);
+elseif sublattice==0
+    xGridRange = -RDiscrete(1)*xrange:RDiscrete(1)*xrange;
+    %yGridRange = -60:80;
+    yGridRange = -RDiscrete(2)*yrange:RDiscrete(2)*yrange;
+end;
 
 %fileName = ['supercell_local_ldos_FeSe_U_0955_Vimp_5','_N_',num2str(N),'_M_',num2str(M),'_E_',num2str(E),'_ita_',num2str(ita)];
 for zGridPoint = zGridRange
@@ -100,5 +108,5 @@ for zGridPoint = zGridRange
     % output of result
     ldosmapfilename=[LDOSfileName,'_z_',num2str(zGridPoint),diagonal_string];
     % save the output together with geometry information necessary to plot
-    save(ldosmapfilename,'localLdos','xGridRange','yGridRange','shift','sizeWannier','RDiscrete');
+    save(ldosmapfilename,'localLdos','xGridRange','yGridRange','shift','sizeWannier','RDiscrete','sublattice');
 end

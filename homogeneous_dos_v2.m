@@ -33,6 +33,8 @@ if ~(exist('singular_quad','var'))
 end;
 if ~singular_quad
         sqstring='sum';
+else
+    sqstring='';
 end;
 load(TB_file,'-mat');
 nOrbitals = size(TBparameters,1);
@@ -97,7 +99,9 @@ for iKx = 1:M
             kSpaceEigenVectors(iKx, iKy, :,:) =  eigVectorK;
             end;
         end
-        disp(iKx)
+        if  mod(iKx,10)==0   
+            disp(['Done ',num2str(iKx), ' of ',num2str(M),' kx values.']);
+        end;
 end
 if (~exist('tetra','var'))
     tetra=false;
@@ -179,8 +183,10 @@ for iEnergyPoint = 1:nEnergyPoints
             greensDiagonal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*sum(sum(greensKSpace));
         end;
     end
-        countLoop = countLoop + 1;
-                disp(['Done ',num2str(countLoop), ' of ',num2str(nEnergyPoints)]);
+        countLoop = countLoop + 1; 
+        if  mod(iEnergyPoint,10)==0
+            disp(['Done ',num2str(countLoop), ' of ',num2str(nEnergyPoints)]);
+        end;
 end
 bandDOS = -(1/pi)*imag(greensDiagonal);
 

@@ -1,6 +1,11 @@
-function p=process_Gamma(flnm)
+function p=process_Gamma(flnm,nOrbitals,sublattice)
 % read Gamma from file
-nOrbitals = 10;
+if nargin <2
+    nOrbitals = 10;
+end;
+if nargin <3
+    sublattice=1;
+end;
 nSites = 11;
 list_plane_small_l=load('list_plane_small_l.csv');
 if nargin < 1
@@ -23,11 +28,15 @@ end
 
 latticeVectors = list_plane_small_l(:,1:2);
 Gamma = reshape(GammaMixed, nOrbitals, nOrbitals, nSites^2);
-
-GammaNewOrder = Gamma;
-GammaNewOrder(1:5,6:10,:) = Gamma(6:10,1:5,:);
-GammaNewOrder(6:10,1:5,:) = Gamma(1:5,6:10,:);
-Gamma = GammaNewOrder;
+if abs(sublattice)>0
+    orb2=nOrbitals/2;
+    GammaNewOrder = Gamma;
+    GammaNewOrder(1:orb2,orb2+1:nOrbitals,:) = Gamma(orb2+1:nOrbitals,1:orb2,:);
+    GammaNewOrder(orb2+1:nOrbitals,1:orb2,:) = Gamma(1:orb2,orb2+1:nOrbitals,:);
+    Gamma = GammaNewOrder;
+else 
+    orb2=nOrbitals;
+end;
 
 % saving
 
@@ -47,13 +56,14 @@ for i = -cut:cut
         GammaCut(:,:,count) = Gamma(:,:,((latticeVectorsSC(:,1) == i) & (latticeVectorsSC(:,2) == j)));
         % special care for the edges, assume certain relation of Fe1 and
         % Fe2 in elementary cell.
+        if abs(sublattice)>0
         if ((i==-cut) | (j==cut))
             GammaCut(1:nOrbitals/2,nOrbitals/2+1:nOrbitals,count)=zeros(nOrbitals/2);
         end;
         if ((i==cut) | (j==-cut))
             GammaCut(nOrbitals/2+1:nOrbitals,1:nOrbitals/2,count)=zeros(nOrbitals/2);
         end
-
+        end;
     end
 end
 Gammatemp=Gamma;
@@ -67,6 +77,7 @@ latticeVectorsSC=latticeVectorsSCtemp;
 % plotting
 %convert 2Fe to 1Fe
 N = nSites;
+if abs(sublattice) >0
 centerCell = [ceil(N/2) ceil(N/2)];
 latticeVectors1Fe = [];%zeros(2,2*N^2);
 Gamma1Fe = [];%zeros(nOrbitals, nOrbitals, 2*N^2);
@@ -75,16 +86,25 @@ for i = -(ceil(N/2)-1):(ceil(N/2)-1)
     for j = -(ceil(N/2)-1):(ceil(N/2)-1)
         count = count + 1;
         Gamma2Fe = Gamma(:,:,count);
-        latticeVectors1Fe = [latticeVectors1Fe; i+j j-i; i+j j-i+1];     
+        switch sublattice
+            case 1
+                latticeVectors1Fe = [latticeVectors1Fe; i+j j-i; i+j j-i+1];     
+            case -1
+                latticeVectors1Fe = [latticeVectors1Fe; i+j j-i; i+j j-i-1];     
+        end;                
         Gamma1Fe = [Gamma1Fe Gamma2Fe(1:nOrbitals/2,:)];
     end
 end
 Gamma1Fe =  reshape(Gamma1Fe,nOrbitals/2, nOrbitals/2, 2*N^2);
+else
+    Gamma1Fe=Gamma;
+    latticeVectors1Fe=latticeVectorsSC;
+end;
 % remove on site potentials
 Gamma1Fe(:,:,(latticeVectors1Fe(:,1) == 0) & (latticeVectors1Fe(:,2) == 0))= 0;
-Gamma2Plot = zeros(nOrbitals/2*N, nOrbitals/2*N);
-for iOrbital = 1:nOrbitals/2
-    for jOrbital = 1:nOrbitals/2
+Gamma2Plot = zeros(orb2*N, orb2*N);
+for iOrbital = 1:orb2
+    for jOrbital = 1:orb2
         GammaBlock = zeros(N,N);
         for i = 1:N
             for j = 1:N
@@ -96,7 +116,6 @@ for iOrbital = 1:nOrbitals/2
         Gamma2Plot(((iOrbital-1)*N + 1):iOrbital*N, ((jOrbital-1)*N + 1):jOrbital*N ) = GammaBlock;
     end
 end
-
 %numl = N;
 tickx={'$d_{z^2}$','$d_{x^2-y^2}$','$d_{yz}$','$d_{xz}$','$d_{xy}$'}; % orbitals order
 % global colorred

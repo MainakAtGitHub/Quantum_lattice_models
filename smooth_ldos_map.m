@@ -56,5 +56,5 @@ for z=1:sizeWannier(3)
     disp(['Writing out ',num2str(z), 'of ',num2str(sizeWannier(3))]);
     ldosmapfilename=[LDOSfileName,'_z_',num2str(z-(sizeWannier(3)+1)/2),diagonal_string,'smooth'];
     localLdos=localldos3s(:,:,z);
-    save(ldosmapfilename,'localLdos','xGridRange','yGridRange');
+    save(ldosmapfilename,'localLdos','xGridRange','yGridRange','shift','sizeWannier','RDiscrete','sublattice');
 end;

@@ -1,10 +1,10 @@
 function p=plot_BdG_impurity_v3(inputfile)
 load(inputfile,'-mat');
 fig1=figure;
-subplot(2,2,1); plot(nAcc); title('nAcc'); axis('square');
-subplot(2,2,2); plot(muAcc); title('mu'); axis('square');
-subplot(2,2,3); plot(abs(deltaMaxAcc)); title('deltaMax'); axis('square');
-subplot(2,2,4); plot(abs(deltaMinAcc)); title('deltaMin'); axis('square');
+subplot(2,2,1); plot(nAcc); title('nAcc');% axis('square');
+subplot(2,2,2); plot(muAcc); title('mu');% axis('square');
+subplot(2,2,3); plot(abs(deltaMaxAcc)); title('max(deltaNN)'); %axis('square');
+subplot(2,2,4); plot(abs(deltaMinAcc)); title('max(deltaNNN)'); %axis('square');
 
 fig2=figure;% plot(deltaDiffAcc); title('Norm deltaDiff'); axis('square');
 % Create semilogy

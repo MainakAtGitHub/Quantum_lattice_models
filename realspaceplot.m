@@ -1,4 +1,4 @@
-function [figure1,h]=realspaceplot(data2plot,numl,tickx,flnm,scale,cptn)
+function [figure1,h,stringp]=realspaceplot(data2plot,numl,tickx,flnm,scale,cptn)
 if nargin < 4
     scale='s';
 end;

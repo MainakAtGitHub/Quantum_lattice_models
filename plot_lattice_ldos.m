@@ -3,7 +3,7 @@ if nargin < 1
     ldosfile='lattice_greens_supercell_FeSe_N_15_M_9_U_0955_Vimp_5_E_minPt0084.mat';
 end;
 % input
-lattice=true;
+lattice=false;
 bluecolor=true;
 fsz=20;
 set(0,'DefaultAxesFontSize',fsz)
@@ -12,10 +12,11 @@ load(ldosfile,'-mat')
 if ~(exist('N','var'))
     N = 11;
 end;
+xylabels=true;
 if nargin <2
     plotN=N;
+    xylabels=false;
 end;
-xylabels=true;
 if plotN<0
     plotN=-plotN;
     xylabels=false;
@@ -29,6 +30,9 @@ end;
 if ~(exist('nOrbitals','var'))
     nOrbitals = 10;
 end;
+if ~(exist('sublattice','var'))
+    sublattice = 0;
+end;
 
 
 % total LDOS at Fe sites
@@ -36,6 +40,7 @@ latticeGreensDiag = diag(latticeGreens);
 ldos = (-1/pi)*imag(reshape(latticeGreensDiag,nOrbitals*N,N));
 Fe1LDOS = zeros(N,N);
 Fe2LDOS = zeros(N,N);
+if abs(sublattice)>0
 for i = 1:N
     Fe1LDOS(i,:) = sum(ldos((i-1)*nOrbitals + (1:nOrbitals/2),:),1);
     Fe2LDOS(i,:) = sum(ldos((i-1)*nOrbitals + ((nOrbitals/2 + 1):nOrbitals),:),1);
@@ -51,6 +56,9 @@ for i=1:(n-1)
     ldos2plot = ldos2plot + diag(Fe1LDOS((i+1):(N-i),n+i), 2*i) + diag(Fe1LDOS((i+1):(N-i),n-i), -2*i) + ....
     diag(Fe2LDOS(i:(N-i),n+i), 2*i-1) + diag(Fe2LDOS(i:(N-i),n-i+1), -(2*i-1));
 end
+else
+    ldos2plot=ldos;
+end;
 
 figure1=figure;
 axes1 = axes('Parent',figure1,'YDir','reverse',...
@@ -65,7 +73,14 @@ pcolorplot=false;
 cptn='LDOS [1/eV]';
 % zoom the figure to show only plotN points
 diffN=N-plotN;
-ldos2plot=ldos2plot(1+diffN/2:N-diffN/2,1+diffN/2:N-diffN/2);
+if sublattice==1
+    ldos2plot=ldos2plot(1+diffN/2:N-diffN/2,1+diffN/2:N-diffN/2);
+elseif sublattice==-1
+    % not correct yet (to be done)
+    ldos2plot=ldos2plot(-1+diffN/2:N-diffN/2,-1+diffN/2:N-diffN/2);
+else
+    ldos2plot=ldos2plot(diffN/2+1:N-diffN/2,diffN/2+1:N-diffN/2);
+end
 N=plotN;
 n = ceil(N/2);
 showcolorbar=true;

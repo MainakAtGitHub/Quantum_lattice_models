@@ -42,6 +42,9 @@ if ~singular_quad
         sqstring='sum';
 end;
 [dirprefix,~,~] = fileparts(inputfile);
+if ~isempty(dirprefix)
+    dirprefix=[dirprefix,filesep]
+end;
 load(TB_file);
 % possibly not necessary?
 %latticeVectors = latticeVector;
@@ -64,12 +67,25 @@ farAwayCell = [1 1];
 impCell = [ceil(N/2) ceil(N/2)];
 impNNCell = impCell + [0 1];
 if ~calcGreens
-    farAwaySiteIndex = ((farAwayCell(1)-1)*N + farAwayCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
-    impSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
-    impNNSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + ((nOrbitals/2+1):nOrbitals);
-    impNNNSiteIndex = ((impNNCell(1)-1)*N + impNNCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
-    siteIndices = [farAwaySiteIndex impSiteIndex impNNSiteIndex impNNNSiteIndex];
-    nDosSites = length(siteIndices);
+  switch sublattice
+    case 1
+	  efforb=nOrbitals/2;  
+        farAwaySiteIndex = ((farAwayCell(1)-1)*N + farAwayCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
+        impSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
+        impNNSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + ((nOrbitals/2+1):nOrbitals);
+        impNNNSiteIndex = ((impNNCell(1)-1)*N + impNNCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
+      case -1
+          % not yet implemented
+      case 0
+	      efforb=nOrbitals;
+        farAwaySiteIndex = ((farAwayCell(1)-1)*N + farAwayCell(2) - 1)*nOrbitals + (1:nOrbitals);
+        impSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + (1:nOrbitals);
+        impNNSiteIndex = ((impNNCell(1)-1)*N + impNNCell(2) - 1)*nOrbitals + (1:nOrbitals);
+        impNNNCell = impCell + [1 1];        
+        impNNNSiteIndex = ((impNNNCell(1)-1)*N + impNNNCell(2) - 1)*nOrbitals + (1:nOrbitals);
+  end;
+  siteIndices = [farAwaySiteIndex impSiteIndex impNNSiteIndex impNNNSiteIndex];
+  nDosSites = length(siteIndices);
 else
 end;
 
@@ -81,8 +97,22 @@ TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) - mu*eye(nOr
 [deltaSuper,superDeltaVectors] = supercell_delta(nOrbitals, delta, maxHop);
 HImpurity = zeros(nBands);
 [iRange, jRange] = find_lattice_translation_index(N, nOrbitals, impCell, impCell);
-impPotential = Vimp*eye(nOrbitals/2, nOrbitals/2);
-HImpurity(iRange, jRange) = [impPotential zeros(nOrbitals/2); zeros(nOrbitals/2) zeros(nOrbitals/2)];
+% to be done: implementation of more complicated impurity potentials
+if abs(sublattice)>0
+    impPotential = Vimp*eye(nOrbitals/2, nOrbitals/2);
+else
+    impPotential = Vimp*eye(nOrbitals, nOrbitals);
+end;
+
+switch sublattice
+    case 1
+        HImpurity(iRange, jRange) = [impPotential zeros(nOrbitals/2); zeros(nOrbitals/2) zeros(nOrbitals/2)];
+    case -1
+        % not yet implemented
+        HImpurity(iRange, jRange) = [zeros(nOrbitals/2) zeros(nOrbitals/2); zeros(nOrbitals/2) impPotential];
+    case 0
+        HImpurity(iRange, jRange) = impPotential;
+end;
 
 % supercell diagonalization
 nSuperCells = size(superLatticeVectors,1);
@@ -266,14 +296,14 @@ if part>division
                     ekukvk_file=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'.mat'];
                     ekukvk_fileGF=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'GF.mat'];
                     if calcGreens
-                        load(ekukvk_fileGF); 
+                        load(ekukvk_fileGF);
                     else
                         try
                             load(ekukvk_file);
                         catch exception
-                            load(ekukvk_fileGF); 
-                            uK = uK(siteIndices,(nBands + 1):end);
-                            vK = vK(nBands + siteIndices,(nBands + 1):end);
+                            load(ekukvk_fileGF);
+                            uK = uK(siteIndices,:);
+                            vK = vK(siteIndices,:);
                         end
                     end;
             catch exception
@@ -395,7 +425,7 @@ if part>division
     if isempty(dirprefix)
         outputfilename=[LDOSfileName];
     else
-        outputfilename=[dirprefix,filesep,LDOSfileName];
+        outputfilename=[dirprefix,LDOSfileName];
     end;
 
     if ~calcGreens
@@ -404,13 +434,13 @@ if part>division
         else
             ldos = (-(1/pi))*imag(greensRealSpace);
         end;
-        orbitalLDOSFarAway = ldos(1:5,:);
+        orbitalLDOSFarAway = ldos(1:efforb,:);
         totalLDOSFarAway = sum(orbitalLDOSFarAway,1); %#ok<NASGU>
-        orbitalLDOSImp = ldos(6:10,:);
+        orbitalLDOSImp = ldos(efforb+1:2*efforb,:);
         totalLDOSImp = sum(orbitalLDOSImp,1);%#ok<NASGU>
-        orbitalLDOSImpNN = ldos(11:15,:);
+        orbitalLDOSImpNN = ldos(2*efforb+1:3*efforb,:);
         totalLDOSImpNN = sum(orbitalLDOSImpNN,1);%#ok<NASGU>
-        orbitalLDOSImpNNN = ldos(16:20,:);
+        orbitalLDOSImpNNN = ldos(3*efforb+1:4*efforb,:);
         totalLDOSImpNNN = sum(orbitalLDOSImpNNN,1);%#ok<NASGU>
         % to be done: change filename to general string
         save(outputfilename, 'energy', 'orbitalLDOSFarAway', 'orbitalLDOSImp', 'orbitalLDOSImpNN', 'orbitalLDOSImpNNN');
