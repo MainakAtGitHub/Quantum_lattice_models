@@ -64,7 +64,8 @@ end;
 
 num=numel(ldos2plot);
 halfN=floor(N/2);
-[kx,ky]=meshgrid(-pi:pi/(halfN+1):pi,-pi:pi/(halfN+1):pi);
+fine=2;
+[kx,ky]=meshgrid(-pi:pi/(fine*halfN+1):pi,-pi:pi/(fine*halfN+1):pi);
 szk=size(kx);
 ldosk=ldos2plot*0;
 range=-halfN:halfN;

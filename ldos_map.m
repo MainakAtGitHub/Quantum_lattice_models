@@ -9,9 +9,6 @@ sublattice=1;
 read_input_file=inputfile;
 read_input;
 read_input_file
-if (~exist('xrange','var'))
-    xrange=3
-end;
 if (~exist('zGridRange','var'))
     zGridRange = [0 21 4 22]
 end;
@@ -53,23 +50,36 @@ szw=size(wannierValues);
 sizeWannier=szw(1:3);
 
 nBands = size(latticeGreens,1);
-N = sqrt(nBands/nOrbitals);
-
+if (~exist('N','var'))
+    N1 = sqrt(nBands/nOrbitals);
+    if ~(N1==N)
+        disp(['Error: wrong settings for N:',num2str(N),' vs. ', num2str(N1)]);
+    end
+end;
+if (~exist('xrange','var'))
+    % change default behavior: calculate the whole grid
+    xrange=N/2
+end;
 % Local greens function
 % Wannier vector
 yrange=xrange;
 %xGridRange = -80:60;
 if sublattice==1
-    xGridRange = -RDiscrete(1)/2*(xrange+1):RDiscrete(1)/2*xrange;
+    xGridRange = -round(RDiscrete(1)/2*(xrange+1)):round(RDiscrete(1)/2*xrange);
     %yGridRange = -60:80;
-    yGridRange = -RDiscrete(2)/2*yrange:RDiscrete(2)/2*(yrange+1);
+    yGridRange = -round(RDiscrete(2)/2*yrange):round(RDiscrete(2)/2*(yrange+1));
 elseif sublattice==0
-    xGridRange = -RDiscrete(1)*xrange:RDiscrete(1)*xrange;
+    xGridRange = -round(RDiscrete(1)*xrange):round(RDiscrete(1)*xrange);
     %yGridRange = -60:80;
-    yGridRange = -RDiscrete(2)*yrange:RDiscrete(2)*yrange;
+    yGridRange = -round(RDiscrete(2)*yrange):round(RDiscrete(2)*yrange);
 end;
 
+
 %fileName = ['supercell_local_ldos_FeSe_U_0955_Vimp_5','_N_',num2str(N),'_M_',num2str(M),'_E_',num2str(E),'_ita_',num2str(ita)];
+numlm=(2*(ceil(N/2)-1)+1)^2;
+%wAcc=zeros(numlm,nOrbitals);
+lhalf=ceil(N/2)-1;
+mhalf=ceil(N/2)-1;
 for zGridPoint = zGridRange
     disp(['Calculating ',num2str(zGridPoint), 'of (',num2str(zGridRange(1)),'..',num2str(zGridRange(numel(zGridRange))),')']);
     localLdos = zeros(length(xGridRange),length(yGridRange));
@@ -81,25 +91,48 @@ for zGridPoint = zGridRange
         for yGridPoint = yGridRange
             countLoopY = countLoopY + 1;
             r = [xGridPoint, yGridPoint, zGridPoint];
-            wAcc = []; 
-            for l = -(ceil(N/2)-1):(ceil(N/2)-1)
-                for m = -(ceil(N/2)-1):(ceil(N/2)-1)
-                    R = [l m 0];
-                    latticeVector = RDiscrete.*R;
-                    wannierArgument = r - latticeVector;
-                    shiftedArgument = wannierArgument + shift; % translate wannier origin
+           % wAcc = [];
+           %position=0;
+           wAcc=zeros(numlm,nOrbitals);
+           % change way of calculation to reduce loop
+           % calculation of minimal / maximal l and m where we have Wannier
+           % boxes
+           centerm=yGridPoint/RDiscrete(1);
+           centerl=xGridPoint/RDiscrete(1);
+           minl=round(centerl-(sizeWannier(1)-shift(1)+0.5)/RDiscrete(1)+0.5);
+           maxl=round(centerl+(sizeWannier(1)-shift(1)+0.5)/RDiscrete(1)-0.5);
+           minm=round(centerm-(sizeWannier(2)-shift(2)+0.5)/RDiscrete(2)+0.5);
+           maxm=round(centerm+(sizeWannier(2)-shift(2)+0.5)/RDiscrete(2)-0.5);
+           lrange=(minl:maxl);
+           mrange=(minm:maxm);
+            for l = lrange
+                for m = mrange
+            %for l = -(ceil(N/2)-1):(ceil(N/2)-1)%lrange
+             %   for m = -(ceil(N/2)-1):(ceil(N/2)-1)
+                    %position=position+1;
+                    position=N*(mod(l+lhalf,N))+mod(m+mhalf,N)+1;
+                    %if position>numlm
+                    %    disp(['outside']);
+                    %end;
+                    %R = [l m 0];
+                    %latticeVector = RDiscrete.*R;
+                    %wannierArgument = r - latticeVector;
+                    %shiftedArgument = wannierArgument + shift; % translate wannier origin
+                    % shift to central area if needed (for x and y direction)
+                    shiftedArgument = r -  RDiscrete.*[l m 0] + shift;
                     % check whether this argument is in range or not
-                    if (((shiftedArgument) <= sizeWannier) & ((shiftedArgument) >= [1 1 1]))
+                    %if (((shiftedArgument) <= sizeWannier) & ((shiftedArgument) >= [1 1 1]))
                         % yes in range, now find the value
                         %wannierValue = wannierI(shiftedArgument);
                         %for orbital = 1:nOrbitals
                             w = squeeze(wannierValues(shiftedArgument(1),shiftedArgument(2),shiftedArgument(3),:));
-                            wAcc = [wAcc; w];
+                            wAcc(position,:) =  w;
                         %end;
-                    else
+                    %else
+                  %disp(['outside:',num2str(shiftedArgument)]);
                         % not in range, set it to zero
-                        wAcc = [wAcc; zeros(nOrbitals,1)];
-                    end
+                       % wAcc = [wAcc; zeros(nOrbitals,1)];
+                   % end
                 end
             end
             localLdos(countLoopX,countLoopY) = (-1/pi)*imag(wAcc'*(latticeGreens*wAcc));

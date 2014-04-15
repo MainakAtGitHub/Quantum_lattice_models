@@ -74,7 +74,7 @@ for iKx = 1:M
         for iKy = 1:M
             k = [kx(iKx) ky(iKy)];
             % diagonalizing for normal state DOS
-            kSpaceHopping = 0;
+            kSpaceHopping = zeros(nOrbitals,nOrbitals);
             for iUnitCell = 1:nUnitCells
                 iLatticeVector = latticeVector(iUnitCell,:);
                 kSpaceHopping = kSpaceHopping + TBparameters(:,:,iUnitCell)*exp(1i*(iLatticeVector*k'));
@@ -86,7 +86,7 @@ for iKx = 1:M
             kSpaceEigenVectorsNormal(iKx, iKy, :,:) =  eigVectorKNormal;
             % diagonalizing for SC state DOS
             if calcSC
-            kSpaceGap = 0;
+            kSpaceGap = zeros(nOrbitals,nOrbitals);
             for iUnitCellDelta = 1:nUnitCellsDelta
                 iLatticeVectorDelta = latticeVectorsSC(iUnitCellDelta,:);
                 kSpaceGap = kSpaceGap + delta(:,:,iUnitCellDelta)*exp(1i*(iLatticeVectorDelta*k'));

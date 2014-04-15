@@ -39,10 +39,19 @@ end
 impCell = [ceil(N/2) ceil(N/2)];
 impNNCell = impCell + [0 1];
 [iImpNNRange, jImpNNRange] = find_lattice_translation_index(N, nOrbitals, impNNCell, impCell);
-iNNsiteRange = iImpNNRange(1:nOrbitals/2);
-jNNsiteRange = jImpNNRange(1:nOrbitals/2);
-iNNNsiteRange = iImpNNRange((1+nOrbitals/2):nOrbitals);
-jNNNsiteRange = jNNsiteRange;
+if abs(sublattice)==1
+    iNNsiteRange = iImpNNRange(1:nOrbitals/2);
+    jNNsiteRange = jImpNNRange(1:nOrbitals/2);
+    iNNNsiteRange = iImpNNRange((1+nOrbitals/2):nOrbitals);
+    jNNNsiteRange = jNNsiteRange;
+else
+    iNNsiteRange = iImpNNRange(1:nOrbitals);
+    jNNsiteRange = jImpNNRange(1:nOrbitals);
+    impNNNCell = impCell + [1 1];
+    [iImpNNNRange, jImpNNNRange] = find_lattice_translation_index(N, nOrbitals, impNNNCell, impCell);
+    iNNNsiteRange = iImpNNNRange(1:nOrbitals);
+    jNNNsiteRange = jImpNNNRange(1:nOrbitals);
+end;
 [iImpNN, jImpNN] = find_lattice_translation_index(N, nOrbitals, impCell, impCell);
 deltaOnsite = max(max(abs(delta(iImpNN, jImpNN))));
 deltaMaxNN = max(max(abs(delta(iNNsiteRange, jNNsiteRange))));
