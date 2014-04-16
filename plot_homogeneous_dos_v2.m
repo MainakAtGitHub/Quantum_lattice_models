@@ -132,7 +132,7 @@ linestyles={':','-.','-','--','-'};
 colors={[1 0 0], [1 0 0], [0 1 0], [1 0 0], [0 0 1], [0 0 0]};
 markers={'','','o','','',''};
 Displaynames={'d_{z^2}','d_{x^2-y^2}','d_{yz}','d_{xz}','d_{xy}'};
-for n=2:sublatticefactor*nOrbitals
+for n=1:sublatticefactor*nOrbitals
     if isempty(markers{n})
         set(plot1(n+2),'LineStyle',linestyles{n},'Color',colors{n},'DisplayName',Displaynames{n});
     else

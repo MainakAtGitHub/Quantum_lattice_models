@@ -38,6 +38,9 @@ sqstring='';
 if ~(exist('singular_quad','var'))
     singular_quad=true;
 end;
+if ~(exist('sublattice','var'))
+    sublattice=1;
+end;
 if ~singular_quad
         sqstring='sum';
 end;
@@ -95,24 +98,7 @@ TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) = ...
 TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) - mu*eye(nOrbitals); 
 [HSuper, superLatticeVectors] = supercell_hoppings(N, TBparameters, latticeVector);
 [deltaSuper,superDeltaVectors] = supercell_delta(nOrbitals, delta, maxHop);
-HImpurity = zeros(nBands);
-[iRange, jRange] = find_lattice_translation_index(N, nOrbitals, impCell, impCell);
 % to be done: implementation of more complicated impurity potentials
-if abs(sublattice)>0
-    impPotential = Vimp*eye(nOrbitals/2, nOrbitals/2);
-else
-    impPotential = Vimp*eye(nOrbitals, nOrbitals);
-end;
-
-switch sublattice
-    case 1
-        HImpurity(iRange, jRange) = [impPotential zeros(nOrbitals/2); zeros(nOrbitals/2) zeros(nOrbitals/2)];
-    case -1
-        % not yet implemented
-        HImpurity(iRange, jRange) = [zeros(nOrbitals/2) zeros(nOrbitals/2); zeros(nOrbitals/2) impPotential];
-    case 0
-        HImpurity(iRange, jRange) = impPotential;
-end;
 
 % supercell diagonalization
 nSuperCells = size(superLatticeVectors,1);
@@ -193,7 +179,18 @@ end;
 % split casestring from directories
 [~,cs1,cs2] = fileparts(casestring);
 casestring=[cs1,cs2];
-LDOSfileName0 = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
+if ~ischar(Vimp)
+    LDOSfileName0 = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
+else
+    % remove path from Vimp
+    position=findstr(Vimp,filesep);
+    if ~isempty(position)
+        vimp=Vimp(position(length(position))+1:length(Vimp));
+    else
+        vimp=Vimp;
+    end;
+    LDOSfileName0 = [casestring,'_Vimp_', vimp,  '_N_', num2str(N)];
+end;
 % create some sub-directory to avoid many files in one directory
 dirstring=[dirprefix,'data_',LDOSfileName0];
 if division>0
@@ -201,6 +198,8 @@ if division>0
         mkdir(dirstring)
     end;
 end;
+% use external script to set up impurity Hamiltonian
+HImpurity=get_Himp(Vimp,N,nOrbitals,sublattice);
 
 % only one for loop
 for index=startindex:endindex
@@ -231,8 +230,8 @@ for index=startindex:endindex
         end
         KESuper = kSpaceHopping + HImpurity;
         kSpaceHamiltonian = [KESuper -kSpaceGap; -kSpaceGap' -KESuper];
-        [eigVector eigValue] = eig(kSpaceHamiltonian);
-        [eigValueK sortingIndex] = sort(real(diag(eigValue)));
+        [eigVector, eigValue] = eig(kSpaceHamiltonian);
+        [eigValueK, sortingIndex] = sort(real(diag(eigValue)));
         clear eigValue
         eigVectorK = (eigVector(:,sortingIndex));
         Ek_vector=eigValueK((nBands + 1):end);

@@ -9,7 +9,7 @@ nOrbitals = size(TBparameters,1);
 maxHop = max(max(abs(latticeVectors)));
 minSystemSize = 2*maxHop + 1;
 if N < minSystemSize
-    error(['System size must be greater than ',num2str(minSystemSize)]);
+    error(['System size must be greater than or equal',num2str(minSystemSize)]);
 end
 t = zeros(N^2*nOrbitals,N^2*nOrbitals);
 for ix = 1:N

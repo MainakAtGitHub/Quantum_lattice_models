@@ -68,23 +68,42 @@ end;
 nBands = N^2*nOrbitals;
 H0 = lattice_translation(N, TBparameters, latticeVector);
 SCInteractionMatrix = lattice_translation(N, Gamma, latticeVectorsSC);
-Himp = zeros(size(H0));
+%Himp = zeros(size(H0));
 impCell = [ceil(N/2) ceil(N/2)];
-[iRange, jRange] = find_lattice_translation_index(N, nOrbitals, impCell, impCell);
+% % allow for general impurity potentials
+% if ~ischar(Vimp)
+%     [iRange, jRange] = find_lattice_translation_index(N, nOrbitals, impCell, impCell);
+% else
+%     load(Vimp,'-mat')
+%     % now we have a set of impurity matrices imp_matr
+%     % together with some lattice vectors imp_vec
+%     % here we set up Himp directly
+%     numimp=size(imp_vec,2);
+%     for n=1:numimp
+%         cellvector=impCell+imp_vec(:,n);
+%         cellvector(1)=mod(cellvector(1)+ceil(N/2),N);
+%         cellvector(2)=mod(cellvector(2)+ceil(N/2),N);
+%         [iRange, jRange] = find_lattice_translation_index(N, nOrbitals, impCell, cellvector);
+%         Himp(iRange, jRange)=imp_matr(:,:,n);
+%     end;
+% end;
 impNNCell = impCell + [0 1];
 [iImpNNRange, jImpNNRange] = find_lattice_translation_index(N, nOrbitals, impNNCell, impCell);
 
 switch sublattice
     case 1
-        % default with first iron in right upper corner (FeSe)
-        % allow for different potentials
-        if numel(Vimp)==1
-            impPotential = Vimp*eye(nOrbitals/2, nOrbitals/2);
-        else
-            impPotential = diag(Vimp);
-        end;
-        % to do: setup correct impurity potential
-        Himp(iRange, jRange) = [impPotential zeros(nOrbitals/2); zeros(nOrbitals/2) zeros(nOrbitals/2)];
+%         % default with first iron in right upper corner (FeSe)
+%         % allow for different potentials
+%         if ~ischar(Vimp)
+%         if numel(Vimp)==1
+%             impPotential = Vimp*eye(nOrbitals/2, nOrbitals/2);
+%         else
+%             impPotential = diag(Vimp);
+%         end;
+%         % to do: setup correct impurity potential
+%         Himp(iRange, jRange) = [impPotential zeros(nOrbitals/2); zeros(nOrbitals/2) zeros(nOrbitals/2)];
+%         else
+%         end;
         
         % Indices of sites NN and NNN to impurity
         iNNsiteRange = iImpNNRange(1:nOrbitals/2);
@@ -94,12 +113,15 @@ switch sublattice
     case -1
         % to be implemented
     case 0
-        % no sublattice (5 orbital)
-        if numel(Vimp)==1
-            Himp(iRange, jRange) = Vimp*eye(nOrbitals, nOrbitals);
-        else
-            Himp(iRange, jRange) = diag(Vimp);
-        end;    
+%         % no sublattice (5 orbital)
+%         if ~ischar(Vimp)
+%         if numel(Vimp)==1
+%             Himp(iRange, jRange) = Vimp*eye(nOrbitals, nOrbitals);
+%         else
+%             Himp(iRange, jRange) = diag(Vimp);
+%         end;   
+%          else
+%         end;
         iNNsiteRange = iImpNNRange(1:nOrbitals);
         jNNsiteRange = jImpNNRange(1:nOrbitals);
         impNNNCell = impCell + [1 1];
@@ -108,7 +130,6 @@ switch sublattice
         jNNNsiteRange = jImpNNNRange(1:nOrbitals);
 end;
 %Self consistency iteration
-
 % % initial guess
 if ~(exist('nUp','var'))
     fillup=0.5*n0/nOrbitals;
@@ -152,17 +173,20 @@ if ~mixdelta
 end;
 
 % setting of Hamiltonian
+Himp=get_Himp(Vimp,N,nOrbitals,sublattice);
 H = H0 + Himp;
+clear Himp;
 % BdG iterations
 for i = 1:maxLoop
     KE = H - mu*eye(nBands);
-     BdGMatrix = [KE -delta; -delta' -KE];
-    [eVector eValue] = eig(BdGMatrix);
+    BdGMatrix = [KE -delta; -delta' -KE];
+    clear KE
+    [eVector, eValue] = eig(BdGMatrix);
     % save some memory for following commands (here we need to save three
     % full arrays such that we get in MB:
     % 3*(2*N^2*nOrbitals)^2*8/1024/1024 (3.6G for N=25, 470M for N=15)
     clear BdGMatrix
-    [En,sortIndex] = sort(real(diag(eValue)));
+    [En, sortIndex] = sort(real(diag(eValue)));
     % save some memory for following commands
     clear eValue
     eVector = eVector(:,sortIndex);
@@ -192,7 +216,7 @@ for i = 1:maxLoop
     nAcc = [nAcc; nAvg];   
     % fix phase of delta (mostly not necessary, but always gives the same
     % result, largest gap set to be positive
-    [deltamax,index]=max(abs(delta(:)));
+    [deltamax, index]=max(abs(delta(:)));
     delta=delta*exp(-1i*angle(delta(index)));
     % second possible observables
     deltaMaxNN = max(max(abs(delta(iNNsiteRange, jNNsiteRange))));
@@ -211,7 +235,7 @@ if i < maxLoop
     % save the converged result
 %  save(output_fileName,'nAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','muAcc','mu', 'deltaTol', 'nTol');
 else
-    disp('***********Not Converged**********')
+    disp('***********Not converged**********')
 end
 
 % plot
