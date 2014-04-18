@@ -41,6 +41,11 @@ function print_pdf(name, fig)
 if nargin < 2
     fig = gcf;
 end
+% workaround for KU computer:
+if (version('-release')=='2014a')
+    print(name,'-dpdf');
+            return;
+end
 % Set paper size
 set(fig, 'PaperPositionMode', 'auto');
 % Print to eps file

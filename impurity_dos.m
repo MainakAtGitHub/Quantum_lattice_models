@@ -56,7 +56,8 @@ load(BdGfileName);
 
 nOrbitals = size(TBparameters,1);
 nBands = N^2*nOrbitals;
-kx = (2*pi/M)*(0:(M - 1)) + pi/M;
+% for reuse of the k-points with different M, we dropp the shift of the k-grid!
+kx = (2*pi/M)*(0:(M - 1));
 ky = kx;
 delKx = kx(2)-kx(1);
 delKy = delKx;
@@ -206,8 +207,8 @@ for index=startindex:endindex
     iKy= mod(index-1,M)+1;
     iKx= ceil(index/M);
     tic;
-    ekukvk_file=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'.mat'];
-    ekukvk_fileGF=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'GF.mat'];
+    ekukvk_file=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'_g.mat'];
+    ekukvk_fileGF=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'_g_GF.mat'];
     calculate=true;
     if exist(ekukvk_fileGF, 'file') % no need to calculate this k-point
         calculate=false;
@@ -318,7 +319,7 @@ if part>division
                 end;
 
             end
-            % caeful: double code here, change both when doing any
+            % careful: double code here, change both when doing any
             % modifications
             if ~tetra
                 if ~calcGreens

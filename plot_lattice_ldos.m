@@ -31,7 +31,7 @@ if ~(exist('nOrbitals','var'))
     nOrbitals = 10;
 end;
 if ~(exist('sublattice','var'))
-    sublattice = 0;
+    sublattice = 1
 end;
 
 
