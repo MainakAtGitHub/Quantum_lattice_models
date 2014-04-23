@@ -41,10 +41,10 @@ else
     % here we set up Himp directly
     numimp=size(imp_vec,1);
     for n=1:numimp
-        cellvector=impCell+imp_vec(:,n);
+        cellvector=impCell+imp_vec(n,:);
         cellvector(1)=mod(cellvector(1)-1,N)+1;
         cellvector(2)=mod(cellvector(2)-1,N)+1;
-        [iRange, jRange] = find_lattice_translation_index(N, nOrbitals, impCell, cellvector);
+        [iRange, jRange] = find_lattice_translation_index(N, nOrbitals, cellvector, cellvector);
         Himp(iRange, jRange)=imp_matr(:,:,n);
     end;
 end;

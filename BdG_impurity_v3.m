@@ -57,7 +57,7 @@ load(BdGfileName,'-mat');
 if ~exist('sublattice','var')
     % sublattice= {-1,0,1} to define whether there are two sites per
     % elementary cell and which site is first
-    sublattice=1;
+    sublattice=1
 end;
 % not really necessary?
 %deltaH = delta; 
@@ -175,7 +175,7 @@ end;
 % setting of Hamiltonian
 Himp=get_Himp(Vimp,N,nOrbitals,sublattice);
 H = H0 + Himp;
-clear Himp;
+%clear Himp;
 % BdG iterations
 for i = 1:maxLoop
     KE = H - mu*eye(nBands);
@@ -185,16 +185,16 @@ for i = 1:maxLoop
     % save some memory for following commands (here we need to save three
     % full arrays such that we get in MB:
     % 3*(2*N^2*nOrbitals)^2*8/1024/1024 (3.6G for N=25, 470M for N=15)
-    clear BdGMatrix
+    %clear BdGMatrix
     [En, sortIndex] = sort(real(diag(eValue)));
     % save some memory for following commands
-    clear eValue
+    %clear eValue
     eVector = eVector(:,sortIndex);
     fermi = 1./(1 + exp(En/kT));
     nUpCal = (abs(eVector(1:nBands,:)).^2)*fermi;
     nDownCal = (abs(eVector((nBands + 1):end,:)).^2)*(1 - fermi);
     deltaCal = SCInteractionMatrix.*((eVector(1:nBands,:)*(((eVector((nBands + 1):end,:))').*repmat(fermi,1,nBands))));
-    clear eVector
+    %clear eVector
     % convergence criterium: norm (as defined for vector)
     deltaDiff = norm(deltaCal(:) - delta(:))/norm(delta(:));
     nDiff = abs((1/N^2)*sum(nUpCal + nDownCal) - n0)/n0;
@@ -217,7 +217,7 @@ for i = 1:maxLoop
     % fix phase of delta (mostly not necessary, but always gives the same
     % result, largest gap set to be positive
     [deltamax, index]=max(abs(delta(:)));
-    delta=delta*exp(-1i*angle(delta(index)));
+  %  delta=delta*exp(-1i*angle(delta(index)));
     % second possible observables
     deltaMaxNN = max(max(abs(delta(iNNsiteRange, jNNsiteRange))));
     deltaMaxNNN = max(max(abs(delta(iNNNsiteRange, jNNNsiteRange))));

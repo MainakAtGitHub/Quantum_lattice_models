@@ -106,6 +106,9 @@ ylabel('y (Bohr)');
 thickness=0.4;
 ratio=0.8;
 lgth=0.3*RDiscrete(1);
+if ~exist('sublattice','var')
+    sublattice=1
+end;
 if sublattice==1
     offset(1)=-0.25*RDiscrete(1);
     offset(2)=0.25*RDiscrete(2);
@@ -165,6 +168,7 @@ switch axistype
 end
 if ~nolabel
 zposstring=['z=',sprintf('%1.3G',zpos/RDiscrete(3)),' c'];
+zposstring='';
 % Create textbox
 annotation(figure1,'textbox',...
         [0.08 0.921052631578947 0.473511184910166 0.0690451293797412],...
@@ -173,6 +177,7 @@ annotation(figure1,'textbox',...
     'LineStyle','none','FontSize',fntsz);
 
 energystring=['\omega=',sprintf('%1.3G',E*1000),' meV'];
+energystring='';
 % Create textbox
 annotation(figure1,'textbox',...
         [0.515068670435391 0.9375 0.353352382196187 0.0404822520324435],...

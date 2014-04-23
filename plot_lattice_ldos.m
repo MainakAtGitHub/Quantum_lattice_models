@@ -3,7 +3,7 @@ if nargin < 1
     ldosfile='lattice_greens_supercell_FeSe_N_15_M_9_U_0955_Vimp_5_E_minPt0084.mat';
 end;
 % input
-lattice=false;
+lattice=true;
 bluecolor=true;
 fsz=20;
 set(0,'DefaultAxesFontSize',fsz)
@@ -12,7 +12,7 @@ load(ldosfile,'-mat')
 if ~(exist('N','var'))
     N = 11;
 end;
-xylabels=true;
+xylabels=false;
 if nargin <2
     plotN=N;
     xylabels=false;

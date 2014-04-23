@@ -43,6 +43,7 @@ if nargin < 2
 end
 % workaround for KU computer:
 if (version('-release')=='2014a')
+    disp('problem with gs, using another export');
     print(name,'-dpdf');
             return;
 end
