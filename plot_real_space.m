@@ -82,8 +82,10 @@ for i = -(ceil(N/2)-1):(ceil(N/2)-1)
 end
 
 % reshape delta
+% zoom half way in
+plotN=ceil(N/2)-1
 delta1Fe =  reshape(delta1Fe,nOrbitals/2, nOrbitals/2, 2*N^2);
-delta2Plot = zeros(nOrbitals/2*N, nOrbitals/2*N);
+delta2Plot = zeros(nOrbitals/2*plotN, nOrbitals/2*plotN);
 effOrbitals=nOrbitals/2;
 else
     delta1Fe=reshape(delta,nOrbitals,nOrbitals,N^2);
@@ -93,22 +95,22 @@ else
 end
 for iOrbital = 1:effOrbitals
     for jOrbital = 1:effOrbitals
-        deltaBlock = zeros(N,N);
-        for i = 1:N
-            for j = 1:N
-                latticeVector = [j-ceil(N/2), ceil(N/2)-i];
+        deltaBlock = zeros(plotN,plotN);
+        for i = 1:plotN
+            for j = 1:plotN
+                latticeVector = [j-ceil(plotN/2), ceil(plotN/2)-i];
                 ind = find((latticeVectors1Fe(:,1) == latticeVector(1)) & (latticeVectors1Fe(:,2) == latticeVector(2)));
                 deltaBlock(i,j) = delta1Fe(iOrbital, jOrbital, ind);
             end
         end
-        delta2Plot(((iOrbital-1)*N + 1):iOrbital*N, ((jOrbital-1)*N + 1):jOrbital*N ) = deltaBlock;
+        delta2Plot(((iOrbital-1)*plotN + 1):iOrbital*plotN, ((jOrbital-1)*plotN + 1):jOrbital*plotN ) = deltaBlock;
     end
 end
 % convert to meV
 delta2Plot = 1000*delta2Plot;
 %r=realspaceplot(data2plot,numl,tickx,flnm,scale)
 cptn='\Delta_{RR''}^{\mu\nu} [meV]';
-[~,h,stringp]=realspaceplot(delta2Plot,N,tickx,inputfile,scale,cptn);
+[~,h,stringp]=realspaceplot(delta2Plot,plotN,tickx,inputfile,scale,cptn);
 if isunix
     % save delta in format as Gamma
     nup1=nUp(1:nOrbitals);

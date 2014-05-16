@@ -42,10 +42,16 @@ if nargin < 2
     fig = gcf;
 end
 % workaround for KU computer:
-if (version('-release')=='2014a')
-    disp('problem with gs, using another export');
-    print(name,'-dpdf');
-            return;
+if isunix
+    [status,string]=system('lsb_release -c');
+    if status==0
+        if ~isempty(findstr(string,'trusty'))
+            disp('workaround for gs used');
+            disp('problem with gs, using another export');
+            print(name,'-dpdf');
+            return
+        end;
+    end;
 end
 % Set paper size
 set(fig, 'PaperPositionMode', 'auto');

@@ -12,7 +12,7 @@ set(0,'DefaultAxesFontSize',fsz)
 load(ldosfile,'-mat')
 %lattice_greens_supercell_FeSe_N_15_M_9_U_0955_Vimp_5_E_minPt0084.mat
 if ~(exist('N','var'))
-    N = 11;
+    N = 11
 end;
 if nargin <2
     plotN=N;
@@ -32,7 +32,7 @@ if ~(exist('nOrbitals','var'))
     nOrbitals = 10;
 end;
 if ~(exist('sublattice','var'))
-    sublattice = 0;
+    sublattice = 0
 end;
 
 
@@ -64,17 +64,30 @@ end;
 
 num=numel(ldos2plot);
 halfN=floor(N/2);
-fine=2;
-[kx,ky]=meshgrid(-pi:pi/(fine*halfN+1):pi,-pi:pi/(fine*halfN+1):pi);
+fine=1;
+[kx,ky]=meshgrid(-pi:pi/(fine*halfN):pi,-pi:pi/(fine*halfN):pi);
 szk=size(kx);
 ldosk=ldos2plot*0;
 range=-halfN:halfN;
 [x,y]=meshgrid(range,range);
-for n=1:szk(1)
-    for m=1:szk(2)
-        ldosk(n,m)=sum(sum(ldos2plot.*exp(1i*(x*kx(n,m)+y*ky(n,m)))))/num;
-    end
-end
+% Use fast fourier transform ?
+fast=true;
+if ~fast
+ for n=1:szk(1)
+     for m=1:szk(2)
+         ldosk(n,m)=sum(sum(ldos2plot.*exp(1i*(x*kx(n,m)+y*ky(n,m)))))/num;
+     end
+ end
+else
+    ldosk = fft2(ldos2plot);
+    ldosk = fftshift(ldosk);
+end;
+
+% do some cutoff of the k=0 component
+ldosk((szk(1)+1)/2,(szk(2)+1)/2)=0;
+ldosk((szk(1)+1)/2,(szk(2)+1)/2)=max(ldosk(:));
+
+
 figure1=figure;
 
 if nargin < 3

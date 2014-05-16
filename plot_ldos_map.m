@@ -1,10 +1,13 @@
-function [figure1,datarealmax]=plot_ldos_map(ldosfile,scale,datarealmax,cut)
+function [figure1,datarealmax]=plot_ldos_map(ldosfile,scale,datarealmax,cut,rotated)
 if nargin < 2
     % default no sqrt scale!
     scale=''
 end;
 if nargin <4
     cut=5
+end;
+if nargin <5
+    rotated='r';
 end;
 nolabel=false;
 if cut<0
@@ -43,7 +46,11 @@ figure1= figure('Position',[200, 50, 400, 300],'PaperUnits','centimeter','PaperP
 % range=3
 %axes1 = axes('Parent',figure1,'PlotBoxAspectRatio',[1 1 1],'CameraViewAngle',3.88994451795861);
 %range=5
+if rotated=='r'
 axes1 = axes('Parent',figure1,'PlotBoxAspectRatio',[1 1 1],'CameraViewAngle',1.6,'FontSize',fntsz);
+elseif rotated=='n'
+    axes1 = axes('Parent',figure1,'PlotBoxAspectRatio',[1 1 1],'FontSize',fntsz);
+end;
 xlim(axes1,[min(X(:)) max(X(:))]);
 ylim(axes1,[min(Y(:)) max(Y(:))]);
 grid(axes1,'on');
@@ -73,7 +80,7 @@ if scale=='s'
     datarealmax=sqrt(datarealmax);
 else
     surf(X,Y,abs(localLdos'),'LineStyle','none','FaceColor','interp');
-    datarealmax=datarealmax;
+    %datarealmax=datarealmax;
 end;
  bluemap(figure1)
 
@@ -95,7 +102,13 @@ end;
         allAxesInFigure = findall(figure1,'type','axes');
         set(allAxesInFigure,'CLim',[0 datarealmax],'FontSize',fntsz); 
 % view from 1 Fe zone!
-view(axes1,[45 90]);
+if rotated=='r'
+    view(axes1,[45 90]);
+elseif rotated=='n'
+    view([0 90])
+    axistype='';
+end;
+
 caxis([-eps,datarealmax])
     set(h, 'YTick', ticksres1*datarealmax/256);
 set(h, 'YTickLabel', labels1);

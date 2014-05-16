@@ -16,6 +16,33 @@ while ~(num==szwf(2))
     zpoints=input('points in z-direction: ');
     num=xpoints*ypoints*zpoints;
 end
+shift = [51 51 51];
+a=input('shift in x-direction: ');
+if ~isempty(a)
+    shift(1)=a;
+    
+end;
+a=input('shift in y-direction: ');
+if ~isempty(a)
+    shift(2)=a;
+end;
+a=input('shift in z-direction: ');
+if ~isempty(a)
+    shift(3)=a;
+end;
+RDiscrete = [40 40 80];
+a=input('cell size in x-direction: ');
+if ~isempty(a)
+    RDiscrete(1)=a;
+end;
+a=input('cell size in y-direction: ');
+if ~isempty(a)
+    RDiscrete(2)=a;
+end;
+a=input('cell size in z-direction: ');
+if ~isempty(a)
+    RDiscrete(3)=a;
+end;
 for n=1:nOrb
    % wannierValues(:,n)=WF(3+(n-1)*2+1,:)+1i*WF(3+n*2,:);
    % ignore the complex part
@@ -32,11 +59,12 @@ xGrid=minx:(maxx-minx)/(xpoints-1):maxx;
 yGrid=miny:(maxy-miny)/(ypoints-1):maxy;
 zGrid=minz:(maxz-minz)/(zpoints-1):maxz;
 % some code for the BSCCO input
+if nOrb==1
 wv=real(wannierValues(:,:,:,1));
 wannierValues=wv;
-shift = [51 51 51];
+end;
 %sizeWannier = [101 101 81];
-RDiscrete = [20 20 200];
+%RDiscrete = [40 40 80];
 save([filename,'_conv.mat'],'wannierValues','xGrid','yGrid','zGrid','RDiscrete','shift');
 end
 

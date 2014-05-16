@@ -101,7 +101,7 @@ else
     latticeVectors1Fe=latticeVectorsSC;
 end;
 % remove on site potentials
-Gamma1Fe(:,:,(latticeVectors1Fe(:,1) == 0) & (latticeVectors1Fe(:,2) == 0))= 0;
+ Gamma1Fe(:,:,(latticeVectors1Fe(:,1) == 0) & (latticeVectors1Fe(:,2) == 0))= 0;
 Gamma2Plot = zeros(orb2*N, orb2*N);
 for iOrbital = 1:orb2
     for jOrbital = 1:orb2

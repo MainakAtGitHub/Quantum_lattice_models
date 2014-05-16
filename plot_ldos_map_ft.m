@@ -52,21 +52,26 @@ kdividex=(max(xGridRange)-min(xGridRange))/RDiscrete(1);
 kdividey=(max(yGridRange)-min(yGridRange))/RDiscrete(2);
 x=X/RDiscrete(1);
 y=Y/RDiscrete(2);
-xlim(axes1,[-2 2]);
-ylim(axes1,[-2 2]);
 num=numel(localLdos);
 [kx,ky]=meshgrid(-ceil(sqrt(RDiscrete(1)))*pi:pi/(kdividex+1):ceil(sqrt(RDiscrete(1)))*pi,-ceil(sqrt(RDiscrete(2)))*pi:pi/(kdividey+1):ceil(sqrt(RDiscrete(2)))*pi);
 szk=size(kx);
 localLdosk=kx*0;
-for n=1:szk(1)
-for m=1:szk(2)
-localLdosk(n,m)=sum(sum(localLdos'.*exp(1i*(x*kx(n,m)+y*ky(n,m)))))/num;
-end
-end
+% for n=1:szk(1)
+% for m=1:szk(2)
+% localLdosk(n,m)=sum(sum(localLdos'.*exp(1i*(x*kx(n,m)+y*ky(n,m)))))/num;
+% end
+% end
+% to do: use the fast fourier transform from Matlab for speedup
 
-
-
-
+localLdosk = fft2(localLdos);
+localLdosk = fftshift(localLdosk);
+szldos=size(localLdosk);
+xrang=(1:szk(1))+ (szldos(1)-szk(1))/2;
+yrang=(1:szk(2))+ (szldos(2)-szk(2))/2;
+localLdosk=localLdosk(xrang,yrang);
+% do some cutoff of the k=0 component
+localLdosk((szk(1)+1)/2,(szk(2)+1)/2)=0;
+localLdosk((szk(1)+1)/2,(szk(2)+1)/2)=max(localLdosk(:));
 if nargin < 3
     datarealmax=max(abs(localLdosk(:)));
 else
@@ -84,7 +89,7 @@ elseif    (ceil(lm)-lm > 0.35)
 else
     tx=[0:0.1:1];
 end;
-ticks=mtix*tx; 
+ticks=mtix*tx;
 labels = num2str(repmat(sign(ticks).*(abs(ticks)), 1, 1)', 2);
 if scale=='s'
     surf(kx/pi,ky/pi,sqrt(abs(localLdosk)),'LineStyle','none','FaceColor','interp');
@@ -122,14 +127,26 @@ set(h, 'YTickLabel', labels1);
 %title(titleName);
 xlabel('k_x/\pi');
 ylabel('k_y/\pi' );
+xlim(axes1,[-2 2]);
+ylim(axes1,[-2 2]);
 if isunix
     % create pdf of figure
     [~,filename,extension]=fileparts(ldosfile);
     if nolabel
-            set(h,'visible','off');
-            print('-dpng', ['/tmp/',filename,extension,'_ft.png'],'-r200');
+        set(h,'visible','off');
+        print('-dpng', ['/tmp/',filename,extension,'_ft.png'],'-r200');
+        xlim(axes1,[-1 1]);
+        ylim(axes1,[-1 1]);
+        print('-dpng', ['/tmp/',filename,extension,'_ft_zoom.png'],'-r200');
+        xlim(axes1,[-2 2]);
+        ylim(axes1,[-2 2])
     else
         print('-djpeg', ['/tmp/',filename,extension,'_ft.jpg'],'-r200');
+        xlim(axes1,[-1 1]);
+        ylim(axes1,[-1 1]);
+        print('-djpeg', ['/tmp/',filename,extension,'_ft_zoom.jpg'],'-r200');
+        xlim(axes1,[-2 2]);
+        ylim(axes1,[-2 2])        
     end;
 %print_pdf(['/tmp/',filename,extension,'cut',num2str(N),'.pdf'])
 if nolabel

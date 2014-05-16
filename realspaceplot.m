@@ -8,6 +8,7 @@ colorred=false; % set colorscale
 global fsz
 fsz = 25; % font
  datarealmax = max(abs(real(data2plot(:)))); % for setting colormap
+% datarealmax=0.5
 % if scale == 's'
 %     image(sign(real(delta2Plot)).*sqrt(abs(real(delta2Plot)/deltaRealMax))*128+128);
 % else

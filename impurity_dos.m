@@ -44,6 +44,9 @@ end;
 if ~singular_quad
         sqstring='sum';
 end;
+if ~(exist('debug','var'))
+    debug=false;
+end;
 [dirprefix,~,~] = fileparts(inputfile);
 if ~isempty(dirprefix)
     dirprefix=[dirprefix,filesep]
@@ -99,6 +102,8 @@ TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) = ...
 TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) - mu*eye(nOrbitals); 
 [HSuper, superLatticeVectors] = supercell_hoppings(N, TBparameters, latticeVector);
 [deltaSuper,superDeltaVectors] = supercell_delta(nOrbitals, delta, maxHop);
+%deltaSuper=sparse(deltaSuper);
+%HSuper=sparse(HSuper);
 % to be done: implementation of more complicated impurity potentials
 
 % supercell diagonalization
@@ -233,6 +238,9 @@ for index=startindex:endindex
         kSpaceHamiltonian = [KESuper -kSpaceGap; -kSpaceGap' -KESuper];
         [eigVector, eigValue] = eig(kSpaceHamiltonian);
         [eigValueK, sortingIndex] = sort(real(diag(eigValue)));
+        if debug
+            whos;
+        end;
         clear eigValue
         eigVectorK = (eigVector(:,sortingIndex));
         Ek_vector=eigValueK((nBands + 1):end);
@@ -240,7 +248,7 @@ for index=startindex:endindex
         if ~calcGreens
             uK = eigVectorK(siteIndices,(nBands + 1):end);
             vK = eigVectorK(nBands + siteIndices,(nBands + 1):end);
-            %clear eigVectorK
+            clear eigVectorK
             % depending on the mode do different things
             if division==0
                 % single calculation of full DOS
@@ -254,7 +262,7 @@ for index=startindex:endindex
             end
         else
             uK = eigVectorK(1:nBands,(nBands+1):end);
-            vK = eigVectorK((nBands+1):end,(nBands+1):end);        
+            vK = eigVectorK((nBands+1):end,(nBands+1):end);
             if division==0
                 EnRep = repmat(Ek_vector',nBands,1);
                 latticeGreensK(iKx, iKy, :, :) = (uK./(E - EnRep + 1i*ita))*(uK') + (vK./(E + EnRep + 1i*ita))*(vK');
@@ -291,6 +299,9 @@ if part>division
             iKx= ceil(index/M);
             if iKy==1
                 disp(['reading k-point',num2str(iKx),' ',num2str(iKy)])
+                if debug
+                    whos;
+                end;
             end;
             try
                     ekukvk_file=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'_g.mat'];
@@ -391,6 +402,9 @@ if part>division
     else
         latticeGreens = zeros(nBands, nBands);
         for i = 1:nBands
+            if debug
+                whos;
+            end;
             disp(['Integrating Bands (',num2str(i),' ,:) of ', num2str(nBands),'.']);
             for j = 1:nBands
                 if singular_quad
@@ -445,7 +459,7 @@ if part>division
         % to be done: change filename to general string
         save(outputfilename, 'energy', 'orbitalLDOSFarAway', 'orbitalLDOSImp', 'orbitalLDOSImpNN', 'orbitalLDOSImpNNN');
     else
-        save(outputfilename,'latticeGreens','N','nOrbitals','E');
+        save(outputfilename,'latticeGreens','N','nOrbitals','E','sublattice');
     end;
 end
 r=1;

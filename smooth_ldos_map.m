@@ -1,6 +1,11 @@
-function s=smooth_ldos_map(inputfile,smoothparameter)
+function s=smooth_ldos_map(inputfile,smoothparameter,integrateenergy)
 if nargin < 2
     smoothparameter=1;
+end;
+if nargin <3
+    intstr='';
+else
+    intstr=['int',num2str(integrateenergy)]
 end;
 read_input_file=inputfile;
 read_input;
@@ -39,7 +44,7 @@ localldos3(:,:,1)=localLdos;
 % read in all ldos maps from z=1 to z=sizeWannier(3)
 for z=2:sizeWannier(3)
         disp(['Reading in ',num2str(z), 'of ',num2str(sizeWannier(3))]);
-            ldosmapfilename=[LDOSfileName,'_z_',num2str(z-(sizeWannier(3)+1)/2),diagonal_string];
+            ldosmapfilename=[LDOSfileName,'_z_',num2str(z-shift(3)),diagonal_string,intstr];
     load(ldosmapfilename,'-mat');
     if exist('loacalLdos','var')
         localLdos = loacalLdos;
@@ -52,9 +57,9 @@ end;
 %[localldos3s,s] = smoothn(localldos3,smoothparameter);
 localldos3s=smooth_g(localldos3,smoothparameter,[0,0,0]);
 % write out data
-for z=1:sizeWannier(3)
+for z=2:sizeWannier(3)
     disp(['Writing out ',num2str(z), 'of ',num2str(sizeWannier(3))]);
-    ldosmapfilename=[LDOSfileName,'_z_',num2str(z-(sizeWannier(3)+1)/2),diagonal_string,'smooth'];
+    ldosmapfilename=[LDOSfileName,'_z_',num2str(z-shift(3)),diagonal_string,intstr,'smooth'];
     localLdos=localldos3s(:,:,z);
     save(ldosmapfilename,'localLdos','xGridRange','yGridRange','shift','sizeWannier','RDiscrete','sublattice');
 end;

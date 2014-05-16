@@ -41,7 +41,7 @@ if nargin < 2
 end
 
 if (~exist('plotrange','var'))
-    plotrange=[-0.1 0.1];
+    plotrange=[-0.4 0.4];
 end;
 
 
@@ -117,10 +117,10 @@ figure5= figure('Position',[150, 100, 500, 300]);
 set(0,'DefaultAxesFontSize',fsz)
 
 plot5=plot(energy,[sum(orbitalLDOSFarAway,1);sum(orbitalLDOSImp,1);sum(orbitalLDOSImpNN,1);sum(orbitalLDOSImpNNN,1)]);
-set(plot5(1),'DisplayName','tot far away','LineStyle','-','LineWidth',2,'Color',[0 0 0]);
-set(plot5(2),'DisplayName','tot impurity','LineStyle','--','LineWidth',2,'Color',[0 0 0]);
-set(plot5(3),'DisplayName','tot NN','LineStyle','-','LineWidth',2,'Color',coloruf1);
-set(plot5(4),'DisplayName','tot NNN','LineStyle','-','LineWidth',2,'Color',coloruf2);
+set(plot5(1),'DisplayName','far away','LineStyle','-','LineWidth',2,'Color',[0 0 0]);
+set(plot5(2),'DisplayName','impurity','LineStyle','--','LineWidth',2,'Color',[0 0 0]);
+set(plot5(3),'DisplayName','NN','LineStyle','-','LineWidth',2,'Color',coloruf1);
+set(plot5(4),'DisplayName','NNN','LineStyle','-','LineWidth',2,'Color',coloruf2);
 xlim(plotrange);
 xlabel({'\omega [eV]'});
 
@@ -128,7 +128,8 @@ xlabel({'\omega [eV]'});
 ylabel({'LDOS [1/eV]'});
 
 % Create legend
-legend show
+legend('Location','northwest')
+%legend show
 if exist('omega0','var')
     % put in vertical bars at the energies omega0
     %your point goes here

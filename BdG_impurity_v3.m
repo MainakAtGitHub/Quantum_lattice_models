@@ -59,11 +59,14 @@ if ~exist('sublattice','var')
     % elementary cell and which site is first
     sublattice=1
 end;
-% not really necessary?
-%deltaH = delta; 
-%muH = mu;
-%clear delta mu;
-
+% a switch to produce more output
+if ~exist('debug','var')
+    debug=false;
+end;
+% switch to activate memory management actions (clear, sparse, 
+if ~exist('memorymanagement','var')
+    memorymanagement=false;
+end;
 % BdG matrix blocks
 nBands = N^2*nOrbitals;
 H0 = lattice_translation(N, TBparameters, latticeVector);
@@ -175,12 +178,14 @@ end;
 % setting of Hamiltonian
 Himp=get_Himp(Vimp,N,nOrbitals,sublattice);
 H = H0 + Himp;
-%clear Himp;
+clear Himp;
 % BdG iterations
 for i = 1:maxLoop
     KE = H - mu*eye(nBands);
     BdGMatrix = [KE -delta; -delta' -KE];
-    clear KE
+    if memorymanagement
+        clear KE;
+    end;
     [eVector, eValue] = eig(BdGMatrix);
     % save some memory for following commands (here we need to save three
     % full arrays such that we get in MB:
@@ -216,8 +221,8 @@ for i = 1:maxLoop
     nAcc = [nAcc; nAvg];   
     % fix phase of delta (mostly not necessary, but always gives the same
     % result, largest gap set to be positive
-    [deltamax, index]=max(abs(delta(:)));
-  %  delta=delta*exp(-1i*angle(delta(index)));
+    [~, index]=max(abs(delta(:)));
+    delta=delta*exp(-1i*angle(delta(index)));
     % second possible observables
     deltaMaxNN = max(max(abs(delta(iNNsiteRange, jNNsiteRange))));
     deltaMaxNNN = max(max(abs(delta(iNNNsiteRange, jNNNsiteRange))));

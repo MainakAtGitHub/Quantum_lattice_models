@@ -3,7 +3,7 @@ if nargin < 1
     ldosfile='lattice_greens_supercell_FeSe_N_15_M_9_U_0955_Vimp_5_E_minPt0084.mat';
 end;
 % input
-lattice=true;
+lattice=false;
 bluecolor=true;
 fsz=20;
 set(0,'DefaultAxesFontSize',fsz)
@@ -31,7 +31,8 @@ if ~(exist('nOrbitals','var'))
     nOrbitals = 10;
 end;
 if ~(exist('sublattice','var'))
-    sublattice = 1
+    sublattice = input('Sublattice not defined. Please enter: ');
+    %sublattice = 1
 end;
 
 
@@ -84,7 +85,7 @@ end
 N=plotN;
 n = ceil(N/2);
 showcolorbar=true;
-if nargin < 3
+if (nargin < 3 || isnan(datarealmax))
     datarealmax=max(ldos2plot(:));
 end;
 if datarealmax<0
