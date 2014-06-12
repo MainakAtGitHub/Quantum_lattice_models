@@ -46,16 +46,16 @@ figure1= figure('Position',[200, 50, 400, 300],'PaperUnits','centimeter','PaperP
 % range=3
 %axes1 = axes('Parent',figure1,'PlotBoxAspectRatio',[1 1 1],'CameraViewAngle',3.88994451795861);
 %range=5
-if rotated=='r'
+if ~isequal(rotated,'')
 axes1 = axes('Parent',figure1,'PlotBoxAspectRatio',[1 1 1],'CameraViewAngle',1.6,'FontSize',fntsz);
-elseif rotated=='n'
+else
     axes1 = axes('Parent',figure1,'PlotBoxAspectRatio',[1 1 1],'FontSize',fntsz);
 end;
 xlim(axes1,[min(X(:)) max(X(:))]);
 ylim(axes1,[min(Y(:)) max(Y(:))]);
 grid(axes1,'on');
 hold(axes1,'all');
-if nargin < 3
+if nargin < 3 | isnan(datarealmax)
     datarealmax=max(abs(localLdos(:)));
 else
     if isnan(datarealmax)
@@ -78,11 +78,24 @@ if scale=='s'
     surf(X,Y,sqrt(abs(localLdos')),'LineStyle','none','FaceColor','interp');
     ticks=sign(tx).*sqrt(mtix*abs(tx));
     datarealmax=sqrt(datarealmax);
+elseif scale =='l'
+        surf(X,Y,log(abs(localLdos')),'LineStyle','none','FaceColor','interp');
+            ticks=sign(tx).*log(mtix*abs(tx));
+    datarealmax=log(datarealmax);
 else
     surf(X,Y,abs(localLdos'),'LineStyle','none','FaceColor','interp');
     %datarealmax=datarealmax;
 end;
- bluemap(figure1)
+global map
+if isequal(map,'');
+    bluemap(figure1);
+elseif isequal(map,'neg');
+    neg_bluemap(figure1);  
+elseif isequal(map,'bma');
+    bma_map(figure1);
+elseif isequal(map,'song');
+    song_map(figure1);
+end;
 
 %view([0 90])
 %pcolor(X,Y,localLdos');
@@ -98,24 +111,32 @@ end;
             labels1=[labels1;labels(n,:)];
         end
     end;
- caxis([0,datarealmax])
+    if ~isequal(scale,'l')
+        caxis([0,datarealmax])
         allAxesInFigure = findall(figure1,'type','axes');
         set(allAxesInFigure,'CLim',[0 datarealmax],'FontSize',fntsz); 
+    end;
 % view from 1 Fe zone!
 if rotated=='r'
     view(axes1,[45 90]);
 elseif rotated=='n'
     view([0 90])
+elseif rotated==''
     axistype='';
 end;
 
+    if ~isequal(scale,'l')
+
 caxis([-eps,datarealmax])
-    set(h, 'YTick', ticksres1*datarealmax/256);
+    end
+set(h, 'YTick', ticksres1*datarealmax/256);
 set(h, 'YTickLabel', labels1);
 %titleName = ['E = ', num2str(E), ', z = ', num2str(z), ' Bohr'];
 %title(titleName);
-xlabel('x (Bohr)');
-ylabel('y (Bohr)');
+%xlabel('x (Bohr)');
+%ylabel('y (Bohr)');
+xlabel('x');
+ylabel('y');
 thickness=0.4;
 ratio=0.8;
 lgth=0.3*RDiscrete(1);
@@ -145,38 +166,76 @@ switch axistype
         % put in z-component and energy as text
         set(h1,'facecolor',[1 0 0])
     case 'lines'
-        x=cut/4*[-RDiscrete(1),RDiscrete(2)]+offset(1);
-        y=cut/4*[-RDiscrete(1),RDiscrete(2)]+offset(2);
-        plot3(x,y,z,'r');
-        x=cut/4*[RDiscrete(1),-RDiscrete(2)]+offset(1);
-        y=cut/4*[-RDiscrete(1),RDiscrete(2)]+offset(2);
-        plot3(x,y,z,'r');
-        if exist('cut','var')
-    % plot black box with corresponding cut and cuttof the image with white
-    % boxes
-    boxx=[-1, 0, 1, 0,-1];
-    boxy=[ 0, 1, 0,-1, 0];
-    z=[1 1 1 1 1]*datarealmax*1.02;
-    boxx=cut/2*RDiscrete(1)*boxx+offset(1);
-    boxy=cut/2*RDiscrete(2)*boxy+offset(2);
-    plot3(boxx,boxy,z*1.02,'k');
-    boxscale=3;
-    boxcolor='white';
-    % plot white box
-    boxx1=[ 0 1 boxscale  0 0]*cut/2*RDiscrete(1)+offset(1);
-    boxy1=[-1 0 0 -boxscale -1]*cut/2*RDiscrete(2)+offset(2);
-    patch(boxx1,boxy1,z,boxcolor,'LineStyle','none');
-    boxx1=[-1  0  0 -boxscale -1]*cut/2*RDiscrete(1)+offset(1);
-    boxy1=[ 0 -1 -boxscale  0  0]*cut/2*RDiscrete(2)+offset(2);
-    patch(boxx1,boxy1,z,boxcolor,'LineStyle','none');
-    boxx1=[0 -1 -boxscale 0 0]*cut/2*RDiscrete(1)+offset(1);
-    boxy1=[1  0  0 boxscale 1]*cut/2*RDiscrete(2)+offset(2);
-    patch(boxx1,boxy1,z,boxcolor,'LineStyle','none');
-    boxx1=[1 0 0 boxscale 1]*cut/2*RDiscrete(1)+offset(1);
-    boxy1=[0 1 boxscale 0 0]*cut/2*RDiscrete(2)+offset(2);
-    patch(boxx1,boxy1,z,boxcolor,'LineStyle','none');
-    xlim(boxscale*RDiscrete(1)*cut/2*[ -1 1]);
-    ylim(boxscale*RDiscrete(2)*cut/2*[ -1 1]);
+        switch rotated
+            case 'r'
+                x=cut/4*[-RDiscrete(1),RDiscrete(2)]+offset(1);
+                y=cut/4*[-RDiscrete(1),RDiscrete(2)]+offset(2);
+                plot3(x,y,z,'r');
+                x=cut/4*[RDiscrete(1),-RDiscrete(2)]+offset(1);
+                y=cut/4*[-RDiscrete(1),RDiscrete(2)]+offset(2);
+                plot3(x,y,z,'r');
+                if exist('cut','var')
+                    % plot black box with corresponding cut and cuttof the image with white
+                    % boxes
+                    boxx=[-1, 0, 1, 0,-1];
+                    boxy=[ 0, 1, 0,-1, 0];
+                    z=[1 1 1 1 1]*datarealmax*1.02;
+                    boxx=cut/2*RDiscrete(1)*boxx+offset(1);
+                    boxy=cut/2*RDiscrete(2)*boxy+offset(2);
+                    plot3(boxx,boxy,z*1.02,'k');
+                    boxscale=3;
+                    boxcolor='white';
+                    % plot white box
+                    boxx1=[ 0 1 boxscale  0 0]*cut/2*RDiscrete(1)+offset(1);
+                    boxy1=[-1 0 0 -boxscale -1]*cut/2*RDiscrete(2)+offset(2);
+                    patch(boxx1,boxy1,z,boxcolor,'LineStyle','none');
+                    boxx1=[-1  0  0 -boxscale -1]*cut/2*RDiscrete(1)+offset(1);
+                    boxy1=[ 0 -1 -boxscale  0  0]*cut/2*RDiscrete(2)+offset(2);
+                    patch(boxx1,boxy1,z,boxcolor,'LineStyle','none');
+                    boxx1=[0 -1 -boxscale 0 0]*cut/2*RDiscrete(1)+offset(1);
+                    boxy1=[1  0  0 boxscale 1]*cut/2*RDiscrete(2)+offset(2);
+                    patch(boxx1,boxy1,z,boxcolor,'LineStyle','none');
+                    boxx1=[1 0 0 boxscale 1]*cut/2*RDiscrete(1)+offset(1);
+                    boxy1=[0 1 boxscale 0 0]*cut/2*RDiscrete(2)+offset(2);
+                    patch(boxx1,boxy1,z,boxcolor,'LineStyle','none');
+                    xlim(boxscale*RDiscrete(1)*cut/2*[ -1 1]);
+                    ylim(boxscale*RDiscrete(2)*cut/2*[ -1 1]);
+                end
+            case 'n'
+                x=cut/2*[-RDiscrete(1),RDiscrete(1)]+offset(1);
+                y=cut/2*[0,0]+offset(2);
+                plot3(x,y,z,'r');
+                x=cut/2*[0,0]+offset(1);
+                y=cut/2*[-RDiscrete(2),RDiscrete(2)]+offset(2);
+                plot3(x,y,z,'r');
+                if exist('cut','var')
+                    % plot black box with corresponding cut and cuttof the image with white
+                    % boxes
+                    boxx=[-1, 1, 1, -1,-1];
+                    boxy=[ -1, -1, 1,1, -1];
+                    z=[1 1 1 1 1]*datarealmax*1.02;
+                    boxx=cut/2*RDiscrete(1)*boxx+offset(1);
+                    boxy=cut/2*RDiscrete(2)*boxy+offset(2);
+                    plot3(boxx,boxy,z*1.02,'k');
+                    boxscale=3;
+                    boxcolor='white';
+                    % plot white box
+                    boxx1=[ -1 1 boxscale  -boxscale -1]*cut/2*RDiscrete(1)+offset(1);
+                    boxy1=[-1 -1 -boxscale -boxscale -1]*cut/2*RDiscrete(2)+offset(2);
+                    patch(boxx1,boxy1,z,boxcolor,'LineStyle','none');
+                    boxx1=[-1  -1  -boxscale -boxscale -1]*cut/2*RDiscrete(1)+offset(1);
+                    boxy1=[ -1 1 boxscale  -boxscale  -1]*cut/2*RDiscrete(2)+offset(2);
+                    patch(boxx1,boxy1,z,boxcolor,'LineStyle','none');
+                    boxx1=[-1 1 boxscale -boxscale -1]*cut/2*RDiscrete(1)+offset(1);
+                    boxy1=[1  1  boxscale boxscale 1]*cut/2*RDiscrete(2)+offset(2);
+                    patch(boxx1,boxy1,z,boxcolor,'LineStyle','none');
+                    boxx1=[1 1 boxscale boxscale 1]*cut/2*RDiscrete(1)+offset(1);
+                    boxy1=[1 -1 -boxscale boxscale 1]*cut/2*RDiscrete(2)+offset(2);
+                    patch(boxx1,boxy1,z,boxcolor,'LineStyle','none');
+                    xlim(boxscale*RDiscrete(1)*cut/sqrt(2)*[ -1 1]);
+                    ylim(boxscale*RDiscrete(2)*cut/sqrt(2)*[ -1 1]);
+                end;
+                
         end;
 end
 if ~nolabel
@@ -206,7 +265,8 @@ if isunix
             set(h,'visible','off');
             print('-dpng', ['/tmp/',filename,extension,'.png'],'-r200');
     else
-        print('-djpeg', ['/tmp/',filename,extension,'.jpg'],'-r200');
+set(gcf, 'Renderer', 'zbuffer');
+print('-djpeg', ['/tmp/',filename,extension,'.jpg'],'-r200');
     end;
 %print_pdf(['/tmp/',filename,extension,'cut',num2str(N),'.pdf'])
 if nolabel

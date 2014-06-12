@@ -41,7 +41,7 @@ if nargin < 2
 end
 
 if (~exist('plotrange','var'))
-    plotrange=[-0.4 0.4];
+    plotrange=[-0.06 0.06];
 end;
 
 

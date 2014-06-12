@@ -1,4 +1,4 @@
-function i=integrate_ldos(inputfile,emax,step,emin)
+function i=integrate_ldos_ratio(inputfile,emax,step,emin)
 % integration of the ldos maps from emin to emax with step
 % simple routine that reads ldos maps and adds them together
 if nargin < 3
@@ -35,7 +35,20 @@ for i=emin:step:emax
         localLdos = loacalLdos;
         clear loacalLdos;
     end;
+    localLdosp=localLdos;
+        E = -i/1000;
+    set_ldosfilename;
+    ldosmapfilename=[LDOSfileName,'_z_',num2str(z-shift(3)),diagonal_string]
+    load(ldosmapfilename,'-mat');
+    if exist('loacalLdos','var')
+        localLdos = loacalLdos;
+        clear loacalLdos;
+    end;
     % add ldos maps together
+    localLdos=localLdosp./localLdos;
+    ldosmapfilename=[LDOSfileName,'_z_',num2str(z-shift(3)),diagonal_string,'_rel',num2str(-E)];
+    E=-E;
+    save(ldosmapfilename,'localLdos','xGridRange','yGridRange','shift','sizeWannier','RDiscrete','sublattice','E');
     if isempty(ldossummed)
         ldossummed=localLdos;
     else
@@ -45,6 +58,6 @@ end;
 localLdos=ldossummed;
 % write output
 %shift(3)=-1;
-ldosmapfilename=[LDOSfileName,'_z_',num2str(z-shift(3)),diagonal_string,'int',num2str(emax)];
+ldosmapfilename=[LDOSfileName,'_z_',num2str(z-shift(3)),diagonal_string,'int_rel',num2str(emax)];
 save(ldosmapfilename,'localLdos','xGridRange','yGridRange','shift','sizeWannier','RDiscrete','sublattice');
 

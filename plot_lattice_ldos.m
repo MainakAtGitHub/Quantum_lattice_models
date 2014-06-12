@@ -1,10 +1,11 @@
-function p=plot_lattice_ldos(ldosfile,plotN,datarealmax)
+function figure1=plot_lattice_ldos(ldosfile,plotN,datarealmax)
+global map
+global scale
 if nargin < 1
     ldosfile='lattice_greens_supercell_FeSe_N_15_M_9_U_0955_Vimp_5_E_minPt0084.mat';
 end;
 % input
 lattice=false;
-bluecolor=true;
 fsz=20;
 set(0,'DefaultAxesFontSize',fsz)
 load(ldosfile,'-mat')
@@ -99,7 +100,11 @@ if pcolorplot
     ldos2plot(N+1,:) = 0;
     pcolor(ldos2plot,'Parent',axes1);
 else
-    image(ldos2plot,'Parent',axes1,'CDataMapping','scaled');
+    if isequal(scale,'')
+        image(ldos2plot,'Parent',axes1,'CDataMapping','scaled');
+    elseif isequal(scale,'l')
+        image(log(ldos2plot),'Parent',axes1,'CDataMapping','scaled');
+    end;
     tickx_num=(-n+1:1:n-1);
     tickx=cellstr(num2str(tickx_num(:)));
     %tickx={'-5','-4','-3','-2','-1','0','1','2','3','4','5'};
@@ -127,10 +132,18 @@ title(['\omega = ',num2str(E*1000), ' meV']);
 % colorbar schemes
 
 cb=colorbar;
-if bluecolor
- bluemap(figure1)
+if isequal(map,'');
+    bluemap(figure1);
+elseif isequal(map,'neg');
+    neg_bluemap(figure1);  
+elseif isequal(map,'bma');
+    bma_map(figure1);
+elseif isequal(map,'song');
+    song_map(figure1);
 end;
-caxis([0,datarealmax])
+if isequal(scale,'')
+    caxis([0,datarealmax])
+end;
 caxis
 % set caption to colorbar
 if ~strcmp(cptn,'')

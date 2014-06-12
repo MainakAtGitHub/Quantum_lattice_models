@@ -31,6 +31,12 @@ end;
 if ~(exist('singular_quad','var'))
     singular_quad=true;
 end;
+if ~(exist('write_states','var'))
+    write_states=false;
+end;
+if ~(exist('calc_dos','var'))
+    calc_dos=true;
+end;
 if ~singular_quad
         sqstring='sum';
 else
@@ -79,8 +85,8 @@ for iKx = 1:M
                 iLatticeVector = latticeVector(iUnitCell,:);
                 kSpaceHopping = kSpaceHopping + TBparameters(:,:,iUnitCell)*exp(1i*(iLatticeVector*k'));
             end                        
-            [eigVectorNormal eigValueNormal] = eig(kSpaceHopping);
-            [eigValueKNormal sortingIndexNormal] = sort(real(diag(eigValueNormal)));
+            [eigVectorNormal, eigValueNormal] = eig(kSpaceHopping);
+            [eigValueKNormal, sortingIndexNormal] = sort(real(diag(eigValueNormal)));
             eigVectorKNormal = (eigVectorNormal(:,sortingIndexNormal))';
             kSpaceEigenValuesNormal(iKx, iKy, :) = eigValueKNormal;
             kSpaceEigenVectorsNormal(iKx, iKy, :,:) =  eigVectorKNormal;
@@ -92,8 +98,8 @@ for iKx = 1:M
                 kSpaceGap = kSpaceGap + delta(:,:,iUnitCellDelta)*exp(1i*(iLatticeVectorDelta*k'));
             end
             kSpaceHamiltonian = [kSpaceHopping -kSpaceGap; -kSpaceGap' -kSpaceHopping];
-            [eigVector eigValue] = eig(kSpaceHamiltonian);
-            [eigValueK sortingIndex] = sort(real(diag(eigValue)));
+            [eigVector, eigValue] = eig(kSpaceHamiltonian);
+            [eigValueK, sortingIndex] = sort(real(diag(eigValue)));
             eigVectorK = (eigVector(:,sortingIndex))';
             kSpaceEigenValues(iKx, iKy, :) = eigValueK;
             kSpaceEigenVectors(iKx, iKy, :,:) =  eigVectorK;
@@ -106,7 +112,13 @@ end
 if (~exist('tetra','var'))
     tetra=false;
 end;
-
+% save the eigenvalues for later processing
+if write_states
+    outfile1=[BdGfileName,'_M_', num2str(M)];
+    save([outfile1,'_normal'], 'kSpaceEigenValuesNormal', 'kx', 'ky', '-mat');
+    save([outfile1,'_SC'], 'kSpaceEigenValues', 'kx', 'ky', '-mat');
+end;
+if calc_dos
 % Normal state DOS
 disp('Computing normal state DOS......')
 greensDiagonalNormal = zeros(nOrbitals,nEnergyPoints);    
@@ -246,5 +258,6 @@ plot(energy, bandDOS(5,:), 'b');
 axis('square'); title('Orbital resolved SC dos')
 % Create legend
 legend show
+end;
 end;
 
