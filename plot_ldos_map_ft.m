@@ -1,4 +1,4 @@
-function [figure1,datarealmax]=plot_ldos_map_ft(ldosfile,scale,fine,cut)
+function [figure1,datarealmax]=plot_ldos_map_ft(ldosfile,scale,fine,cut,datarealmax)
 if nargin < 2
     % default no sqrt scale!
     scale=''
@@ -58,7 +58,8 @@ figure1= figure('Position',[200, 50, 400, 300],'PaperUnits','centimeter','PaperP
 %axes1 = axes('Parent',figure1,'PlotBoxAspectRatio',[1 1 1],'CameraViewAngle',3.88994451795861);
 %range=5,'CameraViewAngle',1.6,
 axes1 = axes('Parent',figure1,'PlotBoxAspectRatio',[1 1 1],'FontSize',fntsz);
-grid(axes1,'on');
+%grid(axes1,'on');
+box(axes1,'on');
 hold(axes1,'all');
 % do the fourier transform
 
@@ -90,12 +91,23 @@ if remove_bragg
         localLdosk1 = fft2(localLdos);
         % remove peaks at +/-2pi (4 largest values)
         [sortedValues,~] = sort(localLdosk1(:),'descend');  %# Sort the values in
-               maxValues = sortedValues(1:4);  %# Get the 5 largest values
-maxIndex = ismember(localLdosk1,maxValues);     %# Get a logical index of all values
-                                      %#   equal to the 5 largest values                                   %#   descending order
-        localLdosk1=localLdosk1.*maxIndex;
+        maxValues = sortedValues(1:4);  %# Get the 5 largest values
+        maxIndex = ismember(localLdosk1,maxValues);     %# Get a logical index of all values
+        %#   equal to the 5 largest values                                   %#   descending order
+        % manual removal for special map, to
+        % be adapted!
+        if true
+            localLdosk2=localLdosk1*0;
+            localLdosk2(31)=localLdosk1(31);
+            localLdosk2(571)=localLdosk1(571);
+            localLdosk2(18001)=localLdosk1(18001);
+            localLdosk2(342001)=localLdosk1(342001);
+            localLdos=localLdos-ifft2(localLdosk2);
+        else
+            localLdosk1=localLdosk1.*maxIndex;
+            localLdos=localLdos-ifft2(localLdosk1);
+        end;
         %        localLdosk1=(max(abs(localLdosk1(:))*0.95)<abs(localLdosk1)).*localLdosk1;
-        localLdos=localLdos-ifft2(localLdosk1);
     end,
 end;
 localLdosk = fft2(localLdos,fine*sqrt(num),fine*sqrt(num));
@@ -116,13 +128,13 @@ xrang=(1:szk(1))+ (szldos(1)-szk(1)-1)/2+1;
 yrang=(1:szk(2))+ (szldos(2)-szk(2)-1)/2+1;
 localLdosk=localLdosk(xrang,yrang);
 
-%if nargin < 3
+if nargin < 5
     datarealmax=max(abs(localLdosk(:)));
-%else
-%    if isnan(datarealmax)
-%            datarealmax=max(abs(localLdosk(:)));
-%    end
-%end;
+else
+    if isnan(datarealmax)
+            datarealmax=max(abs(localLdosk(:)));
+    end
+end;
 lm=log(datarealmax)/log(10);
 mtix=10^(ceil(lm));
 % do some refinement to avoid only single labels
@@ -146,13 +158,21 @@ end;
  %bluemap(figure1)
 %bma_map(figure1);
 %blackmap(figure1);
-hanaguri_map(figure1);
-%hoffman_map(figure1);
+%hanaguri_map(figure1);
+hoffman_map(figure1);
+%fujita_map(figure1);
 
 %view([0 90])
 %pcolor(X,Y,localLdos');
 %axis('square')
+ axisshow=false
+ if ~axisshow
+     set(axes1, 'Visible','off')
+ end;
+cbar=false
+if cbar
     h = colorbar;
+end;
     ticks_res=round(ticks/datarealmax*256);
     % eliminate the same ticks_res
     ticksres1=ticks_res(1);
@@ -168,12 +188,14 @@ hanaguri_map(figure1);
         set(allAxesInFigure,'CLim',[0 datarealmax],'FontSize',fntsz); 
 view(axes1,[0 90]);
 caxis([-eps,datarealmax])
+if cbar
     set(h, 'YTick', ticksres1*datarealmax/256);
 set(h, 'YTickLabel', labels1);
+end;
 %titleName = ['E = ', num2str(E), ', z = ', num2str(z), ' Bohr'];
 %title(titleName);
-xlabel('k_x/\pi');
-ylabel('k_y/\pi' );
+xlabel('q_x/\pi');
+ylabel('q_y/\pi' );
 xlim(axes1,[-2 2]);
 ylim(axes1,[-2 2]);
 if fine >1
@@ -182,14 +204,22 @@ else
     fn='';
 end;
 shading flat
-% put some labels
-annotation(figure1,'textbox',...
-    [0.2 0.8 0.4 0.1],...
-    'String',{['E=',num2str(E*1000),' meV']},...
-    'FontSize',20,...
-    'FitBoxToText','off',...
-    'EdgeColor','none', 'Color',[1 0 0]);
 
+plotoctett=true;
+if plotoctett
+    symm=true;
+[kx,ky]=banana_1band('~/itp/docs/real_space/BdG/bscco/Z3/input_SC_U015_N35_Z3.txt',E);
+h=datarealmax;
+[o,figure1]=plot_octett_1band(kx,ky,E,figure1,symm,h);
+else
+  % put some labels
+%  annotation(figure1,'textbox',...
+%      [0.2 0.8 0.4 0.1],...
+%      'String',{['E=',num2str(E*1000),' meV']},...
+%      'FontSize',20,...
+%      'FitBoxToText','off',...
+%      'EdgeColor','none', 'Color',[1 0 0]);  
+end;
 if isunix
     % create pdf of figure
     [~,filename,extension]=fileparts(ldosfile);
@@ -202,10 +232,11 @@ if isunix
         xlim(axes1,[-2 2]);
         ylim(axes1,[-2 2])
     else
-        print('-djpeg', ['/tmp/',filename,extension,fn,'_ft.jpg'],'-r200');
-        xlim(axes1,[-1 1]);
-        ylim(axes1,[-1 1]);
-        print('-djpeg', ['/tmp/',filename,extension,fn,'_ft_zoom.jpg'],'-r200');
+        %print('-djpeg', ['/tmp/',filename,extension,fn,'_ft.jpg'],'-r200');
+        print('-dpng', ['/tmp/',filename,extension,fn,'_ft.png'],'-r200');
+        %xlim(axes1,[-1 1]);
+        %ylim(axes1,[-1 1]);
+        %print('-djpeg', ['/tmp/',filename,extension,fn,'_ft_zoom.jpg'],'-r200');
         xlim(axes1,[-2 2]);
         ylim(axes1,[-2 2])        
     end;

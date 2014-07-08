@@ -103,7 +103,7 @@ if isunix
 end;
 
 % NNN dos
-figure4=figure('Position',[200, 50, 500, 300]);
+figure4=figure('Position',[200, 50, 500, 400]);
 set(0,'DefaultAxesFontSize',fsz)
 plot4=plot(energy,[orbitalLDOSImpNNN;sum(orbitalLDOSImpNNN,1)]);
 setlabels(plot4,orb,plotrange);
@@ -116,11 +116,12 @@ end;
 figure5= figure('Position',[150, 100, 500, 300]);
 set(0,'DefaultAxesFontSize',fsz)
 
-plot5=plot(energy,[sum(orbitalLDOSFarAway,1);sum(orbitalLDOSImp,1);sum(orbitalLDOSImpNN,1);sum(orbitalLDOSImpNNN,1)]);
+%plot5=plot(energy,[sum(orbitalLDOSFarAway,1);sum(orbitalLDOSImp,1);sum(orbitalLDOSImpNN,1);sum(orbitalLDOSImpNNN,1)]);
+plot5=plot(energy,[sum(orbitalLDOSFarAway,1);sum(orbitalLDOSImp,1);sum(orbitalLDOSImpNN,1)]);
 set(plot5(1),'DisplayName','far away','LineStyle','-','LineWidth',2,'Color',[0 0 0]);
 set(plot5(2),'DisplayName','impurity','LineStyle','--','LineWidth',2,'Color',[0 0 0]);
 set(plot5(3),'DisplayName','NN','LineStyle','-','LineWidth',2,'Color',coloruf1);
-set(plot5(4),'DisplayName','NNN','LineStyle','-','LineWidth',2,'Color',coloruf2);
+%set(plot5(4),'DisplayName','NNN','LineStyle','-','LineWidth',2,'Color',coloruf2);
 xlim(plotrange);
 xlabel({'\omega [eV]'});
 
@@ -129,6 +130,7 @@ ylabel({'LDOS [1/eV]'});
 
 % Create legend
 legend('Location','northwest')
+legend('Location','northeast')
 %legend show
 if exist('omega0','var')
     % put in vertical bars at the energies omega0
@@ -180,7 +182,7 @@ ylabel({'LDOS rel'});
 legend1 = legend(gca,'show');
 set(legend1,'Location','Best');
 if isunix
-    print_pdf(['/tmp/',inputfile,'_rel.pdf']);
+  %  print_pdf(['/tmp/',inputfile,'_rel.pdf']);
 end;
 
 end

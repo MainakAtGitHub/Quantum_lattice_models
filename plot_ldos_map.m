@@ -124,7 +124,7 @@ elseif rotated=='n'
 elseif rotated==''
     axistype='';
 end;
-
+redlines=true;
     if ~isequal(scale,'l')
 
 caxis([-eps,datarealmax])
@@ -170,10 +170,14 @@ switch axistype
             case 'r'
                 x=cut/4*[-RDiscrete(1),RDiscrete(2)]+offset(1);
                 y=cut/4*[-RDiscrete(1),RDiscrete(2)]+offset(2);
-                plot3(x,y,z,'r');
+                if redlines
+                    plot3(x,y,z,'r');
+                end;
                 x=cut/4*[RDiscrete(1),-RDiscrete(2)]+offset(1);
                 y=cut/4*[-RDiscrete(1),RDiscrete(2)]+offset(2);
-                plot3(x,y,z,'r');
+                if redlines
+                    plot3(x,y,z,'r');
+                end;
                 if exist('cut','var')
                     % plot black box with corresponding cut and cuttof the image with white
                     % boxes
@@ -204,10 +208,10 @@ switch axistype
             case 'n'
                 x=cut/2*[-RDiscrete(1),RDiscrete(1)]+offset(1);
                 y=cut/2*[0,0]+offset(2);
-                plot3(x,y,z,'r');
+                %plot3(x,y,z,'r');
                 x=cut/2*[0,0]+offset(1);
                 y=cut/2*[-RDiscrete(2),RDiscrete(2)]+offset(2);
-                plot3(x,y,z,'r');
+               % plot3(x,y,z,'r');
                 if exist('cut','var')
                     % plot black box with corresponding cut and cuttof the image with white
                     % boxes
@@ -265,8 +269,11 @@ if isunix
             set(h,'visible','off');
             print('-dpng', ['/tmp/',filename,extension,'.png'],'-r200');
     else
-set(gcf, 'Renderer', 'zbuffer');
+set(gcf, 'Renderer', 'OpenGL');
+%set(gcf, 'Renderer', 'zbuffer');
 print('-djpeg', ['/tmp/',filename,extension,'.jpg'],'-r200');
+print('-dpng', ['/tmp/',filename,extension,'.png'],'-r200');
+
     end;
 %print_pdf(['/tmp/',filename,extension,'cut',num2str(N),'.pdf'])
 if nolabel

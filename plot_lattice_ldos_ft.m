@@ -1,4 +1,4 @@
-function figure1=plot_lattice_ldos_ft(ldosfile,scale,fine,fast)
+function figure1=plot_lattice_ldos_ft(ldosfile,scale,fine,fast,datarealmax)
 if nargin < 1
     ldosfile='lattice_greens_supercell_FeSe_N_15_M_9_U_0955_Vimp_5_E_minPt0084.mat';
 end;
@@ -96,13 +96,13 @@ end;
 ldosk = fftshift(ldosk);
 
 figure1=figure('Position',[200, 50, 400, 300],'PaperUnits','centimeter','PaperPosition',[4 1 12 9]);
-%if nargin < 3
+if nargin < 5
     datarealmax=max(abs(ldosk(:)));
-%else
-%    if isnan(datarealmax)
-%            datarealmax=max(abs(ldosk(:)));
-%    end
-%end;
+else
+    if isnan(datarealmax)
+            datarealmax=max(abs(ldosk(:)));
+    end
+end;
 lm=log(datarealmax)/log(10);
 mtix=10^(ceil(lm));
 % do some refinement to avoid only single labels
@@ -146,14 +146,22 @@ surface('Parent',axes1,'ZData',0*kx/pi,'YData',ky/pi,'XData',kx/pi,...
 
 %surfc(kx/pi,ky/pi,real(ldosk))
 axis square
-xlabel('k_x/\pi')
-ylabel('k_y/\pi')
+xlabel('q_x/\pi')
+ylabel('q_y/\pi')
 %bma_map(figure1);
 %blackmap(figure1);
  %bluemap(figure1)
- hanaguri_map(figure1);
- %hoffman_map(figure1);
-    h = colorbar;
+ %hanaguri_map(figure1);
+ hoffman_map(figure1);
+ %fujita_map(figure1);
+ axisshow=false
+ if ~axisshow
+     set(axes1, 'Visible','off')
+ end;
+ cbar=false;
+ if cbar
+     h = colorbar;
+ end
     ticks_res=round(ticks/datarealmax*256);
     % eliminate the same ticks_res
     ticksres1=ticks_res(1);
@@ -170,21 +178,38 @@ ylabel('k_y/\pi')
         set(allAxesInFigure,'CLim',[0 datarealmax],'FontSize',fntsz); 
 %view(axes1,[0 90]);
 caxis([-eps,datarealmax])
+if cbar
     set(h, 'YTick', ticksres1*datarealmax/256);
 set(h, 'YTickLabel', labels1);
+end;
 if fine >1
     fn=['fine_',num2str(fine)];
 else
     fn='';
 end;
-% put some labels
-annotation(figure1,'textbox',...
-    [0.2 0.8 0.4 0.1],...
-    'String',{['E=',num2str(E*1000),' meV']},...
-    'FontSize',20,...
-    'FitBoxToText','off',...
-    'EdgeColor','none', 'Color',[1 0 0]);
-
+% % put some labels
+%  annotation(figure1,'textbox',...
+%      [0.2 0.8 0.4 0.1],...
+%      'String',{['E=',num2str(E*1000),' meV']},...
+%      'FontSize',20,...
+%      'FitBoxToText','off',...
+%      'EdgeColor','none', 'Color',[1 0 0]);
+plotoctett=true;
+if plotoctett
+    symm=true;
+[kx,ky]=banana_1band('~/itp/docs/real_space/BdG/bscco/Z3/input_SC_U015_N35_Z3.txt',E);
+[o,figure1]=plot_octett_1band(kx,ky,E,figure1,symm);
+else
+%   % put some labels
+%  annotation(figure1,'textbox',...
+%      [0.2 0.8 0.4 0.1],...
+%      'String',{['E=',num2str(E*1000),' meV']},...
+%      'FontSize',20,...
+%      'FitBoxToText','off',...
+%      'EdgeColor','none', 'Color',[1 0 0]);  
+end;
+xlim([-2 2]);
+ylim([-2 2]);
 if isunix
     % create pdf of figure
     [~,filename,extension]=fileparts(ldosfile);
@@ -192,7 +217,8 @@ if isunix
     %                set(cb,'visible','off');
    % end;
    if fine >2
-       print('-djpeg', ['/tmp/',filename,extension,fn,'_ft.jpg'],'-r200');
+       %print('-djpeg', ['/tmp/',filename,extension,fn,'_ft.jpg'],'-r200');
+       print('-dpng', ['/tmp/',filename,extension,fn,'_ft.png'],'-r200');
    else
        print_pdf(['/tmp/',filename,extension,fn,'ft.pdf'])
    end;

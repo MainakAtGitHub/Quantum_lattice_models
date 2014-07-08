@@ -20,10 +20,10 @@ load([infile,'_SC'],'-mat');
 [kxg,kyg]=meshgrid(kx-pi,ky-pi);
 %kSpaceEigenValues=kSpaceEigenValues(1:numel(kx),1:numel(kx),:);
 kSpaceEigenValues = fftshift(kSpaceEigenValues(:,:,2));
-energy=[0.001:0.002:0.03];
+energy=[0.001:0.001:0.033];
 
 % Create figure
-figure1 = figure;
+figure1 = figure('Position',[200, 50, 200, 150],'PaperUnits','centimeter','PaperPosition',[4 1 12 9]);
 
 % Create axes
 axes1 = axes('Parent',figure1);
