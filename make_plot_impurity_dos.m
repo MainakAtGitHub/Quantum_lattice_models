@@ -116,12 +116,12 @@ end;
 figure5= figure('Position',[150, 100, 500, 300]);
 set(0,'DefaultAxesFontSize',fsz)
 
-%plot5=plot(energy,[sum(orbitalLDOSFarAway,1);sum(orbitalLDOSImp,1);sum(orbitalLDOSImpNN,1);sum(orbitalLDOSImpNNN,1)]);
-plot5=plot(energy,[sum(orbitalLDOSFarAway,1);sum(orbitalLDOSImp,1);sum(orbitalLDOSImpNN,1)]);
+plot5=plot(energy,[sum(orbitalLDOSFarAway,1);sum(orbitalLDOSImp,1);sum(orbitalLDOSImpNN,1);sum(orbitalLDOSImpNNN,1)]);
+%plot5=plot(energy,[sum(orbitalLDOSFarAway,1);sum(orbitalLDOSImp,1);sum(orbitalLDOSImpNN,1)]);
 set(plot5(1),'DisplayName','far away','LineStyle','-','LineWidth',2,'Color',[0 0 0]);
 set(plot5(2),'DisplayName','impurity','LineStyle','--','LineWidth',2,'Color',[0 0 0]);
 set(plot5(3),'DisplayName','NN','LineStyle','-','LineWidth',2,'Color',coloruf1);
-%set(plot5(4),'DisplayName','NNN','LineStyle','-','LineWidth',2,'Color',coloruf2);
+set(plot5(4),'DisplayName','NNN','LineStyle','-','LineWidth',2,'Color',coloruf2);
 xlim(plotrange);
 xlabel({'\omega [eV]'});
 

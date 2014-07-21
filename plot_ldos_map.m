@@ -75,15 +75,15 @@ end;
 ticks=mtix*tx; 
 labels = num2str(repmat(sign(ticks).*(abs(ticks)), 1, 1)', 2);
 if scale=='s'
-    surf(X,Y,sqrt(abs(localLdos')),'LineStyle','none','FaceColor','interp');
+    surf(X,Y,sqrt(abs(localLdos')),'LineStyle','none','FaceColor','flat');
     ticks=sign(tx).*sqrt(mtix*abs(tx));
     datarealmax=sqrt(datarealmax);
 elseif scale =='l'
-        surf(X,Y,log(abs(localLdos')),'LineStyle','none','FaceColor','interp');
+        surf(X,Y,log(abs(localLdos')),'LineStyle','none','FaceColor','flat');
             ticks=sign(tx).*log(mtix*abs(tx));
     datarealmax=log(datarealmax);
 else
-    surf(X,Y,abs(localLdos'),'LineStyle','none','FaceColor','interp');
+    surf(X,Y,abs(localLdos'),'LineStyle','none','FaceColor','flat');
     %datarealmax=datarealmax;
 end;
 global map
@@ -168,13 +168,13 @@ switch axistype
     case 'lines'
         switch rotated
             case 'r'
-                x=cut/4*[-RDiscrete(1),RDiscrete(2)]+offset(1);
-                y=cut/4*[-RDiscrete(1),RDiscrete(2)]+offset(2);
+                x=cut/4*[-RDiscrete(1),RDiscrete(2)]+offset(1)+.5;
+                y=cut/4*[-RDiscrete(1),RDiscrete(2)]+offset(2)+.5;
                 if redlines
                     plot3(x,y,z,'r');
                 end;
-                x=cut/4*[RDiscrete(1),-RDiscrete(2)]+offset(1);
-                y=cut/4*[-RDiscrete(1),RDiscrete(2)]+offset(2);
+                x=cut/4*[RDiscrete(1),-RDiscrete(2)]+offset(1)+.5;
+                y=cut/4*[-RDiscrete(1),RDiscrete(2)]+offset(2)+.5;
                 if redlines
                     plot3(x,y,z,'r');
                 end;
@@ -267,12 +267,12 @@ if isunix
     [~,filename,extension]=fileparts(ldosfile);
     if nolabel
             set(h,'visible','off');
-            print('-dpng', ['/tmp/',filename,extension,'.png'],'-r200');
+            print('-dpng', ['/tmp/',filename,extension,'.png'],'-r150');
     else
 set(gcf, 'Renderer', 'OpenGL');
 %set(gcf, 'Renderer', 'zbuffer');
-print('-djpeg', ['/tmp/',filename,extension,'.jpg'],'-r200');
-print('-dpng', ['/tmp/',filename,extension,'.png'],'-r200');
+print('-djpeg', ['/tmp/',filename,extension,'.jpg'],'-r150');
+print('-dpng', ['/tmp/',filename,extension,'.png'],'-r150');
 
     end;
 %print_pdf(['/tmp/',filename,extension,'cut',num2str(N),'.pdf'])

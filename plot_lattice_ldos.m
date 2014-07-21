@@ -1,11 +1,14 @@
-function figure1=plot_lattice_ldos(ldosfile,plotN,datarealmax)
+function figure1=plot_lattice_ldos(ldosfile,plotN,datarealmax,datarealmin)
 global map
 global scale
 if nargin < 1
     ldosfile='lattice_greens_supercell_FeSe_N_15_M_9_U_0955_Vimp_5_E_minPt0084.mat';
 end;
+if nargin <4
+    datarealmin=0
+end;
 % input
-lattice=false;
+lattice=true;
 fsz=20;
 set(0,'DefaultAxesFontSize',fsz)
 load(ldosfile,'-mat')
@@ -32,8 +35,8 @@ if ~(exist('nOrbitals','var'))
     nOrbitals = 10;
 end;
 if ~(exist('sublattice','var'))
-    sublattice = input('Sublattice not defined. Please enter: ');
-    %sublattice = 1
+    %sublattice = input('Sublattice not defined. Please enter: ');
+    sublattice = 1
 end;
 
 
@@ -128,7 +131,7 @@ else
         end;      
 end;
 axis('square');
-title(['\omega = ',num2str(E*1000), ' meV']);
+%title(['\omega = ',num2str(E*1000), ' meV']);
 % colorbar schemes
 
 cb=colorbar;
@@ -142,7 +145,7 @@ elseif isequal(map,'song');
     song_map(figure1);
 end;
 if isequal(scale,'')
-    caxis([0,datarealmax])
+    caxis([datarealmin,datarealmax])
 end;
 caxis
 % set caption to colorbar
