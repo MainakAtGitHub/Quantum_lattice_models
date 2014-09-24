@@ -205,7 +205,7 @@ else
 end;
 shading flat
 
-plotoctett=true;
+plotoctett=false;
 if plotoctett
     symm=true;
 [kx,ky]=banana_1band('~/itp/docs/real_space/BdG/bscco/Z3/input_SC_U015_N35_Z3.txt',E);

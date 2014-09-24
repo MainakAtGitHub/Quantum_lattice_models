@@ -28,13 +28,16 @@ end
 
 latticeVectors = list_plane_small_l(:,1:2);
 Gamma = reshape(GammaMixed, nOrbitals, nOrbitals, nSites^2);
-if abs(sublattice)>0
+orb2=nOrbitals/2;
+if sublattice>0
     orb2=nOrbitals/2;
     GammaNewOrder = Gamma;
     GammaNewOrder(1:orb2,orb2+1:nOrbitals,:) = Gamma(orb2+1:nOrbitals,1:orb2,:);
     GammaNewOrder(orb2+1:nOrbitals,1:orb2,:) = Gamma(1:orb2,orb2+1:nOrbitals,:);
     Gamma = GammaNewOrder;
-else 
+elseif sublattice<0
+    orb2=nOrbitals/2;
+else
     orb2=nOrbitals;
 end;
 
@@ -90,9 +93,14 @@ for i = -(ceil(N/2)-1):(ceil(N/2)-1)
             case 1
                 latticeVectors1Fe = [latticeVectors1Fe; i+j j-i; i+j j-i+1];     
             case -1
-                latticeVectors1Fe = [latticeVectors1Fe; i+j j-i; i+j j-i-1];     
-        end;                
-        Gamma1Fe = [Gamma1Fe Gamma2Fe(1:nOrbitals/2,:)];
+                latticeVectors1Fe = [latticeVectors1Fe; i+j j-i+1; i+j j-i];
+        end;  
+        if sublattice >0
+            Gamma1Fe = [Gamma1Fe Gamma2Fe(1:nOrbitals/2,:)];
+        else
+            Gamma1Fe = [Gamma1Fe Gamma2Fe(nOrbitals/2+1:nOrbitals,:)];
+        end;
+
     end
 end
 Gamma1Fe =  reshape(Gamma1Fe,nOrbitals/2, nOrbitals/2, 2*N^2);

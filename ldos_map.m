@@ -24,6 +24,12 @@ end;
 if (~exist('diagonal_GF','var'))
     diagonal_GF=false;
 end;
+if ~(exist('singular_quad','var'))
+    singular_quad=true;
+end;
+if ~singular_quad
+        sqstring='sum';
+end;
 E = Greensenergy;
 % some double code with impurity_dos (please check, if making
 % modifications)
@@ -50,6 +56,10 @@ shift = [51 51 41];
 RDiscrete = [40 40 80];
 load(wannier_filename,'-mat');
 szw=size(wannierValues);
+if length(szw)==2
+    % Fix for 2D maps
+    szw(3)=1;
+end;
 sizeWannier=szw(1:3);
 
 nBands = size(latticeGreens,1);

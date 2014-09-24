@@ -62,7 +62,7 @@ nBands = N^2*nOrbitals;
 % for reuse of the k-points with different M, we dropp the shift of the k-grid!
 kx = (2*pi/M)*(0:(M - 1));
 ky = kx;
-delKx = kx(2)-kx(1);
+delKx = 2*pi/M; %kx(2)-kx(1);
 delKy = delKx;
 % introduce some indexing for the k-vectors to use precalculated values
 kx_ind=[0:(M-1);ones(1,M)*M];
@@ -308,14 +308,25 @@ if part>division
                     ekukvk_fileGF=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'_g_GF.mat'];
                     if calcGreens
                         load(ekukvk_fileGF);
+                        if ~(exist('vK','var'))
+                            vK=0*uK;
+                        end;
                     else
                         try
                             load(ekukvk_file);
                         catch exception
+                            clear uK vK
                             load(ekukvk_fileGF);
                             uK = uK(siteIndices,:);
-                            vK = vK(siteIndices,:);
+                            if ~(exist('vK','var'))
+                                vK=0*uK;
+                            else
+                                vK = vK(siteIndices,:);
+                            end
                         end
+                        if ~(exist('vK','var'))
+                            vK=0*uK;
+                        end;
                     end;
             catch exception
                 % missing k-point (or wrong input as number of k-points)

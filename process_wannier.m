@@ -1,16 +1,38 @@
-function [ wannierValues xGrid yGrid zGrid] = process_wannier( filename, nOrb)
+function [ wannierValues xGrid yGrid zGrid] = process_wannier( filename, nOrb,im)
 readstring=['%g %g %g '];
-for n=1:nOrb
-    readstring=[readstring,' (%g,%g)'];
+% only two dimensional map
+readstring=['%g %g '];
+if im
+    imagnum=2;
+else
+    imagnum=1;
 end;
+for n=1:nOrb
+    if im
+        readstring=[readstring,' (%g,%g)'];
+        % new format
+        readstring=[readstring,' (%g,%g)'];
+    else
+        readstring=[readstring,' %g'];
+    end;
+end;
+if nargin <3
+    im=true
+end;
+
 fid = fopen(filename);
-WF = fscanf(fid, readstring, [3+2*nOrb inf]);
+pos=2;
+dble=2;
+%WF = fscanf(fid, readstring, [3+imagnum*nOrb inf]);
+% new format (2D)
+WF = fscanf(fid, readstring, [pos+imagnum*nOrb*dble inf]);
 fclose(fid);
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 szwf=size(WF);
 num=0;
 while ~(num==szwf(2))
+    disp(['total points ',num2str(szwf(2))]);
     xpoints=input('points in x-direction: ');
     ypoints=input('points in y-direction: ');
     zpoints=input('points in z-direction: ');
@@ -46,7 +68,11 @@ end;
 for n=1:nOrb
    % wannierValues(:,n)=WF(3+(n-1)*2+1,:)+1i*WF(3+n*2,:);
    % ignore the complex part
-   wannierValues(:,n)=WF(3+(n-1)*2+1,:);
+   if im
+       wannierValues(:,n)=WF(pos+(n-1)*2+1,:);
+   else
+       wannierValues(:,n)=WF(pos+(n-1)+1,:);
+   end;
 end;
 wannierValues=reshape(wannierValues,xpoints,ypoints,zpoints,nOrb);
 minx=min(WF(1,:));

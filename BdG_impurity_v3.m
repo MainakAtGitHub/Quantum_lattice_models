@@ -67,8 +67,17 @@ end;
 if ~exist('memorymanagement','var')
     memorymanagement=false;
 end;
+% magnetic calculation
+if ~exist('magnetic','var')
+    magnetic=false;
+end;
+% spin polarized calculation
+if ~exist('spinpolarized','var')
+    spinpolarized=false;
+end;
 % BdG matrix blocks
 nBands = N^2*nOrbitals;
+% kinetic energy
 H0 = lattice_translation(N, TBparameters, latticeVector);
 SCInteractionMatrix = lattice_translation(N, Gamma, latticeVectorsSC);
 %Himp = zeros(size(H0));
@@ -142,6 +151,14 @@ if ~(exist('nDown','var'))
     filldown=0.5*n0/nOrbitals;
     nDown = filldown*ones(nBands,1);
 end;
+if spinpolarized
+    if ~(exist('nUpdown','var'))
+        nUpdown = nDown;
+    end;
+    if ~(exist('nDowndown','var'))
+        nDowndown = nUp;
+    end;
+end
 % setup of some "growing" variables
 
 % not needed for long time, remove
@@ -179,46 +196,107 @@ end;
 Himp=get_Himp(Vimp,N,nOrbitals,sublattice);
 H = H0 + Himp;
 clear Himp;
+if magnetic
+    % do a non-magnetic simulation
+    if ~exist('Vimpdown','var')
+        Vimpdown=Vimp
+    end;
+    Himpdown=get_Himp(Vimpdown,N,nOrbitals,sublattice);
+    Hdown=H0+Himpdown;
+    clear Himpdown
+    if spinpolarized
+        if ~exist('mudown','var')
+            mudown=mu
+        end;
+    end;
+end;
+
 % BdG iterations
 for i = 1:maxLoop
     KE = H - mu*eye(nBands);
-    BdGMatrix = [KE -delta; -delta' -KE];
-    if memorymanagement
-        clear KE;
-    end;
-    [eVector, eValue] = eig(BdGMatrix);
-    % save some memory for following commands (here we need to save three
-    % full arrays such that we get in MB:
-    % 3*(2*N^2*nOrbitals)^2*8/1024/1024 (3.6G for N=25, 470M for N=15)
-    %clear BdGMatrix
-    [En, sortIndex] = sort(real(diag(eValue)));
-    % save some memory for following commands
-    %clear eValue
-    eVector = eVector(:,sortIndex);
-    fermi = 1./(1 + exp(En/kT));
-    nUpCal = (abs(eVector(1:nBands,:)).^2)*fermi;
-    nDownCal = (abs(eVector((nBands + 1):end,:)).^2)*(1 - fermi);
-    deltaCal = SCInteractionMatrix.*((eVector(1:nBands,:)*(((eVector((nBands + 1):end,:))').*repmat(fermi,1,nBands))));
+    if ~spinpolarized
+        if ~magnetic
+            [ nUpCal, nDownCal, deltaCal ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix);
+        else
+            KEdown = Hdown - mu*eye(nBands);
+            [ nUpCal, nDownCal, deltaCal ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
+        end;
+    else
+        mudown=mu;
+        % put a magnetic field here
+        if exist('field','var')
+            mu=mu+field;
+            mudown=mu-field;
+        end;    
+        if ~magnetic
+            KEdown = H - mudown*eye(nBands);
+            [ nUpCal, nDownCal, deltaCal ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
+            [ nUpCaldown, nDownCaldown, deltaCaldown ] = BdG_step( KEdown, conj(-delta'), kT, nBands, SCInteractionMatrix,-KE);
+        else
+            KEdown = Hdown - mudown*eye(nBands);
+            [ nUpCal, nDownCal, deltaCal ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
+            [ nUpCaldown, nDownCaldown, deltaCaldown ] = BdG_step( KEdown, conj(-delta'), kT, nBands, SCInteractionMatrix,-KE);
+        end;
+    end
+%     BdGMatrix = [KE -delta; -delta' -KE];
+%     if memorymanagement
+%         clear KE;
+%     end;
+%     [eVector, eValue] = eig(BdGMatrix);
+%     % save some memory for following commands (here we need to save three
+%     % full arrays such that we get in MB:
+%     % 3*(2*N^2*nOrbitals)^2*8/1024/1024 (3.6G for N=25, 470M for N=15)
+%     %clear BdGMatrix
+%     [En, sortIndex] = sort(real(diag(eValue)));
+%     % save some memory for following commands
+%     %clear eValue
+%     eVector = eVector(:,sortIndex);
+%     fermi = 1./(1 + exp(En/kT));
+%     nUpCal = (abs(eVector(1:nBands,:)).^2)*fermi;
+%     nDownCal = (abs(eVector((nBands + 1):end,:)).^2)*(1 - fermi);
+%     deltaCal = SCInteractionMatrix.*((eVector(1:nBands,:)*(((eVector((nBands + 1):end,:))').*repmat(fermi,1,nBands))));
     %clear eVector
     % convergence criterium: norm (as defined for vector)
     deltaDiff = norm(deltaCal(:) - delta(:))/norm(delta(:));
     nDiff = abs((1/N^2)*sum(nUpCal + nDownCal) - n0)/n0;
-    if (nDiff < nTol) && (deltaDiff < deltaTol)
+    if spinpolarized
+        tmp=-conj(deltaCaldown');
+        deltaDiff(2)= norm(tmp(:) - delta(:))/norm(delta(:));
+        nDiff(2) = abs((1/N^2)*sum(nUpCaldown + nDownCaldown) - n0)/n0;
+        clear tmp;
+    end;
+    if (sum(nDiff) < numel(nDiff)*nTol) && (sum(deltaDiff) < numel(deltaDiff)*deltaTol)
        break % go out of loop if self-consistency is achieved
     end
     % update
     beta =  beta1 + (beta2 - beta1).*rand(1); 
     nUp = beta*nUp + (1-beta)*nUpCal;
     nDown = beta*nDown + (1-beta)*nDownCal;
+    if spinpolarized
+        nUpdown = beta*nUpdown + (1-beta)*nUpCaldown;
+        nDowndown = beta*nDowndown + (1-beta)*nDownCaldown;
+    end;
     % new variable for input file: mixdelta to only converge nUp, nDown, mu
     % with fixing delta (makes only sense if the initial guess for delta is
     % already good).
     if mixdelta
-        delta = beta*delta + (1-beta)*deltaCal;
+        if ~spinpolarized
+            delta = beta*delta + (1-beta)*deltaCal;
+        else
+            delta = beta*delta + 0.5*(1-beta)*(deltaCal-deltaCaldown');
+        end
     end;
     nAvg = (1/N^2)*(sum(nUp + nDown));
-    mu = mu - alpha*(nAvg - n0);
-    nAcc = [nAcc; nAvg];   
+    if spinpolarized
+        nAvg(2) = (1/N^2)*(sum(nUpdown + nDowndown));
+    end
+    %if ~spinpolarized
+     %   mu=mu - alpha*(nAvg - n0);
+    %else
+        mu=mu - alpha*(mean(nAvg) - n0);
+        %mudown=mudown - alpha*(nAvg(2) - n0)
+    %end;
+    nAcc = [nAcc; mean(nAvg)];   
     % fix phase of delta (mostly not necessary, but always gives the same
     % result, largest gap set to be positive
     [~, index]=max(abs(delta(:)));
@@ -231,9 +309,13 @@ for i = 1:maxLoop
     deltaMaxAcc = [deltaMaxAcc; deltaMaxNN];
     deltaMinAcc = [deltaMinAcc; deltaMaxNNN]; 
     muAcc = [muAcc; mu];
-    deltaDiffAcc = [deltaDiffAcc; deltaDiff];
-    disp([num2str(i),' ndiff= ',num2str(nDiff), ' deltaDiff= ',num2str( deltaDiff), ' deltaMaxNN= ',num2str(deltaMaxNN)]);  
-    save(BdGfileName,'nAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','muAcc','mu', 'deltaTol', 'nTol','nUp','nDown');
+    deltaDiffAcc = [deltaDiffAcc; sum(deltaDiff)];
+    disp([num2str(i),' ndiff= ',num2str(nDiff), ' deltaDiff= ',num2str( deltaDiff), ' deltaMaxNN= ',num2str(deltaMaxNN)]);
+    if ~spinpolarized
+        save(BdGfileName,'nAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','muAcc','mu', 'nUp','nDown');
+    else
+        save(BdGfileName,'nAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown');
+    end
 end
 if i < maxLoop
     disp('Converged')

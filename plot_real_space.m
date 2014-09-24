@@ -75,7 +75,7 @@ for i = -(ceil(N/2)-1):(ceil(N/2)-1)
                 latticeVectors1Fe = [latticeVectors1Fe; i+j j-i; i+j j-i+1];
             case -1
                 % LiFeAs (not fixed yet)
-                latticeVectors1Fe = [latticeVectors1Fe; i+j j-i; i+j j-i-1];        
+                latticeVectors1Fe = [latticeVectors1Fe; i+j j-i; i+j j-i+1];        
         end;
         delta1Fe = [delta1Fe delta2Fe(1:nOrbitals/2,:)];
     end
@@ -83,7 +83,7 @@ end
 
 % reshape delta
 % zoom half way in
-plotN=ceil(N/2)-1
+plotN=ceil((round(N/2)-1)/2)*2+1;
 delta1Fe =  reshape(delta1Fe,nOrbitals/2, nOrbitals/2, 2*N^2);
 delta2Plot = zeros(nOrbitals/2*plotN, nOrbitals/2*plotN);
 effOrbitals=nOrbitals/2;

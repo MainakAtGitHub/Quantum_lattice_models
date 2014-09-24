@@ -2,9 +2,7 @@ function h=homogeneous_dos_v2(inputfile,calcSC)
 
 % Modified homogeneous_dos.m
 % takes \Delta_ij as input and constructs \Delta_i0.
-if ~exist('calcSC','var')
-    calcSC=true;
-end;
+
 if nargin <1
     % load relevant files
     TB_file='TB_hamiltonian_FeSe_2D.mat'
@@ -22,7 +20,9 @@ else
      read_input;
      read_input_file
 end;
-
+if ~exist('calcSC','var')
+    calcSC=true;
+end;
 if (~exist('Vimp','var'))
     if abs(Vimp)>0
         disp('Warning: finite impurity potential, not homogeneous case.')

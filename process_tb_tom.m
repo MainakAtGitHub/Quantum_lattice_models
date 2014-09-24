@@ -16,15 +16,17 @@ readstring1= ['\t(%g,%g)\t'];
 %end;
 number1=0
 for n=1:number
-    rrp= fscanf(fid, '%d', 6);
+    rrp= fscanf(fid, '\t%d', 6);
     line1=fscanf(fid,readstring1,2*nOrb^2);
     line2=reshape(line1,2,nOrb^2);
     line3=line2(1,:)+1i*line2(2,:);
     matrix=reshape(line3,nOrb,nOrb);
-    lv=[rrp(1)-rrp(4),rrp(2)-rrp(5),rrp(3)-rrp(5)];
+    lv=[rrp(1)-rrp(4),rrp(2)-rrp(5),rrp(3)-rrp(6)];
+    lv=[rrp(1),rrp(2),rrp(3)];
     if lv(3)==0
         number1=number1+1;
-        latticeVector(number1,:)=[rrp(1)-rrp(4),rrp(2)-rrp(5),rrp(3)-rrp(5)];
+        %latticeVector(number1,:)=[rrp(1)-rrp(4),rrp(2)-rrp(5),rrp(3)-rrp(6)];
+                latticeVector(number1,:)=[rrp(1),rrp(2),rrp(3)];
         TBparameters(:,:,number1)=matrix;
     end;
 end;

@@ -6,6 +6,9 @@ if nargin <3
     plotall=false;
 end;
 coloruf1=[250 	70 	22 ]/255;
+% pure red instead of orange
+coloruf1=[250 	0 	0 ]/255;
+% pure blue instead of UF_blue
 coloruf2= [0 	48 	135]/255;
 % support for wildcards
 kstar = strfind(inputfile, '*');
@@ -47,6 +50,7 @@ end;
 
 fsz=14;
 % load input
+plot_NNN=false;
 try
     load(inputfile,'-mat')
 catch
@@ -116,12 +120,17 @@ end;
 figure5= figure('Position',[150, 100, 500, 300]);
 set(0,'DefaultAxesFontSize',fsz)
 
+if plot_NNN
 plot5=plot(energy,[sum(orbitalLDOSFarAway,1);sum(orbitalLDOSImp,1);sum(orbitalLDOSImpNN,1);sum(orbitalLDOSImpNNN,1)]);
-%plot5=plot(energy,[sum(orbitalLDOSFarAway,1);sum(orbitalLDOSImp,1);sum(orbitalLDOSImpNN,1)]);
+else
+    plot5=plot(energy,[sum(orbitalLDOSFarAway,1);sum(orbitalLDOSImp,1);sum(orbitalLDOSImpNN,1)]);
+end;
 set(plot5(1),'DisplayName','far away','LineStyle','-','LineWidth',2,'Color',[0 0 0]);
-set(plot5(2),'DisplayName','impurity','LineStyle','--','LineWidth',2,'Color',[0 0 0]);
+set(plot5(2),'DisplayName','impurity','LineStyle','--','LineWidth',2,'Color',coloruf2);
 set(plot5(3),'DisplayName','NN','LineStyle','-','LineWidth',2,'Color',coloruf1);
+if plot_NNN
 set(plot5(4),'DisplayName','NNN','LineStyle','-','LineWidth',2,'Color',coloruf2);
+end;
 xlim(plotrange);
 xlabel({'\omega [eV]'});
 

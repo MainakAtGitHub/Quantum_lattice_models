@@ -19,9 +19,9 @@ switch sublattice
         end;
         % to do: setup correct impurity potential
         imp_matr(:,:,1) = [impPotential zeros(nOrbitals/2); zeros(nOrbitals/2) impPotential];
-        imp_vec(2,:)=[ 1 0];
+        imp_vec(2,:)=[0 1];
         imp_matr(:,:,2) = [impPotential zeros(nOrbitals/2); zeros(nOrbitals/2) zeros(nOrbitals/2)];
-        imp_vec(3,:)=[ 0 1];
+        imp_vec(3,:)=[1 0];
         imp_matr(:,:,3) = [0*impPotential zeros(nOrbitals/2);  zeros(nOrbitals/2) impPotential];
     case -1
         % not yet implemented!

@@ -8,7 +8,7 @@ if nargin <4
     datarealmin=0
 end;
 % input
-lattice=true;
+lattice=false;
 fsz=20;
 set(0,'DefaultAxesFontSize',fsz)
 load(ldosfile,'-mat')
@@ -35,8 +35,8 @@ if ~(exist('nOrbitals','var'))
     nOrbitals = 10;
 end;
 if ~(exist('sublattice','var'))
-    %sublattice = input('Sublattice not defined. Please enter: ');
-    sublattice = 1
+    sublattice = input('Sublattice not defined. Please enter: ');
+    %sublattice = 1
 end;
 
 
