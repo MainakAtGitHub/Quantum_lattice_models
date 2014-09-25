@@ -47,6 +47,9 @@ end;
 if ~(exist('debug','var'))
     debug=false;
 end;
+if ~(exist('nDosSitesfile','var'))
+    nDosSitesfile='';
+end;
 [dirprefix,~,~] = fileparts(inputfile);
 if ~isempty(dirprefix)
     dirprefix=[dirprefix,filesep]
@@ -69,33 +72,81 @@ kx_ind=[0:(M-1);ones(1,M)*M];
 kx_ind=kx_ind./repmat(gcd(kx_ind(1,:),kx_ind(2,:)),2,1);
 ky_ind=kx_ind;
 
-% lattice range for impurity, nn, nnn and far away sites
-farAwayCell = [1 1];
-impCell = [ceil(N/2) ceil(N/2)];
-impNNCell = impCell + [0 1];
+
 if ~calcGreens
-  switch sublattice
-    case 1
-	  efforb=nOrbitals/2;  
-        farAwaySiteIndex = ((farAwayCell(1)-1)*N + farAwayCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
-        impSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
-        impNNSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + ((nOrbitals/2+1):nOrbitals);
-        impNNNSiteIndex = ((impNNCell(1)-1)*N + impNNCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
-      case -1
-          % not yet implemented
-      case 0
-	      efforb=nOrbitals;
-        farAwaySiteIndex = ((farAwayCell(1)-1)*N + farAwayCell(2) - 1)*nOrbitals + (1:nOrbitals);
-        impSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + (1:nOrbitals);
-        impNNSiteIndex = ((impNNCell(1)-1)*N + impNNCell(2) - 1)*nOrbitals + (1:nOrbitals);
-        impNNNCell = impCell + [1 1];        
-        impNNNSiteIndex = ((impNNNCell(1)-1)*N + impNNNCell(2) - 1)*nOrbitals + (1:nOrbitals);
-  end;
-  siteIndices = [farAwaySiteIndex impSiteIndex impNNSiteIndex impNNNSiteIndex];
-  nDosSites = length(siteIndices);
+    if isempty(nDosSitesfile)
+        % lattice range for impurity, nn, nnn and far away sites
+        farAwayCell = [1 1];
+        impCell = [ceil(N/2) ceil(N/2)];
+        impNNCell = impCell + [0 1];
+        switch sublattice
+            case 1
+                efforb=nOrbitals/2;
+                farAwaySiteIndex = ((farAwayCell(1)-1)*N + farAwayCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
+                impSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
+                impNNSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + ((nOrbitals/2+1):nOrbitals);
+                impNNNSiteIndex = ((impNNCell(1)-1)*N + impNNCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
+            case -1
+                % not fully correct, but works fine for C_4 symmetric
+                % impurity
+                efforb=nOrbitals/2;
+                farAwaySiteIndex = ((farAwayCell(1)-1)*N + farAwayCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
+                impSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
+                impNNSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + ((nOrbitals/2+1):nOrbitals);
+                impNNNSiteIndex = ((impNNCell(1)-1)*N + impNNCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
+            case 0
+                efforb=nOrbitals;
+                farAwaySiteIndex = ((farAwayCell(1)-1)*N + farAwayCell(2) - 1)*nOrbitals + (1:nOrbitals);
+                impSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + (1:nOrbitals);
+                impNNSiteIndex = ((impNNCell(1)-1)*N + impNNCell(2) - 1)*nOrbitals + (1:nOrbitals);
+                impNNNCell = impCell + [1 1];
+                impNNNSiteIndex = ((impNNNCell(1)-1)*N + impNNNCell(2) - 1)*nOrbitals + (1:nOrbitals);
+        end;
+        siteIndices = [farAwaySiteIndex impSiteIndex impNNSiteIndex impNNNSiteIndex];
+        LDOSsites=[-inf,-inf; 0,0; 0,1;1,1];
+        nDosSites = length(siteIndices);
+    else
+        % user defined sites
+        load(nDosSitesfile);
+        % set up the siteIndices
+        siteIndices=[];
+        impCell = [ceil(N/2) ceil(N/2)];
+        for n=1:size(LDOSsites,1)
+            if abs(sublattice)>0
+                efforb=nOrbitals/2;
+                disp('not fully tested for 10 orbitals yet, works modulo C_4 symmetry')
+                a=sum(LDOSsites(n,:))/2;
+                b=LDOSsites(n,2)-LDOSsites(n,2);
+                cell2=[ceil(b) floor(a)];
+                if LDOSsites(n,1)==-inf
+                    cell=[ 1 1];
+                else
+                    cell=impCell+cell2;
+                end
+                if floor(a)==a
+                    siteIndex=((cell(1)-1)*N + cell(2) - 1)*nOrbitals +(1:efforb);
+                else
+                    siteIndex=((cell(1)-1)*N + cell(2) - 1)*nOrbitals +(1:efforb)+efforb;
+                end;
+            else
+                efforb=nOrbitals;
+                if LDOSsites(n,1)==-inf
+                    % far away point!
+                    cell=[ 1 1];
+                else
+                    cell=impCell+LDOSsites(n,:);
+                end
+                siteIndex=((cell(1)-1)*N + cell(2) - 1)*nOrbitals +(1:efforb);
+            end
+            siteIndices=[siteIndices siteIndex];
+        end
+        nDosSites = length(siteIndices);
+    end;
 else
 end;
 
+% only set up quantities if needed
+if ~(division==0 || part>division)
 % Supercell quantities
 maxHop = max(max(abs(latticeVectorsSC)));
 TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) = ...
@@ -108,6 +159,7 @@ TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) - mu*eye(nOr
 
 % supercell diagonalization
 nSuperCells = size(superLatticeVectors,1);
+end
 % variable not used ?
 %nUnitCellsDelta = size(superDeltaVectors,1);
 if ~calcGreens
@@ -459,16 +511,24 @@ if part>division
         else
             ldos = (-(1/pi))*imag(greensRealSpace);
         end;
-        orbitalLDOSFarAway = ldos(1:efforb,:);
-        totalLDOSFarAway = sum(orbitalLDOSFarAway,1); %#ok<NASGU>
-        orbitalLDOSImp = ldos(efforb+1:2*efforb,:);
-        totalLDOSImp = sum(orbitalLDOSImp,1);%#ok<NASGU>
-        orbitalLDOSImpNN = ldos(2*efforb+1:3*efforb,:);
-        totalLDOSImpNN = sum(orbitalLDOSImpNN,1);%#ok<NASGU>
-        orbitalLDOSImpNNN = ldos(3*efforb+1:4*efforb,:);
-        totalLDOSImpNNN = sum(orbitalLDOSImpNNN,1);%#ok<NASGU>
-        % to be done: change filename to general string
-        save(outputfilename, 'energy', 'orbitalLDOSFarAway', 'orbitalLDOSImp', 'orbitalLDOSImpNN', 'orbitalLDOSImpNNN');
+        if isempty(nDosSitesfile)
+            orbitalLDOSFarAway = ldos(1:efforb,:);
+            totalLDOSFarAway = sum(orbitalLDOSFarAway,1); %#ok<NASGU>
+            orbitalLDOSImp = ldos(efforb+1:2*efforb,:);
+            totalLDOSImp = sum(orbitalLDOSImp,1);%#ok<NASGU>
+            orbitalLDOSImpNN = ldos(2*efforb+1:3*efforb,:);
+            totalLDOSImpNN = sum(orbitalLDOSImpNN,1);%#ok<NASGU>
+            orbitalLDOSImpNNN = ldos(3*efforb+1:4*efforb,:);
+            totalLDOSImpNNN = sum(orbitalLDOSImpNNN,1);%#ok<NASGU>
+            % to be done: change filename to general string
+            save(outputfilename, 'energy', 'orbitalLDOSFarAway', 'orbitalLDOSImp', 'orbitalLDOSImpNN', 'orbitalLDOSImpNNN');
+        else
+            % new output format
+            for n=1:nDosSites/efforb
+                orbitalLDOS((n-1)*efforb+(1:efforb),:)=ldos((n-1)*efforb+(1:efforb),:);
+            end;
+             save(outputfilename, 'energy', 'orbitalLDOS', 'LDOSsites','efforb');           
+        end
     else
         save(outputfilename,'latticeGreens','N','nOrbitals','E','sublattice');
     end;

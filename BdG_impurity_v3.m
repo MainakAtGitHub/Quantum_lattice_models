@@ -187,6 +187,9 @@ end;
 if ~(exist('mixdelta','var'))
     mixdelta=true;
 end;
+if ~(exist('hom','var'))
+    hom=false;
+end;
 % write out a warning
 if ~mixdelta
     disp('Warning: Not mixing delta, only converging nUp, nDown, mu.');
@@ -267,6 +270,10 @@ for i = 1:maxLoop
     end;
     if (sum(nDiff) < numel(nDiff)*nTol) && (sum(deltaDiff) < numel(deltaDiff)*deltaTol)
        break % go out of loop if self-consistency is achieved
+    end
+    % homogenize calculation to get faster convergence
+    if (hom && (Vimp==0))
+        delta=homogenize_delta(delta,latticeVectorsSC,nOrb,N);
     end
     % update
     beta =  beta1 + (beta2 - beta1).*rand(1); 

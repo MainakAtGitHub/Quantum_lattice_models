@@ -1,8 +1,13 @@
-function f=make_plot_impurity_dos(inputfile,smoothenergy,plotall,omega0)
+function f=make_plot_impurity_dos(inputfile,smoothenergy,plrange,plotall,omega0)
+global plotrange
 if nargin <1
     inputfile='LDOS_FeSe_Milan_Gamma_Vimp_4_N_9_M_40_ita_0.003'
 end;
+% number of ldos positions to be plotted
 if nargin <3
+    plrange=inf;
+end;
+if nargin <4
     plotall=false;
 end;
 coloruf1=[250 	70 	22 ]/255;
@@ -43,94 +48,166 @@ if nargin < 2
     end
 end
 
-if (~exist('plotrange','var'))
+if (isempty(plotrange))
     plotrange=[-0.06 0.06];
+        %plotrange=[-2 2];
 end;
 
 
 fsz=14;
 % load input
-plot_NNN=false;
 try
     load(inputfile,'-mat')
 catch
     load(inputfile)
 end;
-szdata=size(orbitalLDOSFarAway);
-nOrbitals=szdata(1);
+% convert input to new format if needed
+if ~exist('orbitalLDOS','var')
+    szdata=size(orbitalLDOSFarAway);
+    efforb=szdata(1);
+    orbitalLDOS((1:efforb),:)=orbitalLDOSFarAway;
+    orbitalLDOS(efforb+(1:efforb),:)=orbitalLDOSImp;
+    orbitalLDOS(2*efforb+(1:efforb),:)=orbitalLDOSImpNN;
+    orbitalLDOS(3*efforb+(1:efforb),:)=orbitalLDOSImpNNN;
+    LDOSsites=[-inf,-inf; 0,0; 0,1;1,1];
+end;
+nDosSites = length(LDOSsites);
 orb={'orbital1','orbital2','orbital3','orbital4','orbital5','total'};
 orb={'d_{z^2}','d_{x^2-y^2}','d_{yz}','d_{xz}','d_{xy}','total'}; % labels for Tom's FeSe model
-orb={orb{1:nOrbitals},orb{6}};
+% fix for non existing variable
+if ~exist('efforb','var')
+    efforb=1;
+end;
+orb={orb{1:efforb},orb{6}};
 % some smoothing if necessary
 de=energy(2)-energy(1);
 smooth=floor(smoothenergy/de);
-orbitalLDOSFarAway=sg_smooth(orbitalLDOSFarAway,smooth);
-orbitalLDOSImp=sg_smooth(orbitalLDOSImp,smooth);
-orbitalLDOSImpNN=sg_smooth(orbitalLDOSImpNN,smooth);
-orbitalLDOSImpNNN=sg_smooth(orbitalLDOSImpNNN,smooth);
-% fix negative values (numerical error, smoothing artefacts)
-orbitalLDOSFarAway(orbitalLDOSFarAway<0)=0;
-orbitalLDOSImp(orbitalLDOSImp<0)=0;
-orbitalLDOSImpNN(orbitalLDOSImpNN<0)=0;
-orbitalLDOSImpNNN(orbitalLDOSImpNNN<0)=0;
+for n=1:nDosSites
+    tmp=sg_smooth(orbitalLDOS((n-1)*efforb+(1:efforb),:),smooth);
+    tmp(tmp<0)=0;
+    orbitalLDOS((n-1)*efforb+(1:efforb),:)=tmp;
+end;
+clear tmp;
+% orbitalLDOSFarAway=sg_smooth(orbitalLDOSFarAway,smooth);
+% orbitalLDOSImp=sg_smooth(orbitalLDOSImp,smooth);
+% orbitalLDOSImpNN=sg_smooth(orbitalLDOSImpNN,smooth);
+% orbitalLDOSImpNNN=sg_smooth(orbitalLDOSImpNNN,smooth);
+% % fix negative values (numerical error, smoothing artefacts)
+% orbitalLDOSFarAway(orbitalLDOSFarAway<0)=0;
+% orbitalLDOSImp(orbitalLDOSImp<0)=0;
+% orbitalLDOSImpNN(orbitalLDOSImpNN<0)=0;
+% orbitalLDOSImpNNN(orbitalLDOSImpNNN<0)=0;
 % DOS far away (without impurity)
-figure1=figure('Position',[200, 50, 500, 300]);
-set(0,'DefaultAxesFontSize',fsz)
-plot1=plot(energy,[orbitalLDOSFarAway;sum(orbitalLDOSFarAway,1)]);
-setlabels(plot1,orb,plotrange);
 
+% get filename of inputfile without path (doesn't work in windows yet)
 k = findstr(inputfile, '/');
 if ~isempty(k)
     	inputfile=inputfile(k(numel(k))+1:length(inputfile));
 end;
 
-if plotall
-if isunix
-    print_pdf(['/tmp/',inputfile,'_far_away.pdf']);
-end;
-% impurity DOS
-figure2=figure('Position',[200, 50, 500, 300]);
-set(0,'DefaultAxesFontSize',fsz)
-plot2=plot(energy,[orbitalLDOSImp;sum(orbitalLDOSImp,1)]);
-setlabels(plot2,orb,plotrange);
-if isunix
-    print_pdf(['/tmp/',inputfile,'_Imp.pdf']);
-end;
-
-% NN dos
-figure3=figure('Position',[200, 50, 500, 300]);
-set(0,'DefaultAxesFontSize',fsz)
-plot3=plot(energy,[orbitalLDOSImpNN;sum(orbitalLDOSImpNN,1)]);
-setlabels(plot3,orb,plotrange);
-if isunix
-    print_pdf(['/tmp/',inputfile,'_Imp_NN.pdf']);
-end;
-
-% NNN dos
-figure4=figure('Position',[200, 50, 500, 400]);
-set(0,'DefaultAxesFontSize',fsz)
-plot4=plot(energy,[orbitalLDOSImpNNN;sum(orbitalLDOSImpNNN,1)]);
-setlabels(plot4,orb,plotrange);
-if isunix
-    print_pdf(['/tmp/',inputfile,'_Imp_NNN.pdf']);
-end;
-end;
+if plotall && (efforb>0)
+    % plot all results orbital resolved, makes only sense for more than one
+    % orbital
+    for n=1:nDosSites
+        fig(1)=figure('Position',[200, 50, 500, 300]);
+        set(0,'DefaultAxesFontSize',fsz)
+        plot1=plot(energy,[orbitalLDOS((n-1)*efforb+(1:efforb),:);sum(orbitalLDOS((n-1)*efforb+(1:efforb),:),1)]);
+        setlabels(plot1,orb,plotrange);
+        if isunix
+            print_pdf(['/tmp/',inputfile,'_dx_',num2str(LDOSsites(n,1)),'_dy_',num2str(LDOSsites(n,2)),'.pdf']);
+        end;
+    end
+end
+% if plotall
+% % impurity DOS
+% fig(2)=figure('Position',[200, 50, 500, 300]);
+% set(0,'DefaultAxesFontSize',fsz)
+% plot2=plot(energy,[orbitalLDOS(efforb+(1:efforb),:);sum(orbitalLDOS(efforb+(1:efforb),:),1)]);
+% setlabels(plot2,orb,plotrange);
+% if isunix
+%     print_pdf(['/tmp/',inputfile,'_Imp.pdf']);
+% end;
+% 
+% % NN dos
+% fig(3)=figure('Position',[200, 50, 500, 300]);
+% set(0,'DefaultAxesFontSize',fsz)
+% plot3=plot(energy,[orbitalLDOS(2*efforb+(1:efforb),:);sum(orbitalLDOS(2*efforb+(1:efforb),:),1)]);
+% setlabels(plot3,orb,plotrange);
+% if isunix
+%     print_pdf(['/tmp/',inputfile,'_Imp_NN.pdf']);
+% end;
+% 
+% % NNN dos
+% fig(4)=figure('Position',[200, 50, 500, 400]);
+% set(0,'DefaultAxesFontSize',fsz)
+% plot4=plot(energy,[orbitalLDOS(3*efforb+(1:efforb),:);sum(orbitalLDOS(3*efforb+(1:efforb),:),1)]);
+% setlabels(plot4,orb,plotrange);
+% if isunix
+%     print_pdf(['/tmp/',inputfile,'_Imp_NNN.pdf']);
+% end;
+% end;
 % compare total dos
 %figure5= figure('Position',[200, 50, 500, 300]);
+
+% plot the position dependence of the summed lattice ldos
 figure5= figure('Position',[150, 100, 500, 300]);
 set(0,'DefaultAxesFontSize',fsz)
 
-if plot_NNN
-plot5=plot(energy,[sum(orbitalLDOSFarAway,1);sum(orbitalLDOSImp,1);sum(orbitalLDOSImpNN,1);sum(orbitalLDOSImpNNN,1)]);
+% plot all sites or up to the plrange, or the sites given in plrange
+% set up the summed ldos
+if length(plrange)>1
+    plrng=plrange;
 else
-    plot5=plot(energy,[sum(orbitalLDOSFarAway,1);sum(orbitalLDOSImp,1);sum(orbitalLDOSImpNN,1)]);
+    plrange=min(plrange,nDosSites);
+    plrng=1:plrange;
 end;
-set(plot5(1),'DisplayName','far away','LineStyle','-','LineWidth',2,'Color',[0 0 0]);
-set(plot5(2),'DisplayName','impurity','LineStyle','--','LineWidth',2,'Color',coloruf2);
-set(plot5(3),'DisplayName','NN','LineStyle','-','LineWidth',2,'Color',coloruf1);
-if plot_NNN
-set(plot5(4),'DisplayName','NNN','LineStyle','-','LineWidth',2,'Color',coloruf2);
+plrange=min(plrange,nDosSites);
+for n=plrng
+    sumorbitalLDOS(n,:)=sum(orbitalLDOS(efforb*(n-1)+(1:efforb),:),1);
 end;
+plot5=plot(energy,sumorbitalLDOS);
+
+% if plot_NNN
+%     plot5=plot(energy,[sum(orbitalLDOS((1:efforb),:),1);sum(orbitalLDOS(efforb+(1:efforb),:),1);sum(orbitalLDOS(2*efforb+(1:efforb),:),1);sum(orbitalLDOS(3*efforb+(1:efforb),:),1)]);
+% else
+%     plot5=plot(energy,[sum(orbitalLDOS((1:efforb),:),1);sum(orbitalLDOS(efforb+(1:efforb),:),1);sum(orbitalLDOS(2*efforb+(1:efforb),:),1)]);
+% end;
+
+% set some special names for certain LDOSsites:
+n0=0;
+for n=plrng
+    n0=n0+1;
+    if isequal(LDOSsites(n,:),[-inf -inf])
+        namestring='far away';
+        lsty='-';
+        lcol=[0 0 0];
+    elseif isequal(LDOSsites(n,:),[0 0])
+        namestring='impurity';
+        lsty='--';
+        lcol=coloruf2;
+    elseif isequal(LDOSsites(n,:),[0 1])
+        namestring='NN';
+        lsty='-';
+        lcol=coloruf1;
+    elseif isequal(LDOSsites(n,:),[1 1])
+        namestring='NNN';
+        lsty='-';
+        lcol=coloruf2;
+    else
+        namestring=['d=(',num2str(LDOSsites(n,1)),',',num2str(LDOSsites(n,2)),')'];
+        lsty='';
+    end
+    set(plot5(n0),'DisplayName',namestring);
+    if ~isempty(lsty)
+       set(plot5(n0),'LineStyle',lsty,'LineWidth',2,'Color',lcol);
+    end
+end;
+% set(plot5(1),'DisplayName','far away','LineStyle','-','LineWidth',2,'Color',[0 0 0]);
+% set(plot5(2),'DisplayName','impurity','LineStyle','--','LineWidth',2,'Color',coloruf2);
+% set(plot5(3),'DisplayName','NN','LineStyle','-','LineWidth',2,'Color',coloruf1);
+% if plrange(end)>10
+% set(plot5(4),'DisplayName','NNN','LineStyle','-','LineWidth',2,'Color',coloruf2);
+% end;
 xlim(plotrange);
 xlabel({'\omega [eV]'});
 
@@ -149,19 +226,24 @@ if exist('omega0','var')
 uistack(l1,'bottom')
 uistack(l2,'bottom')
 end;
+fndpeaks=false;
 if isunix
     print_pdf(['/tmp/',inputfile,'_tot.pdf']);
+    if fndpeaks
     if smoothenergy>0
         peakdistance=ceil(20*smoothenergy/de);
     else
         peakdistance=20;
     end;
+    if peakdistance>200
+        peakdistance=200
+    end;
     energyrange=find((2*plotrange(1)<energy)+(2*plotrange(2)>energy)-1==1);
     % identify some peaks and show the positions in the plot
-    [imppks,implocs]=findpeaks(sum(orbitalLDOSImp(:,energyrange),1),'MINPEAKDISTANCE',peakdistance,'SORTSTR','descend','NPEAKS',40);
-    [NNpks,NNlocs]=findpeaks(sum(orbitalLDOSImpNN(:,energyrange),1),'MINPEAKDISTANCE',peakdistance,'SORTSTR','descend','NPEAKS',40);
-    [NNNpks,NNNlocs]=findpeaks(sum(orbitalLDOSImpNNN(:,energyrange),1),'MINPEAKDISTANCE',peakdistance,'SORTSTR','descend','NPEAKS',40);
-    [farpks,farlocs]=findpeaks(sum(orbitalLDOSFarAway(:,energyrange),1),'MINPEAKDISTANCE',peakdistance,'SORTSTR','descend','NPEAKS',40);
+    [imppks,implocs]=findpeaks(sum(orbitalLDOS(efforb+(1:efforb),energyrange),1),'MINPEAKDISTANCE',peakdistance,'SORTSTR','descend','NPEAKS',40);
+    [NNpks,NNlocs]=findpeaks(sum(orbitalLDOS(2*efforb+(1:efforb),energyrange),1),'MINPEAKDISTANCE',peakdistance,'SORTSTR','descend','NPEAKS',40);
+    [NNNpks,NNNlocs]=findpeaks(sum(orbitalLDOS(3*efforb+(1:efforb),energyrange),1),'MINPEAKDISTANCE',peakdistance,'SORTSTR','descend','NPEAKS',40);
+    [farpks,farlocs]=findpeaks(sum(orbitalLDOS((1:efforb),energyrange),1),'MINPEAKDISTANCE',peakdistance,'SORTSTR','descend','NPEAKS',40);
     hold on
     energyw=energy(energyrange);
     plot(energyw(implocs),imppks,'k^','markerfacecolor',[1 0 0])
@@ -171,12 +253,14 @@ if isunix
     xlim(2*plotrange);
     f={[energyw(implocs);imppks],[energyw(NNlocs);NNpks],[energyw(NNNlocs);NNNpks],[energyw(farlocs);farpks]};
     % give back the peak positions of the 5 largest peaks
+    end;
 end;
 
+    if fndpeaks
 
 %peak detection plot 
 figure6= figure('Position',[200, 50, 500, 300]);
-data=[sum(orbitalLDOSImpNNN)./sum(orbitalLDOSImpNN,1);1./sum(orbitalLDOSImpNNN,1).*sum(orbitalLDOSImpNN,1)];
+data=[sum(orbitalLDOSImpNNN)./sum(orbitalLDOS(2*efforb+(1:efforb),:),1);1./sum(orbitalLDOS(3*efforb+(1:efforb),:),1).*sum(orbitalLDOS(2*efforb+(1:efforb),:),1)];
 plot6=plot(energy,data);
 set(plot6(1),'DisplayName','NNN/NN','Color',coloruf2);
 set(plot6(2),'DisplayName','NN/NNN','Color',coloruf1);
@@ -193,7 +277,7 @@ set(legend1,'Location','Best');
 if isunix
   %  print_pdf(['/tmp/',inputfile,'_rel.pdf']);
 end;
-
+    end
 end
 
 function setlabels(plot,orb,range)
