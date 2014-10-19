@@ -42,14 +42,15 @@ if nargin < 2
     fig = gcf;
 end
 % workaround for KU computer:
+cmd='gs';
 if isunix
     [status,string]=system('lsb_release -c');
     if status==0
         if ~isempty(findstr(string,'trusty'))
-            disp('workaround for gs used');
-            disp('problem with gs, using another export');
-            print(name,'-dpdf');
-            return
+            %disp('workaround for gs used');
+            %disp('problem with gs, using another export');
+            %print(name,'-dpdf');
+            cmd=['export LD_LIBRARY_PATH="";',cmd];
         end;
     end;
 end
@@ -67,11 +68,11 @@ end
 % Construct the command string for ghostscript. This assumes that the
 % ghostscript binary is on your path - you can also give the complete path,
 % e.g. cmd = '"C:\Program Files\gs\gs8.63\bin\gswin32c.exe"';
-cmd = 'gs';
 if ispc
     cmd = [cmd 'win32c.exe'];
 end
 options = [' -q -dNOPAUSE -dBATCH -dEPSCrop -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -sOutputFile="' name '" -f "' tmp_nam '"'];
+% options = [' -dNOPAUSE -dBATCH -dEPSCrop -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -sOutputFile="' name '" -f "' tmp_nam '"'];
 % Convert to pdf
 [status result] = system([cmd options]);
 % Check status

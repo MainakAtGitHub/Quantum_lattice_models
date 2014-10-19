@@ -83,7 +83,7 @@ elseif scale =='l'
             ticks=sign(tx).*log(mtix*abs(tx));
     datarealmax=log(datarealmax);
 else
-    surf(X,Y,abs(localLdos'),'LineStyle','none','FaceColor','flat');
+    surf(X,Y,localLdos','LineStyle','none','FaceColor','flat');
     %datarealmax=datarealmax;
 end;
 global map
@@ -111,7 +111,7 @@ end;
             labels1=[labels1;labels(n,:)];
         end
     end;
-    if ~isequal(scale,'l')
+    if (~isequal(scale,'l') && ~isequal(map,'all'))
         caxis([0,datarealmax])
         allAxesInFigure = findall(figure1,'type','axes');
         set(allAxesInFigure,'CLim',[0 datarealmax],'FontSize',fntsz); 
@@ -125,7 +125,7 @@ elseif rotated==''
     axistype='';
 end;
 redlines=true;
-    if ~isequal(scale,'l')
+    if (~isequal(scale,'l')&& ~isequal(map,'all'))
 
 caxis([-eps,datarealmax])
     end

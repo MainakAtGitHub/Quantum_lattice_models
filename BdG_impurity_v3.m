@@ -123,7 +123,11 @@ switch sublattice
         iNNNsiteRange = iImpNNRange((1+nOrbitals/2):nOrbitals);
         jNNNsiteRange = jNNsiteRange;
     case -1
-        % to be implemented
+        % to be implemented (not tested)
+        iNNsiteRange = iImpNNRange(1:nOrbitals/2);
+        jNNsiteRange = jImpNNRange(1:nOrbitals/2);
+        iNNNsiteRange = iImpNNRange((1+nOrbitals/2):nOrbitals);
+        jNNNsiteRange = jNNsiteRange;
     case 0
 %         % no sublattice (5 orbital)
 %         if ~ischar(Vimp)
@@ -271,9 +275,9 @@ for i = 1:maxLoop
     if (sum(nDiff) < numel(nDiff)*nTol) && (sum(deltaDiff) < numel(deltaDiff)*deltaTol)
        break % go out of loop if self-consistency is achieved
     end
-    % homogenize calculation to get faster convergence
+    % homogenize calculation to get faster convergence without impurity
     if (hom && (Vimp==0))
-        delta=homogenize_delta(delta,latticeVectorsSC,nOrb,N);
+        delta=homogenize_delta(delta,latticeVectorsSC,nOrbitals,N);
     end
     % update
     beta =  beta1 + (beta2 - beta1).*rand(1); 

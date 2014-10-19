@@ -1,14 +1,20 @@
-function [TBparameters   latticeVector  sublattice] = process_tb_tom( filename, nOrb)
+function [TBparameters, latticeVector, sublattice] = process_tb_tom( filename, nOrb)
 fid = fopen(filename);
 % read string in first line
+oldformat=false;
+if oldformat
+    [s]= fscanf(fid, '%s', 10)
+end;
 % read number of matrices and number of orbitals
 [number]= fscanf(fid, '%*s  %*s  %*s %d', 1);
 [nOrb]= fscanf(fid, '%d', 1);
+if ~oldformat
 [s]= fscanf(fid, '%s', 1)
 [s]= fscanf(fid, '%s', 1)
 [s]= fscanf(fid, '%s', 1)
 [s]= fscanf(fid, '%s', 1)
 [s]= fscanf(fid, '%s', 1)
+end;
 sublattice=1;
 readstring1= ['\t(%g,%g)\t'];
 %for o=1:nOrb
@@ -21,19 +27,20 @@ for n=1:number
     line2=reshape(line1,2,nOrb^2);
     line3=line2(1,:)+1i*line2(2,:);
     matrix=reshape(line3,nOrb,nOrb);
-    lv=[rrp(1)-rrp(4),rrp(2)-rrp(5),rrp(3)-rrp(6)];
+   % lv=[rrp(1)-rrp(4),rrp(2)-rrp(5),rrp(3)-rrp(6)];
     lv=[rrp(1),rrp(2),rrp(3)];
     if lv(3)==0
         number1=number1+1;
         %latticeVector(number1,:)=[rrp(1)-rrp(4),rrp(2)-rrp(5),rrp(3)-rrp(6)];
                 latticeVector(number1,:)=[rrp(1),rrp(2),rrp(3)];
-        TBparameters(:,:,number1)=matrix;
+                % do a transpose due to convention differences!
+        TBparameters(:,:,number1)=matrix';
     end;
 end;
     % only consider real part?
 im=max(abs(imag(TBparameters(:))));
 if im < 1e-8
-    TBparameters=real(TBparameters)
+    TBparameters=real(TBparameters);
 end;
 save([filename,'_conv_z0.mat'],'TBparameters','latticeVector','sublattice');
 number2=0;

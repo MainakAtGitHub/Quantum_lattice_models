@@ -12,7 +12,7 @@ if nargin <4
     nOrbitals=10;
 end;
 if nargin <5
-    sublattice=1;
+    sublattice=-1
 end;
 fsz=20;
 load(inputfile,'-mat'); % BdG_homogeneous_FeSe_Toms_BS_6Dec13_GammaCut_3_N_9.mat
@@ -72,12 +72,18 @@ for i = -(ceil(N/2)-1):(ceil(N/2)-1)
         switch sublattice
             case 1
                 % FeSe
-                latticeVectors1Fe = [latticeVectors1Fe; i+j j-i; i+j j-i+1];
+                latticeVectors1Fe = [latticeVectors1Fe; i+j, j-i; i+j, j-i+1];
+                delta1Fe = [delta1Fe delta2Fe(1:nOrbitals/2,:)];
             case -1
                 % LiFeAs (not fixed yet)
-                latticeVectors1Fe = [latticeVectors1Fe; i+j j-i; i+j j-i+1];        
+                latticeVectors1Fe = [latticeVectors1Fe; i+j j-i; i+j j-i-1];
+                % tmp=delta2Fe((1:nOrbitals/2)+nOrbitals/2,:);
+                tmp= delta2Fe(1:nOrbitals/2,:);
+                %tmp(:,(1:nOrbitals/2)+nOrbitals/2)=0;
+                %tmp(:,(1:nOrbitals/2))=0;
+                delta1Fe = [delta1Fe tmp];
         end;
-        delta1Fe = [delta1Fe delta2Fe(1:nOrbitals/2,:)];
+     %   delta1Fe = [delta1Fe delta2Fe(1:nOrbitals/2,:)];
     end
 end
 
