@@ -82,7 +82,7 @@ for iKx = 1:M
             % diagonalizing for normal state DOS
             kSpaceHopping = zeros(nOrbitals,nOrbitals);
             for iUnitCell = 1:nUnitCells
-                iLatticeVector = latticeVector(iUnitCell,:);
+                iLatticeVector = latticeVector(iUnitCell,1:2);
                 kSpaceHopping = kSpaceHopping + TBparameters(:,:,iUnitCell)*exp(1i*(iLatticeVector*k'));
             end                        
             [eigVectorNormal, eigValueNormal] = eig(kSpaceHopping);
