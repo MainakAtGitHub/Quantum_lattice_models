@@ -58,8 +58,9 @@ load(TB_file);
 % possibly not necessary?
 %latticeVectors = latticeVector;
 load(Gamma_file);
+% problem with build-in function, explicitely overwrite it
+mu=0;
 load(BdGfileName);
-
 nOrbitals = size(TBparameters,1);
 nBands = N^2*nOrbitals;
 % for reuse of the k-points with different M, we dropp the shift of the k-grid!
@@ -145,6 +146,40 @@ if ~calcGreens
 else
 end;
 
+% some code for parallelization
+if nargin < 2
+    startindex=1;
+    endindex=M^2;
+    % do also the integration
+    part=1;
+    division=0;
+else
+    % set up the start and endindex for parallelization
+    if isa(division,'char')
+        division=str2num(division);
+    end;
+    if isa(part,'char')
+        part=str2num(part);
+    end
+    if part > division
+        % just do the summation and integration
+        startindex=1;
+        endindex=0;
+    elseif part <0
+        % only calculate single point
+        startindex=-part;
+        endindex=-part;
+    else
+        pointspertask=ceil(M^2/division);
+        startindex=pointspertask*(part-1)+1;
+        endindex=startindex+pointspertask-1;
+        if endindex>M^2
+            % if division is not divisor of M^2, the last task has to do less
+            endindex=M^2
+        end;
+    end
+end
+
 % only set up quantities if needed
 if ~(division==0 || part>division)
 % Supercell quantities
@@ -179,40 +214,6 @@ end;
 if ~exist('casestring','var')
     casestring='LDOS_FeSe_Milan_Gamma';
 end;
-
-% some code for parallelization
-if nargin < 2
-    startindex=1;
-    endindex=M^2;
-    % do also the integration
-    part=1;
-    division=0;
-else
-    % set up the start and endindex for parallelization
-    if isa(division,'char')
-        division=str2num(division);
-    end;
-    if isa(part,'char')
-        part=str2num(part);
-    end
-    if part > division
-        % just do the summation and integration
-        startindex=1;
-        endindex=0;
-    elseif part <0
-        % only calculate single point
-        startindex=-part;
-        endindex=-part;
-    else
-        pointspertask=ceil(M^2/division);
-        startindex=pointspertask*(part-1)+1;
-        endindex=startindex+pointspertask-1;
-        if endindex>M^2
-            % if division is not divisor of M^2, the last task has to do less
-            endindex=M^2
-        end;
-    end
-end
 
 if (~exist('tetra','var'))
     tetra=false;

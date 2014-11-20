@@ -335,7 +335,7 @@ if i < maxLoop
 else
     disp('***********Not converged**********')
 end
-
+r=1;
 % plot
 figure;
 subplot(2,2,1); plot(nAcc); title('nAcc'); axis('square');
