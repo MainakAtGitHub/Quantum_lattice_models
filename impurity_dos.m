@@ -50,6 +50,9 @@ end;
 if ~(exist('nDosSitesfile','var'))
     nDosSitesfile='';
 end;
+if ~(exist('version','var'))
+    version=1.0;
+end;
 [dirprefix,~,~] = fileparts(inputfile);
 if ~isempty(dirprefix)
     dirprefix=[dirprefix,filesep]
@@ -58,7 +61,7 @@ load(TB_file);
 % possibly not necessary?
 %latticeVectors = latticeVector;
 load(Gamma_file);
-% problem with build-in function, explicitely overwrite it
+% explicitely overwrite function mu.m from Matlab
 mu=0;
 load(BdGfileName);
 nOrbitals = size(TBparameters,1);
@@ -200,7 +203,11 @@ end
 if ~calcGreens
     % find the
 energy = linspace(firstEnergy, lastEnergy, nEnergyPoints);
+if version >0
+    E = repmat(energy,nBands*2,1);
+else
 E = repmat(energy,nBands,1);
+end
 else
     if ~(exist('Greensenergy','var'))
         disp('No Greensenergy given, setting to 0.');
@@ -230,9 +237,15 @@ if (division==0 || part>division)
     else
         % some huge arrays to store the result
         % store the edges twice to calculate the whole area
+        if version >0
+        ukall=zeros(M+1,M+1,nDosSites,nBands*2);
+    %    vkall=zeros(M+1,M+1,nDosSites,nBands);
+        Ekall=zeros(M+1,M+1,nBands*2);
+        else
         ukall=zeros(M+1,M+1,nDosSites,nBands);
         vkall=zeros(M+1,M+1,nDosSites,nBands);
         Ekall=zeros(M+1,M+1,nBands);
+        end;
     end;
 end;
 % split casestring from directories
@@ -296,31 +309,61 @@ for index=startindex:endindex
         end;
         clear eigValue
         eigVectorK = (eigVector(:,sortingIndex));
-        Ek_vector=eigValueK((nBands + 1):end);
+        if version >0
+            Ek_vector=eigValueK;
+        else
+            Ek_vector=eigValueK((nBands + 1):end);
+        end;
         clear eigValueK
         if ~calcGreens
+            if version >0
+                % only use this part for the calculation of the Greens
+                % function
+                uK = eigVectorK(siteIndices,:);
+            else
             uK = eigVectorK(siteIndices,(nBands + 1):end);
             vK = eigVectorK(nBands + siteIndices,(nBands + 1):end);
+            end
             clear eigVectorK
             % depending on the mode do different things
             if division==0
                 % single calculation of full DOS
                 Ek = repmat(Ek_vector, 1, nEnergyPoints) ;
-                greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita )) + ...
+                if version >0
+                    greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita ));
+                else
+                    greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita )) + ...
                     ((abs(vK)).^2)*(1./(E + Ek + 1i*ita ));
+                end
             else
                 % save result in one single file
                 % put k_vector in filename to avoid double calculation ?
-                save(ekukvk_file,'uK','vK','Ek_vector');
+                if version >0
+                    save(ekukvk_file,'uK','Ek_vector');
+                else
+                    save(ekukvk_file,'uK','vK','Ek_vector');
+                end           
             end
         else
-            uK = eigVectorK(1:nBands,(nBands+1):end);
-            vK = eigVectorK((nBands+1):end,(nBands+1):end);
+            if version >0
+                uK = eigVectorK(1:nBands,:);
+            else
+                uK = eigVectorK(1:nBands,(nBands+1):end);
+                vK = eigVectorK((nBands+1):end,(nBands+1):end);
+            end;
             if division==0
                 EnRep = repmat(Ek_vector',nBands,1);
-                latticeGreensK(iKx, iKy, :, :) = (uK./(E - EnRep + 1i*ita))*(uK') + (vK./(E + EnRep + 1i*ita))*(vK');
+                if version >0
+                    latticeGreensK(iKx, iKy, :, :) = (uK./(E - EnRep + 1i*ita))*(uK');
+                else
+                    latticeGreensK(iKx, iKy, :, :) = (uK./(E - EnRep + 1i*ita))*(uK') + (vK./(E + EnRep + 1i*ita))*(vK');
+                end
             else
+                if version >0
+                save(ekukvk_fileGF,'uK','Ek_vector');
+                else
                 save(ekukvk_fileGF,'uK','vK','Ek_vector');
+                end
             end;
 
         end
@@ -361,9 +404,12 @@ if part>division
                     ekukvk_fileGF=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'_g_GF.mat'];
                     if calcGreens
                         load(ekukvk_fileGF);
+                        if version >0
+                        else
                         if ~(exist('vK','var'))
                             vK=0*uK;
                         end;
+                        end
                     else
                         try
                             load(ekukvk_file);
@@ -371,15 +417,22 @@ if part>division
                             clear uK vK
                             load(ekukvk_fileGF);
                             uK = uK(siteIndices,:);
+                            if version >0
                             if ~(exist('vK','var'))
                                 vK=0*uK;
                             else
                                 vK = vK(siteIndices,:);
                             end
+                            else
+                                vK = vK(siteIndices,:);
+                            end
                         end
+                        if version >0
+                        else
                         if ~(exist('vK','var'))
                             vK=0*uK;
                         end;
+                        end
                     end;
             catch exception
                 % missing k-point (or wrong input as number of k-points)
@@ -399,15 +452,27 @@ if part>division
             if ~tetra
                 if ~calcGreens
                     Ek = repmat(Ek_vector, 1, nEnergyPoints) ;
+                    if version>0
+                     greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita ));
+                    else
                     greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita )) + ...
                         ((abs(vK)).^2)*(1./(E + Ek + 1i*ita ));
+                    end;
                 else
                     EnRep = repmat(Ek_vector',nBands,1);
+                    if version>0
+                    latticeGreensK(iKx, iKy, :, :) = (uK./(E - EnRep + 1i*ita))*(uK');
+                    else
                     latticeGreensK(iKx, iKy, :, :) = (uK./(E - EnRep + 1i*ita))*(uK') + (vK./(E + EnRep + 1i*ita))*(vK');
+                    end;
                 end;
             else
+                if version >0
                 ukall(iKx,iKy,:,:)=uK;
+                else
+                 ukall(iKx,iKy,:,:)=uK;
                 vkall(iKx,iKy,:,:)=vK;
+                end;
                 Ekall(iKx,iKy,:)=Ek_vector;
                 % store the edges twice to construct set of triangles that cover the whole area
 %                 if iKx==1
@@ -456,11 +521,20 @@ if part>division
                     % to do: vectorize the code!
                     for iband=1:nBands
                         disp(['Band ',num2str(iband),' of ',num2str(nBands)]);
+                        if version >0
+                            E=Ekall(:,:,iband);
+                            a=ukall(:,:,:,iband).*conj(ukall(:,:,:,iband));
+                            greensRealSpace(:, :) = greensRealSpace(:, :) + f(E,a,kx,ky,energy);
+                            E=Ekall(:,:,iband+nBands);
+                            a=ukall(:,:,:,iband+nBands).*conj(ukall(:,:,:,iband+nBands));
+                            greensRealSpace(:, :) = greensRealSpace(:, :) + f(E,a,kx,ky,energy);                           
+                        else
                         E=Ekall(:,:,iband);
                         a=ukall(:,:,:,iband).*conj(ukall(:,:,:,iband));
                         greensRealSpace(:, :) = greensRealSpace(:, :) + f(E,a,kx,ky,energy);
                         a=vkall(:,:,:,iband).*conj(vkall(:,:,:,iband));
                         greensRealSpace(:, :) = greensRealSpace(:, :) + f(E,a,kx,ky,-energy);
+                        end;
                     end;
         end;
     else

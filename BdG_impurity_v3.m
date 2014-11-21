@@ -238,11 +238,11 @@ for i = 1:maxLoop
         if ~magnetic
             KEdown = H - mudown*eye(nBands);
             [ nUpCal, nDownCal, deltaCal ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
-            [ nUpCaldown, nDownCaldown, deltaCaldown ] = BdG_step( KEdown, conj(-delta'), kT, nBands, SCInteractionMatrix,-KE);
+           % [ nUpCaldown, nDownCaldown, deltaCaldown ] = BdG_step( KEdown, conj(-delta'), kT, nBands, SCInteractionMatrix,-KE);
         else
             KEdown = Hdown - mudown*eye(nBands);
             [ nUpCal, nDownCal, deltaCal ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
-            [ nUpCaldown, nDownCaldown, deltaCaldown ] = BdG_step( KEdown, conj(-delta'), kT, nBands, SCInteractionMatrix,-KE);
+           % [ nUpCaldown, nDownCaldown, deltaCaldown ] = BdG_step( KEdown, conj(-delta'), kT, nBands, SCInteractionMatrix,-KE);
         end;
     end
 %     BdGMatrix = [KE -delta; -delta' -KE];
@@ -266,12 +266,13 @@ for i = 1:maxLoop
     % convergence criterium: norm (as defined for vector)
     deltaDiff = norm(deltaCal(:) - delta(:))/norm(delta(:));
     nDiff = abs((1/N^2)*sum(nUpCal + nDownCal) - n0)/n0;
-    if spinpolarized
-        tmp=-conj(deltaCaldown');
-        deltaDiff(2)= norm(tmp(:) - delta(:))/norm(delta(:));
-        nDiff(2) = abs((1/N^2)*sum(nUpCaldown + nDownCaldown) - n0)/n0;
-        clear tmp;
-    end;
+  %  if spinpolarized
+   %     % to be checked
+   %     tmp=-conj(deltaCaldown');
+   %     deltaDiff(2)= norm(tmp(:) - delta(:))/norm(delta(:));
+   %     nDiff(2) = abs((1/N^2)*sum(nUpCaldown + nDownCaldown) - n0)/n0;
+   %     clear tmp;
+   % end;
     if (sum(nDiff) < numel(nDiff)*nTol) && (sum(deltaDiff) < numel(deltaDiff)*deltaTol)
        break % go out of loop if self-consistency is achieved
     end
@@ -283,24 +284,25 @@ for i = 1:maxLoop
     beta =  beta1 + (beta2 - beta1).*rand(1); 
     nUp = beta*nUp + (1-beta)*nUpCal;
     nDown = beta*nDown + (1-beta)*nDownCal;
-    if spinpolarized
-        nUpdown = beta*nUpdown + (1-beta)*nUpCaldown;
-        nDowndown = beta*nDowndown + (1-beta)*nDownCaldown;
-    end;
+  %  if spinpolarized
+  %      % to be checked
+  %      nUpdown = beta*nUpdown + (1-beta)*nUpCaldown;
+  %      nDowndown = beta*nDowndown + (1-beta)*nDownCaldown;
+  %  end;
     % new variable for input file: mixdelta to only converge nUp, nDown, mu
     % with fixing delta (makes only sense if the initial guess for delta is
     % already good).
     if mixdelta
-        if ~spinpolarized
+      %  if ~spinpolarized
             delta = beta*delta + (1-beta)*deltaCal;
-        else
-            delta = beta*delta + 0.5*(1-beta)*(deltaCal-deltaCaldown');
-        end
+       % else
+        %    delta = beta*delta + 0.5*(1-beta)*(deltaCal-deltaCaldown');
+       % end
     end;
     nAvg = (1/N^2)*(sum(nUp + nDown));
-    if spinpolarized
-        nAvg(2) = (1/N^2)*(sum(nUpdown + nDowndown));
-    end
+   % if spinpolarized
+   %     nAvg(2) = (1/N^2)*(sum(nUpdown + nDowndown));
+   % end
     %if ~spinpolarized
      %   mu=mu - alpha*(nAvg - n0);
     %else
@@ -318,7 +320,7 @@ for i = 1:maxLoop
     %deltaMaxAcc = [deltaMaxAcc; deltamax];
     %deltaMinAcc = [deltaMinAcc; min(min(real(delta)))]; 
     deltaMaxAcc = [deltaMaxAcc; deltaMaxNN];
-    deltaMinAcc = [deltaMinAcc; deltaMaxNNN]; 
+    deltaMinAcc = [deltaMinAcc; deltaMaxNNN];
     muAcc = [muAcc; mu];
     deltaDiffAcc = [deltaDiffAcc; sum(deltaDiff)];
     disp([num2str(i),' ndiff= ',num2str(nDiff), ' deltaDiff= ',num2str( deltaDiff), ' deltaMaxNN= ',num2str(deltaMaxNN)]);

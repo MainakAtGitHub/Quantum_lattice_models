@@ -45,7 +45,23 @@ else
         cellvector(1)=mod(cellvector(1)-1,N)+1;
         cellvector(2)=mod(cellvector(2)-1,N)+1;
         [iRange, jRange] = find_lattice_translation_index(N, nOrbitals, cellvector, cellvector);
-        Himp(iRange, jRange)=imp_matr(:,:,n);
+        if ~iscell(imp_matr)
+            % only on-site potentials
+            if size(imp_matr,1)<iRange
+                % put a 5 orbital potential on the first lattice position
+                iRange=iRange(1:size(imp_matr,1));
+                jRange=jRange(1:size(imp_matr,2));
+                Himp(iRange, jRange)=Himp(iRange, jRange)+imp_matr(:,:,n);
+            else
+                Himp(iRange, jRange)=Himp(iRange, jRange)+imp_matr(:,:,n);
+            end;
+        else
+            % read impurity potential given in filename (slow, because
+            % multiple times reading the same input, but working for now)
+            load(imp_matr{n});
+            % add the corresponding impurity hoppings, potentials
+            Himp=Himp+lattice_single(N, Impparameters, ImpVector,cellvector);
+        end;
     end;
 end;
 

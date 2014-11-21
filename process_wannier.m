@@ -21,8 +21,11 @@ if nargin <3
 end;
 
 fid = fopen(filename);
+% 3D maps
+pos=3;
+% 2D maps
 pos=2;
-dble=2;
+dble=1;
 %WF = fscanf(fid, readstring, [3+imagnum*nOrb inf]);
 % new format (2D)
 WF = fscanf(fid, readstring, [pos+imagnum*nOrb*dble inf]);
