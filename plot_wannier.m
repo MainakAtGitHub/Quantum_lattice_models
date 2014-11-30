@@ -1,15 +1,17 @@
 function figure1=plot_wannier(wannierfile,isovalue);
 load(wannierfile);
 [x,y,z]=meshgrid(xGrid,yGrid,zGrid);
-fv = isosurface(x,y,z,wannierValues,isovalue);
-fvm = isosurface(x,y,z,wannierValues,-isovalue);
+wsize=size(wannierValues,4);
+for band=1:wsize
+fv = isosurface(x,y,z,wannierValues(:,:,:,band),isovalue);
+fvm = isosurface(x,y,z,wannierValues(:,:,:,band),-isovalue);
 figure1=figure;
 p=patch(fv);
-isonormals(x,y,z,wannierValues,p)
+isonormals(x,y,z,wannierValues(:,:,:,band),p)
 set(p,'FaceColor','blue','EdgeColor','none');
 hold on
 pm=patch(fvm);
-isonormals(x,y,z,wannierValues,pm)
+isonormals(x,y,z,wannierValues(:,:,:,band),pm)
 set(pm,'FaceColor','red','EdgeColor','none');
 daspect([1,1,1])
 view(3); axis tight
@@ -31,4 +33,5 @@ annotation(figure1,'textbox',...
     'String',{['Isovalue ',num2str(isovalue),' bohr^{-3/2}']},...
     'FitBoxToText','off',...
     'LineStyle','none');
- print('-djpeg', ['/tmp/Wannier',num2str(isovalue),'.jpg'],'-r200');
+ print('-djpeg', ['/tmp/Wannier',num2str(isovalue),'band_',num2str(band),'.jpg'],'-r200');
+end;

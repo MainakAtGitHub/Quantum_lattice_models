@@ -4,9 +4,9 @@ if nargin < 2
     kz=NaN
 end;
 % read string in first line
-oldformat=false;
+oldformat=true;
 if oldformat
-    %[s]= fscanf(fid, '%s', 10)
+    [s]= fscanf(fid, '%s\t', 13)
     [number]= fscanf(fid, ' %d', 1);
 else
     % read number of matrices and number of orbitals

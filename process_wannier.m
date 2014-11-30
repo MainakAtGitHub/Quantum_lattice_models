@@ -24,7 +24,7 @@ fid = fopen(filename);
 % 3D maps
 pos=3;
 % 2D maps
-pos=2;
+%pos=2;
 dble=1;
 %WF = fscanf(fid, readstring, [3+imagnum*nOrb inf]);
 % new format (2D)

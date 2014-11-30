@@ -143,9 +143,10 @@ lgth=0.3*RDiscrete(1);
 if ~exist('sublattice','var')
     sublattice=1
 end;
-if sublattice==1
-    offset(1)=-0.25*RDiscrete(1);
-    offset(2)=0.25*RDiscrete(2);
+sublattice=-1
+if abs(sublattice)==1
+    offset(1)=-0.25*RDiscrete(1)*sublattice;
+    offset(2)=0.25*RDiscrete(2)*sublattice;
 else
     offset=[0 0];
 end;
