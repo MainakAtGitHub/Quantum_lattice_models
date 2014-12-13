@@ -1,5 +1,8 @@
-function f=make_plot_impurity_dos(inputfile,smoothenergy,plrange,plotall,omega0)
-global plotrange
+function [figure5,ax1]=make_plot_impurity_dos(inputfile,smoothenergy,plrange,plotall,omega0)
+global plotrange homogeneous
+if isempty(homogeneous)
+    homogeneous=false
+end;
 if nargin <1
     inputfile='LDOS_FeSe_Milan_Gamma_Vimp_4_N_9_M_40_ita_0.003'
 end;
@@ -72,6 +75,9 @@ if ~exist('orbitalLDOS','var')
     LDOSsites=[-inf,-inf; 0,0; 0,1;1,1];
 end;
 nDosSites = length(LDOSsites);
+if homogeneous
+    nDosSites=1
+end;
 orb={'orbital1','orbital2','orbital3','orbital4','orbital5','total'};
 orb={'d_{z^2}','d_{x^2-y^2}','d_{yz}','d_{xz}','d_{xy}','total'}; % labels for Tom's FeSe model
 % fix for non existing variable
@@ -151,6 +157,7 @@ end
 
 % plot the position dependence of the summed lattice ldos
 figure5= figure('Position',[150, 100, 500, 300]);
+ax1 = gca;
 set(0,'DefaultAxesFontSize',fsz)
 
 % plot all sites or up to the plrange, or the sites given in plrange

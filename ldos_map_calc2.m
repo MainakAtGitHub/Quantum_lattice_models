@@ -1,4 +1,4 @@
-function localLdos=ldos_map_calc1(N,nOrbitals,xGridRange_limits,yGridRange_limits,zGridPoint,RDiscrete,shift,sizeWannier,wannierValuesreshape,latticeGreens)
+function localLdos=ldos_map_calc2(N,nOrbitals,xGridRange_limits,yGridRange_limits,zGridPoint,RDiscrete,shift,sizeWannier,wannierValuesreshape,latticeGreens)
 numlm=N^2;%(2*(ceil(N/2)-1)+1)^2;
 %wAcc=zeros(numlm,nOrbitals);
 lhalf=fix(N/2);

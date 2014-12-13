@@ -15,14 +15,16 @@ if cut<0
     cut=-cut;
 end;
 % to be modified for different Wannier mesh
-RDiscrete = [40 40 80]; % default value, correct value should be in "ldosfile"
+%RDiscrete = [40 40 80]; % default value, correct value should be in "ldosfile"
 %if ~(exist('wannier_filename','var'))
 %    wannier_filename='wannier_FeSe_4d_matrix_v2.mat';
 %        wannier_filename='./bscco/tom_input/WanF_Bi_2Sr_2CaCu_2O_8_vac_100_100_100_ReIm.out_conv.mat';
 %end;
 %load(wannier_filename);
 load(ldosfile,'-mat')
-RDiscrete
+if ~exist('RDiscrete','var')
+    RDiscrete=[40 40 80]
+end;
 axistype='arrows';
 axistype='lines';
 zGridPoint = 0;
@@ -143,7 +145,7 @@ lgth=0.3*RDiscrete(1);
 if ~exist('sublattice','var')
     sublattice=1
 end;
-sublattice=-1
+%sublattice=0;%-1
 if abs(sublattice)==1
     offset(1)=-0.25*RDiscrete(1)*sublattice;
     offset(2)=0.25*RDiscrete(2)*sublattice;

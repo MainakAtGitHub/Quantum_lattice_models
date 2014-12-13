@@ -338,13 +338,13 @@ else
     disp('***********Not converged**********')
 end
 r=1;
-% plot
-figure;
-subplot(2,2,1); plot(nAcc); title('nAcc'); axis('square');
-subplot(2,2,2); plot(muAcc); title('mu'); axis('square');
-subplot(2,2,3); plot(deltaMaxAcc); title('deltaMaxNN'); axis('square');
-subplot(2,2,4); plot(deltaMinAcc); title('deltaMaxNNN'); axis('square');
-figure; plot(deltaDiffAcc); title('Norm deltaDiff'); axis('square');
+% plot (not needed any more)
+% figure;
+% subplot(2,2,1); plot(nAcc); title('nAcc'); axis('square');
+% subplot(2,2,2); plot(muAcc); title('mu'); axis('square');
+% subplot(2,2,3); plot(deltaMaxAcc); title('deltaMaxNN'); axis('square');
+% subplot(2,2,4); plot(deltaMinAcc); title('deltaMaxNNN'); axis('square');
+% figure; plot(deltaDiffAcc); title('Norm deltaDiff'); axis('square');
 
 
 

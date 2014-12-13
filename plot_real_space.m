@@ -76,7 +76,10 @@ for i = -(ceil(N/2)-1):(ceil(N/2)-1)
                 delta1Fe = [delta1Fe delta2Fe(1:nOrbitals/2,:)];
             case -1
                 % LiFeAs (not fixed yet)
-                latticeVectors1Fe = [latticeVectors1Fe; i+j j-i; i+j j-i-1];
+             %   latticeVectors1Fe = [latticeVectors1Fe; i+j j-i; i+j j-i-1];
+                                latticeVectors1Fe = [latticeVectors1Fe; i+j j-i; i+j j-i-1];
+                     %           latticeVectors1Fe = [latticeVectors1Fe; i+j j-i; i+j j-i+1];
+
                 % tmp=delta2Fe((1:nOrbitals/2)+nOrbitals/2,:);
                 tmp= delta2Fe(1:nOrbitals/2,:);
                 %tmp(:,(1:nOrbitals/2)+nOrbitals/2)=0;

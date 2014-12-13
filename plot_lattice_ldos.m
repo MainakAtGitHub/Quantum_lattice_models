@@ -52,14 +52,13 @@ for i = 1:N
 end
 Fe1LDOS = Fe1LDOS';
 Fe2LDOS = Fe2LDOS';
-sublattice=-1;
-%  if sublattice <1
-%      tmp=Fe1LDOS;
-%      Fe1LDOS=Fe2LDOS;
-%      Fe2LDOS=tmp;
-%           clear tmp
-%  end;
-
+%sublattice=-1;
+  if sublattice <1
+      tmp=Fe1LDOS;
+      Fe1LDOS=Fe2LDOS;
+      Fe2LDOS=tmp;
+           clear tmp
+  end;
 
 % rotating coordinates by pi/4
 n = ceil(N/2);
@@ -73,8 +72,8 @@ else
     % some akward fix for putting the impurity on the same sublattice
         ldos2plot = diag(Fe1LDOS(:,n),0);
     for i=1:(n-1)
-        ldos2plot = ldos2plot + diag(Fe1LDOS((i+1):(N-i),n+i), 2*i) + diag(Fe1LDOS((i+1):(N-i),n-i), -2*i) +  ...
-   diag(Fe2LDOS((i+1):(N-i+1),n-i), -(2*i-1)) + diag(Fe2LDOS((i+1):(N-i+1),n+i-1), 2*i-1) ;
+        ldos2plot = ldos2plot+ diag(Fe1LDOS((i+1):(N-i),n+i), 2*i) + diag(Fe1LDOS((i+1):(N-i),n-i), -2*i) +  ...
+   diag(Fe2LDOS((i):(N-i),n-i), -(2*i-1)) + diag(Fe2LDOS((i+1):(N-i+1),n+i-1), 2*i-1) ;
     end
  %   tmp=ldos2plot(1,:);
   %  ldos2plot(1:N-1,:)=ldos2plot(2:N,:);

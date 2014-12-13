@@ -1,7 +1,10 @@
 function [ wannierValues xGrid yGrid zGrid] = process_wannier( filename, nOrb,im)
 readstring=['%g %g %g '];
 % only two dimensional map
-readstring=['%g %g '];
+%readstring=['%g %g '];
+if nargin <3
+    im=false
+end;
 if im
     imagnum=2;
 else
@@ -11,14 +14,12 @@ for n=1:nOrb
     if im
         readstring=[readstring,' (%g,%g)'];
         % new format
-        readstring=[readstring,' (%g,%g)'];
+       % readstring=[readstring,' (%g,%g)'];
     else
         readstring=[readstring,' %g'];
     end;
 end;
-if nargin <3
-    im=true
-end;
+
 
 fid = fopen(filename);
 % 3D maps
@@ -92,8 +93,14 @@ if nOrb==1
 wv=real(wannierValues(:,:,:,1));
 wannierValues=wv;
 end;
+%wannierValuest=wannierValues;
+% for i=1:nOrb
+%     for z=1:zpoints
+%         wannierValues(:,:,z,i)=wannierValuest(:,:,z,mod(i+nOrb/2-1,nOrb)+1);
+%     end;
+% end;
 %sizeWannier = [101 101 81];
 %RDiscrete = [40 40 80];
-save([filename,'_conv.mat'],'wannierValues','xGrid','yGrid','zGrid','RDiscrete','shift');
+save([filename,'_conv_a.mat'],'wannierValues','xGrid','yGrid','zGrid','RDiscrete','shift');
 end
 
