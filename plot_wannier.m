@@ -1,4 +1,4 @@
-function figure1=plot_wannier(wannierfile,isovalue);
+function figure1=plot_wannier(wannierfile,isovalue)
 load(wannierfile);
 [x,y,z]=meshgrid(xGrid,yGrid,zGrid);
 wsize=size(wannierValues,4);

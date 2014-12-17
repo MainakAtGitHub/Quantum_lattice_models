@@ -95,9 +95,12 @@ if ~calcGreens
                 % impurity
                 efforb=nOrbitals/2;
                 farAwaySiteIndex = ((farAwayCell(1)-1)*N + farAwayCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
-                impSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
-                impNNSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + ((nOrbitals/2+1):nOrbitals);
-                impNNNSiteIndex = ((impNNCell(1)-1)*N + impNNCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
+% upper orbitals are now on impurity
+                impSiteIndex =  ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + ((nOrbitals/2+1):nOrbitals);
+% lower orbitals are on the NN site
+                impNNSiteIndex=((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
+                %impNNSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + ((nOrbitals/2+1):nOrbitals);
+                impNNNSiteIndex = ((impNNCell(1)-1)*N + impNNCell(2) - 1)*nOrbitals +  ((nOrbitals/2+1):nOrbitals);
             case 0
                 efforb=nOrbitals;
                 farAwaySiteIndex = ((farAwayCell(1)-1)*N + farAwayCell(2) - 1)*nOrbitals + (1:nOrbitals);

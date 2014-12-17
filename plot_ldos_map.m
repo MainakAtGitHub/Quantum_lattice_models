@@ -187,6 +187,7 @@ switch axistype
                     boxx=[-1, 0, 1, 0,-1];
                     boxy=[ 0, 1, 0,-1, 0];
                     z=[1 1 1 1 1]*datarealmax*1.02;
+                   % cut=2*cut
                     boxx=cut/2*RDiscrete(1)*boxx+offset(1);
                     boxy=cut/2*RDiscrete(2)*boxy+offset(2);
                     plot3(boxx,boxy,z*1.02,'k');
