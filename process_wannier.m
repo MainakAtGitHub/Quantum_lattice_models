@@ -1,7 +1,14 @@
 function [ wannierValues xGrid yGrid zGrid] = process_wannier( filename, nOrb,im)
-readstring=['%g %g %g '];
+dim=input('dimension of map 2/3: ');
+if dim==2
 % only two dimensional map
-%readstring=['%g %g '];
+readstring=['%g %g '];
+else
+    if ~dim==3
+        disp('setting dimension to 3');
+    end
+    readstring=['%g %g %g '];
+end
 if nargin <3
     im=false
 end;
@@ -22,10 +29,13 @@ end;
 
 
 fid = fopen(filename);
-% 3D maps
-pos=3;
-% 2D maps
-%pos=2;
+if dim==3
+    % 3D maps
+    pos=3;
+else
+    % 2D maps
+    pos=2;
+end;
 dble=1;
 %WF = fscanf(fid, readstring, [3+imagnum*nOrb inf]);
 % new format (2D)

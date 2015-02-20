@@ -15,12 +15,29 @@ end;
 if (~exist('zGridRange','var'))
     zGridRange = [0 21 4 22]
 end;
+if (~exist('nOrbitals','var'))
+    nOrbitals = 1
+end;
+if (~exist('N','var'))
+    N = 11
+end;
 if (~exist('wannier_filename','var'))
     wannier_filename='wannier_FeSe_4d_matrix_v2.mat'
 end;
-if (~exist('Greensenergy','var'))
-    Greensenergy=0.0084
-end;
+if ~(exist('Greensenergy','var'))
+    disp('No Greensenergy given, setting to 0.');
+    E=0;
+else
+    if ~ischar(Greensenergy)
+        E=Greensenergy;
+    else
+        % load the list of energies to be calculated from the given
+        % file
+        load(Greensenergy,'E');
+        le=numel(E);
+    end;
+end
+le=numel(E);
 if (~exist('diagonal_GF','var'))
     diagonal_GF=false;
 end;
@@ -30,25 +47,10 @@ end;
 if ~singular_quad
         sqstring='sum';
 end;
-E = Greensenergy;
+% E = Greensenergy;
 % some double code with impurity_dos (please check, if making
 % modifications)
-if nargin < 2
-    set_ldosfilename;
-%LDOSfileName0 = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
-%LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita),'_e_',num2str(E)];
-else
-    % input of another filename also accepted
-    LDOSfileName=ldosflnm
-end;
-    
-load(LDOSfileName,'-mat')
-if diagonal_GF
-    diagonal_string='diag';
-    latticeGreens=diag(diag(latticeGreens));
-else
-    diagonal_string='';
-end;
+
 %load('./calc/U_0955/LDOS_FeSe_Tom__Vimp_5_N_15_M_10_ita_0.001_e_-0.0084','-mat');
 %lattice_greens_supercell_FeSe_N_15_M_9_U_0955_Vimp_5_E_minPt0084.mat
 shift = [51 51 41];
@@ -62,17 +64,18 @@ if length(szw)==2
 end;
 sizeWannier=szw(1:3);
 
-nBands = size(latticeGreens,1);
-if (~exist('N','var'))
-    N1 = sqrt(nBands/nOrbitals);
-    if ~(N1==N)
-        disp(['Error: wrong settings for N:',num2str(N),' vs. ', num2str(N1)]);
-    end
-end;
+nBands = nOrbitals*N^2
+%if (~exist('N','var'))
+%    N1 = sqrt(nBands/nOrbitals);
+%    if ~(N1==N)
+%        disp(['Error: wrong settings for N:',num2str(N),' vs. ', num2str(N1)]);
+%    end
+%end;
 if (~exist('xrange','var'))
     % change default behavior: calculate the whole grid
     xrange=N/2
 end;
+if ~ischar(xrange)
 % Local greens function
 % Wannier vector
 % be a little more general to allow for maps that are not centered at the
@@ -103,16 +106,52 @@ lhalf=ceil(N/2)-1;
 mhalf=ceil(N/2)-1;
     xGridRange=xGridRange_limits(1):xGridRange_limits(2);
     yGridRange=yGridRange_limits(1):yGridRange_limits(2);
+[xmesh,ymesh]=meshgrid(xGridRange_limits(1):xGridRange_limits(2),yGridRange_limits(1):yGridRange_limits(2));
+else
+    load(xrange)
+     if ~exist('xGridRange','var')
+         xGridRange=xmesh;
+     end;
+     if ~exist('yGridRange','var')
+         yGridRange=ymesh;
+     end;
+end;
+for en=1:le
+% put all energy dependend code here!
+if nargin < 2
+    set_ldosfilename;
+%LDOSfileName0 = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
+%LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita),'_e_',num2str(E)];
+else
+    % input of another filename also accepted
+    LDOSfileName=ldosflnm
+end;
+% arkward workaround
+E1=E;
+load(LDOSfileName,'-mat')
+E=E1;
+if diagonal_GF
+    diagonal_string='diag';
+    latticeGreens=diag(diag(latticeGreens));
+else
+    diagonal_string='';
+end;
 for zGridPoint = zGridRange
+localLdos=0*xmesh;
     disp(['Calculating ',num2str(zGridPoint), 'of (',num2str(zGridRange(1)),'..',num2str(zGridRange(numel(zGridRange))),')']);
-    localLdos = zeros(length(xGridRange),length(yGridRange));
-    countLoopX = 0;
-    for xGridPoint = xGridRange_limits(1):xGridRange_limits(2)
-        disp(['Calculating ',num2str(xGridPoint), 'of (',num2str(xGridRange(1)),'..',num2str(xGridRange(numel(xGridRange))),')']);
-        countLoopX = countLoopX + 1;
-        countLoopY = 0;
-        for yGridPoint =yGridRange_limits(1):yGridRange_limits(2)
-            countLoopY = countLoopY + 1;
+    for s=1:numel(xmesh)
+    %localLdos = zeros(length(xGridRange),length(yGridRange));
+    %countLoopX = 0;
+    %for xGridPoint = xGridRange_limits(1):xGridRange_limits(2)
+    xGridPoint=xmesh(s);
+    if mod(s,size(xmesh,2))==0
+        disp(['Calculating ',num2str(xmesh(s)), ' of ',num2str(size(xmesh,2))]);
+    end;
+     %   countLoopX = countLoopX + 1;
+      %  countLoopY = 0;
+        %for yGridPoint =yGridRange_limits(1):yGridRange_limits(2)
+        yGridPoint=ymesh(s);
+         %   countLoopY = countLoopY + 1;
             r = [xGridPoint, yGridPoint, zGridPoint];
            % wAcc = [];
            %position=0;
@@ -159,11 +198,12 @@ for zGridPoint = zGridRange
                 end
             end
          %   wAcc1=wAcc(:);
-            localLdos(countLoopX,countLoopY) = (-1/pi)*imag(wAcc'*(latticeGreens*wAcc));
+            localLdos(s) = (-1/pi)*imag(wAcc'*(latticeGreens*wAcc));
         end
     end
     % output of result
     ldosmapfilename=[LDOSfileName,'_z_',num2str(zGridPoint),diagonal_string];
     % save the output together with geometry information necessary to plot
     save(ldosmapfilename,'localLdos','xGridRange','yGridRange','shift','sizeWannier','RDiscrete','sublattice');
+end
 end

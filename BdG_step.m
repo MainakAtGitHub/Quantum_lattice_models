@@ -20,6 +20,22 @@ function [ nUpCal, nDownCal, deltaCal] = BdG_step( KE,delta, kT,nBands, SCIntera
     fermi = 1./(1 + exp(En/kT));
     nUpCal = (abs(eVector(1:nBands,:)).^2)*fermi;
     nDownCal = (abs(eVector((nBands + 1):end,:)).^2)*(1 - fermi);
-    deltaCal = SCInteractionMatrix.*((eVector(1:nBands,:)*(((eVector((nBands + 1):end,:))').*repmat(fermi,1,nBands))));
+    global fullgamma
+    if ~fullgamma
+        deltaCal = SCInteractionMatrix.*((eVector(1:nBands,:)*(((eVector((nBands + 1):end,:))').*repmat(fermi,1,nBands))));
+        % debuging code
+        %for n=1:100
+        %    dc1(n)=SCInteractionMatrix(1,n).*((eVector(n,:)*(((eVector((nBands + 1),:))').*repmat(fermi,1,1))));
+        %end;
+        %dc1=SCInteractionMatrix(1,:).*((eVector(1,:)*(((eVector((nBands + 1),:))').*repmat(fermi,1,nBands))));
+    else
+        deltaCal=zeros(nBands,nBands);
+        nOrb=size(SCInteractionMatrix.int,1);
+        N=int32(sqrt(nBands/nOrb));
+        tic
+        deltaCal=delta_full_mex(eVector,fermi,int32(nBands),int32(nOrb),int32(N),SCInteractionMatrix.int(:),int32(SCInteractionMatrix.latt),deltaCal);
+        %                deltaCal=delta_full(eVector,fermi,int32(nBands),int32(nOrb),int32(N),SCInteractionMatrix.int(:),int32(SCInteractionMatrix.latt),deltaCal);
+        toc
+    end
 end
 

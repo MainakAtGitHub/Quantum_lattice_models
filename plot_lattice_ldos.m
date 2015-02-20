@@ -107,7 +107,11 @@ axes1 = axes('Parent',figure1,'YDir','reverse',...
 %box(axes1,'on');
 
 pcolorplot=false;
+if isequal(scale,'')
 cptn='LDOS [1/eV]';
+elseif isequal(scale,'l')
+cptn='ln LDOS [1/eV]';
+end
 % zoom the figure to show only plotN points
 diffN=N-plotN;
 if sublattice==1

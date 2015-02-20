@@ -147,8 +147,8 @@ if ~exist('sublattice','var')
 end;
 %sublattice=0;%-1
 if abs(sublattice)==1
-    offset(1)=-0.25*RDiscrete(1)*sublattice;
-    offset(2)=0.25*RDiscrete(2)*sublattice;
+    offset(1)=-0.25*RDiscrete(1)*abs(sublattice);
+    offset(2)=0.25*RDiscrete(2)*abs(sublattice);
 else
     offset=[0 0];
 end;
@@ -270,7 +270,7 @@ if isunix
     % create pdf of figure
     [~,filename,extension]=fileparts(ldosfile);
     if nolabel
-            set(h,'visible','off');
+          %  set(h,'visible','off');
             print('-dpng', ['/tmp/',filename,extension,'.png'],'-r150');
     else
 set(gcf, 'Renderer', 'OpenGL');
@@ -286,10 +286,12 @@ if nolabel
     set(childr,'visible','off');
     set(axes1,'visible','off');
     set(h,'visible','on');
+        view(axes1,[45 54]);
     %print('-djpeg', ['/tmp/',filename,extension,'colorbar.jpg'],'-r200');
     print_pdf(['/tmp/',filename,extension,'colorbar.pdf']);
     set(childr,'visible','on');
     set(axes1,'visible','on');
     set(h,'visible','on');
+            view(axes1,[45 90]);
 end
 end;

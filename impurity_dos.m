@@ -150,6 +150,8 @@ if ~calcGreens
         nDosSites = length(siteIndices);
     end;
 else
+    % calcGreens=true needs tetra=false
+    tetra=false
 end;
 
 % some code for parallelization
@@ -211,12 +213,21 @@ if version >0
 else
 E = repmat(energy,nBands,1);
 end
+% only one loop below
+le=1;
 else
     if ~(exist('Greensenergy','var'))
         disp('No Greensenergy given, setting to 0.');
         E=0;
     else
-        E=Greensenergy;
+        if ~ischar(Greensenergy)
+            E=Greensenergy;
+        else
+            % load the list of energies to be calculated from the given
+            % file
+            load(Greensenergy,'E');
+            le=numel(E);
+        end;
     end
 end;
 
@@ -375,6 +386,7 @@ for index=startindex:endindex
     end
     toc;
 end
+for en=1:le
 if ~calcGreens
 if ~tetra
     LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita),sqstring];
@@ -382,7 +394,7 @@ else
     LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_tetra_corr']
 end;
 else
-    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita),'_e_',num2str(E),sqstring];
+    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita),'_e_',num2str(E(en)),sqstring];
 end;
 if part>division
     if division>0
@@ -608,7 +620,12 @@ if part>division
              save(outputfilename, 'energy', 'orbitalLDOS', 'LDOSsites','efforb');           
         end
     else
+        % some arkward workaround for multiple energies
+        E1=E;
+        E=E1(en);
         save(outputfilename,'latticeGreens','N','nOrbitals','E','sublattice');
+        E=E1;
     end;
 end
+end;
 r=1;

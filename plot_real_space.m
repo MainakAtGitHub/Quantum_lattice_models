@@ -12,7 +12,7 @@ if nargin <4
     nOrbitals=10;
 end;
 if nargin <5
-    sublattice=-1
+    sublattice=1
 end;
 fsz=20;
 load(inputfile,'-mat'); % BdG_homogeneous_FeSe_Toms_BS_6Dec13_GammaCut_3_N_9.mat

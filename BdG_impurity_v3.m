@@ -79,7 +79,15 @@ end;
 nBands = N^2*nOrbitals;
 % kinetic energy
 H0 = lattice_translation(N, TBparameters, latticeVector);
-SCInteractionMatrix = lattice_translation(N, Gamma, latticeVectorsSC);
+% ugly global variable
+global fullgamma
+if exist('Gamma','var')
+    SCInteractionMatrix = lattice_translation(N, Gamma, latticeVectorsSC);
+    fullgamma=false;
+else
+    fullgamma=true;
+    SCInteractionMatrix=Gammafull;
+end;
 %Himp = zeros(size(H0));
 impCell = [ceil(N/2) ceil(N/2)];
 % % allow for general impurity potentials
@@ -337,7 +345,7 @@ if i < maxLoop
 else
     disp('***********Not converged**********')
 end
-r=1;
+%r=1; % generate an error to stop the program
 % plot (not needed any more)
 % figure;
 % subplot(2,2,1); plot(nAcc); title('nAcc'); axis('square');
