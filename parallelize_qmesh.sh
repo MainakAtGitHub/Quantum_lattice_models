@@ -51,32 +51,35 @@ template=$3
 
 batchcommand='sbatch'
 holdflag='--hold'
+batchcommand=''
+holdflag=''
 subdir='out'
 if [ ! -e "$3" ]
 then
 	echo "Error submit_script_template $3 does not exist, using standart ones:"
 	while true;
        	do
-		read -p "[I]TP (Slurm), [H]PC-script " ih
+		read -p "[I]TP (Slurm), [H]PC-script, [L]ocal " ih
 		case $ih in
+                        [lL]* )
+                                batchfile='local.sh'
+                                echo "#! /bin/bash" > ${batchfile}
+                                echo "  parameter1=standart_input_imp_dos_M_20.mat" >> ${batchfile}
+                                echo "subdir=${subdir}" >> ${batchfile}
+                                echo '  Run_impurity_dos.sh $parameter1'
+                                template=${batchfile}
+                                break;;
 			[iI]* ) 
 				batchfile='script.sh'
 				echo "#! /bin/bash" > ${batchfile}
-				# check for available queue for current user
-				numdfg=`sinfo | grep dfg | wc -l`
-				if [ "$numdfg" -eq "0" ]
-				then
-					echo "#SBATCH -p housewives" >> ${batchfile}
-				else
-					echo "#SBATCH -p dfg" >> ${batchfile}
-				fi
+				echo "#SBATCH -p dfg-big,dfg,dfg-test" >> ${batchfile}
 				echo "#SBATCH -n 1" >> ${batchfile}
 				echo "#SBATCH --mem-per-cpu=3800" >> ${batchfile}
 				echo "  parameter1=standart_input_imp_dos_M_20.mat" >> ${batchfile}
 				echo "  parameter2=" >> ${batchfile}
 				echo "  parameter3=" >> ${batchfile}
 				echo "subdir=${subdir}" >> ${batchfile}
-				echo '  ./run_impurity_dos.sh /home/software/matlabR2012a-64/ $parameter1 $parameter2 $parameter3 > ./${subdir}/$parameter1$parameter2$parameter3.out 2>&1' >> ${batchfile}
+				echo '  run_impurity_dos.sh /home/software/matlabR2012a-64/ $parameter1 $parameter2 $parameter3 > ./${subdir}/$parameter1$parameter2$parameter3.out 2>&1' >> ${batchfile}
 				releasecommand='scontrol release <job_id>'
 				template=${batchfile}
 				break;;
@@ -145,9 +148,13 @@ do
 	 	 ${batchcommand} ${submit_script}
 	 else 
 		 #echo "Please submit one job ${batchcommand} ${submit_script} when precalculation has been finished."
+if [[ "$holdflag" -eq "" ]
+then
+else
 		 ${batchcommand} ${holdflag} ${submit_script}
 		 echo "The last job is on hold, please release when precalculation has been finished."
 		 echo ${releasecommand}
 		 # do the actual submitting with holding
+fi
  	 fi
 done

@@ -191,7 +191,11 @@ end
 % only set up quantities if needed
 if ~(division==0 || part>division)
 % Supercell quantities
-maxHop = max(max(abs(latticeVectorsSC)));
+if exist('latticeVectorsSC','var')
+	maxHop = max(max(abs(latticeVectorsSC)));
+else
+	maxHop = max(max(abs(Gammafull.latt)));
+end
 TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) = ...
 TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) - mu*eye(nOrbitals); 
 [HSuper, superLatticeVectors] = supercell_hoppings(N, TBparameters, latticeVector);
@@ -222,6 +226,7 @@ else
     else
         if ~ischar(Greensenergy)
             E=Greensenergy;
+            le=1;
         else
             % load the list of energies to be calculated from the given
             % file
@@ -468,17 +473,17 @@ if part>division
                 if ~calcGreens
                     Ek = repmat(Ek_vector, 1, nEnergyPoints) ;
                     if version>0
-                     greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita ));
+                     greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E(en) - Ek + 1i*ita ));
                     else
-                    greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita )) + ...
+                    greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E(en) - Ek + 1i*ita )) + ...
                         ((abs(vK)).^2)*(1./(E + Ek + 1i*ita ));
                     end;
                 else
                     EnRep = repmat(Ek_vector',nBands,1);
                     if version>0
-                    latticeGreensK(iKx, iKy, :, :) = (uK./(E - EnRep + 1i*ita))*(uK');
+                    latticeGreensK(iKx, iKy, :, :) = (uK./(E(en) - EnRep + 1i*ita))*(uK');
                     else
-                    latticeGreensK(iKx, iKy, :, :) = (uK./(E - EnRep + 1i*ita))*(uK') + (vK./(E + EnRep + 1i*ita))*(vK');
+                    latticeGreensK(iKx, iKy, :, :) = (uK./(E(en) - EnRep + 1i*ita))*(uK') + (vK./(E(en) + EnRep + 1i*ita))*(vK');
                     end;
                 end;
             else
