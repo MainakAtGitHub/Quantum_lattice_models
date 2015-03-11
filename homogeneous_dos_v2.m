@@ -48,8 +48,13 @@ if calcSC
     load(Gamma_file,'-mat');
     load(BdGfileName,'-mat');
 N = sqrt(size(delta,1)/nOrbitals);
-nUnitCellsDelta = size(latticeVectorsSC,1);
-deltaCenter = zeros(nOrbitals, nOrbitals, size(latticeVectorsSC,1));
+if exist('latticeVectorsSC','var')
+    nUnitCellsDelta = size(latticeVectorsSC,1);
+else
+    latticeVectorsSC=Gammafull.latt;
+    nUnitCellsDelta = size(Gammafull.latt,1);
+end
+deltaCenter = zeros(nOrbitals, nOrbitals, nUnitCellsDelta);
 jCell = [ceil(N/2) ceil(N/2)];
 for i = 1:nUnitCellsDelta
     iCell = jCell + latticeVectorsSC(i,:);

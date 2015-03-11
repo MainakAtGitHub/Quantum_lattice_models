@@ -79,6 +79,9 @@ end;
 nBands = N^2*nOrbitals;
 % kinetic energy
 H0 = lattice_translation(N, TBparameters, latticeVector);
+% avoid some numerical inaccurancy; for some reason lattice_translation
+% gives back a non-hermitian matrix with sum(sum(abs(H0-H0'))) ~ 1e-13
+H0=0.5*(H0+H0');
 % ugly global variable
 global fullgamma
 if exist('Gamma','var')

@@ -2,9 +2,9 @@ function [deltaCal]= delta_full(eVector,fermi,nBands,nOrb,N,int,latt,deltaCal)
 % old code        deltaCal = SCInteractionMatrix.*((eVector(1:nBands,:)*(((eVector((nBands + 1):end,:))').*repmat(fermi,1,nBands))));
 % new code with for loops
 % indices for deltaCal
+% implement parfor here to get a speedup
 parfor mu=1:nBands
     szlatt=size(latt);
-    tmpvar=zeros(nOrb,1)+1i*zeros(nOrb,1);
     d=int32([0,0]);
     ymu=int32(mod(idivide(mu-1,int32(nOrb)),N)+1);
     xmu=int32(idivide(mu-1,int32(N*nOrb))+1);
@@ -38,13 +38,13 @@ parfor mu=1:nBands
             %l2=l1;
             %l3=l4;
             for l2=1:nOrb
-                % implement parfor here to get a speedup of a factor of
-                % nOrb
                 % remove the vectorization to get another speedup ?
+                tmpvar=zeros(nOrb,1)+1i*zeros(nOrb,1);
                 for l3 = 1:nOrb
-                %for l3=1:nOrb
                     index=index0+(l2-1)*nOrb+(l3-1)*nOrb^2;
-                    tmpvar(l3)=eVector(mu2+l2,:)*(eVector(nu3+l3+nBands,:)'.*fermi)*int(index);
+                    if ~(int(index) == 0)
+                        tmpvar(l3)=eVector(mu2+l2,:)*(eVector(nu3+l3+nBands,:)'.*fermi)*int(index);
+                    end;
                     %for n=1:nBands*2
                            %  SCInteractionMatrix(1,1).*((eVector(1,:)*(((eVector((nBands + 1),:))').*repmat(fermi,1,1))));
                         %deltaCal(mu,nu)=deltaCal(mu,nu)+eVector(mu2+l2,:)*(eVector(nu3+l3+nBands,:)'.*fermi)*int(index);%*eVector(mu2,n)*eVector(nu3+nBands,n)'*fermi(n);
