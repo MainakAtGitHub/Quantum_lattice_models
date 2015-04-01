@@ -11,7 +11,9 @@ function [ nUpCal, nDownCal, deltaCal] = BdG_step( KE,delta, kT,nBands, SCIntera
     %toc
     tic
     % save some memory by giving back the eigenvalues in a vector
-    [eVector, eValue] = eig(BdGMatrix,'vector');
+    % does not work under matlab v8.1 or smaller
+    %[eVector, eValue] = eig(BdGMatrix,'vector');
+    [eVector, eValue] = eig(BdGMatrix);
        % sparse matrix eigenvalue calculation is significantly slower!
         %[eVector, eValue] = eigs(BdGMatrix1,nBands);
     toc
@@ -19,7 +21,7 @@ function [ nUpCal, nDownCal, deltaCal] = BdG_step( KE,delta, kT,nBands, SCIntera
     % full arrays such that we get in MB:
     % 3*(2*N^2*nOrbitals)^2*8/1024/1024 (3.6G for N=25, 470M for N=15)
     clear BdGMatrix
-    [En, sortIndex] = sort(eValue);
+    [En, sortIndex] = sort(diag(eValue));
     % save some memory for following commands
     clear eValue
     eVector = eVector(:,sortIndex);

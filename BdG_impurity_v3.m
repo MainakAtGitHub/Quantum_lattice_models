@@ -79,9 +79,6 @@ end;
 nBands = N^2*nOrbitals;
 % kinetic energy
 H0 = lattice_translation(N, TBparameters, latticeVector);
-% avoid some numerical inaccurancy; for some reason lattice_translation
-% gives back a non-hermitian matrix with sum(sum(abs(H0-H0'))) ~ 1e-13
-H0=0.5*(H0+H0');
 % ugly global variable
 global fullgamma
 if exist('Gamma','var')
@@ -213,7 +210,12 @@ end;
 % setting of Hamiltonian
 Himp=get_Himp(Vimp,N,nOrbitals,sublattice);
 H = H0 + Himp;
+% avoid some numerical inaccurancy; for some reason lattice_translation as
+% well as the general impurity potential (hoppings)
+% gives back a non-hermitian matrix with sum(sum(abs(H-H'))) ~ 1e-13
+H=0.5*(H+H');
 clear Himp;
+clear H0;
 if magnetic
     % do a non-magnetic simulation
     if ~exist('Vimpdown','var')
@@ -221,6 +223,7 @@ if magnetic
     end;
     Himpdown=get_Himp(Vimpdown,N,nOrbitals,sublattice);
     Hdown=H0+Himpdown;
+    Hdown=0.5*(Hdown+Hdown');
     clear Himpdown
     if spinpolarized
         if ~exist('mudown','var')
