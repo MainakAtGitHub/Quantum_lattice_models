@@ -44,6 +44,15 @@ end;
 if ~singular_quad
         sqstring='sum';
 end;
+if ~(exist('debug','var'))
+    debug=false;
+end;
+if ~(exist('nDosSitesfile','var'))
+    nDosSitesfile='';
+end;
+if ~(exist('version','var'))
+    version=0.0;
+end;
 [dirprefix,~,~] = fileparts(inputfile);
 if ~isempty(dirprefix)
     dirprefix=[dirprefix,filesep]
@@ -52,6 +61,8 @@ load(TB_file);
 % possibly not necessary?
 %latticeVectors = latticeVector;
 load(Gamma_file);
+% explicitely overwrite function mu.m from Matlab
+mu=0;
 load(BdGfileName);
 
 nOrbitals = size(TBparameters,1);
@@ -59,72 +70,89 @@ nBands = N^2*nOrbitals;
 % for reuse of the k-points with different M, we dropp the shift of the k-grid!
 kx = (2*pi/M)*(0:(M - 1));
 ky = kx;
-delKx = kx(2)-kx(1);
+delKx = 2*pi/M; %kx(2)-kx(1);
 delKy = delKx;
 % introduce some indexing for the k-vectors to use precalculated values
 kx_ind=[0:(M-1);ones(1,M)*M];
 kx_ind=kx_ind./repmat(gcd(kx_ind(1,:),kx_ind(2,:)),2,1);
 ky_ind=kx_ind;
 
-% lattice range for impurity, nn, nnn and far away sites
-farAwayCell = [1 1];
-impCell = [ceil(N/2) ceil(N/2)];
-impNNCell = impCell + [0 1];
-if ~calcGreens
-  switch sublattice
-    case 1
-	  efforb=nOrbitals/2;  
-        farAwaySiteIndex = ((farAwayCell(1)-1)*N + farAwayCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
-        impSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
-        impNNSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + ((nOrbitals/2+1):nOrbitals);
-        impNNNSiteIndex = ((impNNCell(1)-1)*N + impNNCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
-      case -1
-          % not yet implemented
-      case 0
-	      efforb=nOrbitals;
-        farAwaySiteIndex = ((farAwayCell(1)-1)*N + farAwayCell(2) - 1)*nOrbitals + (1:nOrbitals);
-        impSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + (1:nOrbitals);
-        impNNSiteIndex = ((impNNCell(1)-1)*N + impNNCell(2) - 1)*nOrbitals + (1:nOrbitals);
-        impNNNCell = impCell + [1 1];        
-        impNNNSiteIndex = ((impNNNCell(1)-1)*N + impNNNCell(2) - 1)*nOrbitals + (1:nOrbitals);
-  end;
-  siteIndices = [farAwaySiteIndex impSiteIndex impNNSiteIndex impNNNSiteIndex];
-  nDosSites = length(siteIndices);
-else
-end;
 
-% Supercell quantities
-if exist('latticeVectorsSC','var')
-	maxHop = max(max(abs(latticeVectorsSC)));
-else
-	maxHop = max(max(abs(Gammafull.latt)));
-end
-TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) = ...
-TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) - mu*eye(nOrbitals); 
-[HSuper, superLatticeVectors] = supercell_hoppings(N, TBparameters, latticeVector);
-[deltaSuper,superDeltaVectors] = supercell_delta(nOrbitals, delta, maxHop);
-% to be done: implementation of more complicated impurity potentials
-
-% supercell diagonalization
-nSuperCells = size(superLatticeVectors,1);
-% variable not used ?
-%nUnitCellsDelta = size(superDeltaVectors,1);
 if ~calcGreens
-    % find the
-energy = linspace(firstEnergy, lastEnergy, nEnergyPoints);
-E = repmat(energy,nBands,1);
-else
-    if ~(exist('Greensenergy','var'))
-        disp('No Greensenergy given, setting to 0.');
-        E=0;
+    if isempty(nDosSitesfile)
+        % lattice range for impurity, nn, nnn and far away sites
+        farAwayCell = [1 1];
+        impCell = [ceil(N/2) ceil(N/2)];
+        impNNCell = impCell + [0 1];
+        switch sublattice
+            case 1
+                efforb=nOrbitals/2;
+                farAwaySiteIndex = ((farAwayCell(1)-1)*N + farAwayCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
+                impSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
+                impNNSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + ((nOrbitals/2+1):nOrbitals);
+                impNNNSiteIndex = ((impNNCell(1)-1)*N + impNNCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
+            case -1
+                % not fully correct, but works fine for C_4 symmetric
+                % impurity
+                efforb=nOrbitals/2;
+                farAwaySiteIndex = ((farAwayCell(1)-1)*N + farAwayCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
+% upper orbitals are now on impurity
+                impSiteIndex =  ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + ((nOrbitals/2+1):nOrbitals);
+% lower orbitals are on the NN site
+                impNNSiteIndex=((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + (1:nOrbitals/2);
+                %impNNSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + ((nOrbitals/2+1):nOrbitals);
+                impNNNSiteIndex = ((impNNCell(1)-1)*N + impNNCell(2) - 1)*nOrbitals +  ((nOrbitals/2+1):nOrbitals);
+            case 0
+                efforb=nOrbitals;
+                farAwaySiteIndex = ((farAwayCell(1)-1)*N + farAwayCell(2) - 1)*nOrbitals + (1:nOrbitals);
+                impSiteIndex = ((impCell(1)-1)*N + impCell(2) - 1)*nOrbitals + (1:nOrbitals);
+                impNNSiteIndex = ((impNNCell(1)-1)*N + impNNCell(2) - 1)*nOrbitals + (1:nOrbitals);
+                impNNNCell = impCell + [1 1];
+                impNNNSiteIndex = ((impNNNCell(1)-1)*N + impNNNCell(2) - 1)*nOrbitals + (1:nOrbitals);
+        end;
+        siteIndices = [farAwaySiteIndex impSiteIndex impNNSiteIndex impNNNSiteIndex];
+        LDOSsites=[-inf,-inf; 0,0; 0,1;1,1];
+        nDosSites = length(siteIndices);
     else
-        E=Greensenergy;
-    end
-end;
-
-% orphan later
-if ~exist('casestring','var')
-    casestring='LDOS_FeSe_Milan_Gamma';
+        % user defined sites
+        load(nDosSitesfile);
+        % set up the siteIndices
+        siteIndices=[];
+        impCell = [ceil(N/2) ceil(N/2)];
+        for n=1:size(LDOSsites,1)
+            if abs(sublattice)>0
+                efforb=nOrbitals/2;
+                disp('not fully tested for 10 orbitals yet, works modulo C_4 symmetry')
+                a=sum(LDOSsites(n,:))/2;
+                b=LDOSsites(n,2)-LDOSsites(n,2);
+                cell2=[ceil(b) floor(a)];
+                if LDOSsites(n,1)==-inf
+                    cell=[ 1 1];
+                else
+                    cell=impCell+cell2;
+                end
+                if floor(a)==a
+                    siteIndex=((cell(1)-1)*N + cell(2) - 1)*nOrbitals +(1:efforb);
+                else
+                    siteIndex=((cell(1)-1)*N + cell(2) - 1)*nOrbitals +(1:efforb)+efforb;
+                end;
+            else
+                efforb=nOrbitals;
+                if LDOSsites(n,1)==-inf
+                    % far away point!
+                    cell=[ 1 1];
+                else
+                    cell=impCell+LDOSsites(n,:);
+                end
+                siteIndex=((cell(1)-1)*N + cell(2) - 1)*nOrbitals +(1:efforb);
+            end
+            siteIndices=[siteIndices siteIndex];
+        end
+        nDosSites = length(siteIndices);
+    end;
+else
+    % calcGreens=true needs tetra=false
+    tetra=false
 end;
 
 % some code for parallelization
@@ -161,6 +189,61 @@ else
     end
 end
 
+% only set up quantities if needed
+if ~(division==0 || part>division)
+% Supercell quantities
+if exist('latticeVectorsSC','var')
+	maxHop = max(max(abs(latticeVectorsSC)));
+else
+	maxHop = max(max(abs(Gammafull.latt)));
+end
+TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) = ...
+TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) - mu*eye(nOrbitals); 
+[HSuper, superLatticeVectors] = supercell_hoppings(N, TBparameters, latticeVector);
+% similar code as in BdG_impurity to make the hoppings numerically a
+% Hermitean matrix
+[deltaSuper,superDeltaVectors] = supercell_delta(nOrbitals, delta, maxHop);
+%deltaSuper=sparse(deltaSuper);
+%HSuper=sparse(HSuper);
+% to be done: implementation of more complicated impurity potentials
+
+% supercell diagonalization
+nSuperCells = size(superLatticeVectors,1);
+end
+% variable not used ?
+%nUnitCellsDelta = size(superDeltaVectors,1);
+if ~calcGreens
+    % find the
+energy = linspace(firstEnergy, lastEnergy, nEnergyPoints);
+if version >0
+    E = repmat(energy,nBands*2,1);
+else
+E = repmat(energy,nBands,1);
+end
+% only one loop below
+le=1;
+else
+    if ~(exist('Greensenergy','var'))
+        disp('No Greensenergy given, setting to 0.');
+        E=0;
+    else
+        if ~ischar(Greensenergy)
+            E=Greensenergy;
+            le=1;
+        else
+            % load the list of energies to be calculated from the given
+            % file
+            load(Greensenergy,'E');
+            le=numel(E);
+        end;
+    end
+end;
+
+% orphan later
+if ~exist('casestring','var')
+    casestring='LDOS_FeSe_Milan_Gamma';
+end;
+
 if (~exist('tetra','var'))
     tetra=false;
 end;
@@ -176,9 +259,15 @@ if (division==0 || part>division)
     else
         % some huge arrays to store the result
         % store the edges twice to calculate the whole area
+        if version >0
+        ukall=zeros(M+1,M+1,nDosSites,nBands*2);
+    %    vkall=zeros(M+1,M+1,nDosSites,nBands);
+        Ekall=zeros(M+1,M+1,nBands*2);
+        else
         ukall=zeros(M+1,M+1,nDosSites,nBands);
         vkall=zeros(M+1,M+1,nDosSites,nBands);
         Ekall=zeros(M+1,M+1,nBands);
+        end;
     end;
 end;
 % split casestring from directories
@@ -211,8 +300,13 @@ for index=startindex:endindex
     iKy= mod(index-1,M)+1;
     iKx= ceil(index/M);
     tic;
-    ekukvk_file=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'_g.mat'];
-    ekukvk_fileGF=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'_g_GF.mat'];
+    if version >0
+        ekukvk_file=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'_1.mat'];
+        ekukvk_fileGF=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'_1_GF.mat'];
+    else
+        ekukvk_file=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'_g.mat'];
+        ekukvk_fileGF=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'_g_GF.mat'];      
+    end;
     calculate=true;
     if exist(ekukvk_fileGF, 'file') % no need to calculate this k-point
         calculate=false;
@@ -234,36 +328,70 @@ for index=startindex:endindex
             kSpaceGap = kSpaceGap + deltaSuper(:,:,iUnitCell)*exp(1i*(iLatticeVector*k'));
         end
         KESuper = kSpaceHopping + HImpurity;
+        KESuper=0.5*(KESuper+KESuper');
         kSpaceHamiltonian = [KESuper -kSpaceGap; -kSpaceGap' -KESuper];
         [eigVector, eigValue] = eig(kSpaceHamiltonian);
         [eigValueK, sortingIndex] = sort(real(diag(eigValue)));
+        if debug
+            whos;
+        end;
         clear eigValue
         eigVectorK = (eigVector(:,sortingIndex));
-        Ek_vector=eigValueK((nBands + 1):end);
+        if version >0
+            Ek_vector=eigValueK;
+        else
+            Ek_vector=eigValueK((nBands + 1):end);
+        end;
         clear eigValueK
         if ~calcGreens
+            if version >0
+                % only use this part for the calculation of the Greens
+                % function
+                uK = eigVectorK(siteIndices,:);
+            else
             uK = eigVectorK(siteIndices,(nBands + 1):end);
             vK = eigVectorK(nBands + siteIndices,(nBands + 1):end);
-            %clear eigVectorK
+            end
+            clear eigVectorK
             % depending on the mode do different things
             if division==0
                 % single calculation of full DOS
                 Ek = repmat(Ek_vector, 1, nEnergyPoints) ;
-                greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita )) + ...
+                if version >0
+                    greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita ));
+                else
+                    greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita )) + ...
                     ((abs(vK)).^2)*(1./(E + Ek + 1i*ita ));
+                end
             else
                 % save result in one single file
                 % put k_vector in filename to avoid double calculation ?
-                save(ekukvk_file,'uK','vK','Ek_vector');
+                if version >0
+                    save(ekukvk_file,'uK','Ek_vector');
+                else
+                    save(ekukvk_file,'uK','vK','Ek_vector');
+                end           
             end
         else
-            uK = eigVectorK(1:nBands,(nBands+1):end);
-            vK = eigVectorK((nBands+1):end,(nBands+1):end);        
+            if version >0
+                uK = eigVectorK(1:nBands,:);
+            else
+                uK = eigVectorK(1:nBands,(nBands+1):end);
+                vK = eigVectorK((nBands+1):end,(nBands+1):end);
+            end;
             if division==0
                 EnRep = repmat(Ek_vector',nBands,1);
-                latticeGreensK(iKx, iKy, :, :) = (uK./(E - EnRep + 1i*ita))*(uK') + (vK./(E + EnRep + 1i*ita))*(vK');
+                if version >0
+                    latticeGreensK(iKx, iKy, :, :) = (uK./(E - EnRep + 1i*ita))*(uK');
+                else
+                    latticeGreensK(iKx, iKy, :, :) = (uK./(E - EnRep + 1i*ita))*(uK') + (vK./(E + EnRep + 1i*ita))*(vK');
+                end
             else
+                if version >0
+                save(ekukvk_fileGF,'uK','Ek_vector');
+                else
                 save(ekukvk_fileGF,'uK','vK','Ek_vector');
+                end
             end;
 
         end
@@ -272,6 +400,7 @@ for index=startindex:endindex
     end
     toc;
 end
+for en=1:le
 if ~calcGreens
 if ~tetra
     LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita),sqstring];
@@ -279,7 +408,7 @@ else
     LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_tetra_corr']
 end;
 else
-    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita),'_e_',num2str(E),sqstring];
+    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita),'_e_',num2str(E(en)),sqstring];
 end;
 if part>division
     if division>0
@@ -295,19 +424,48 @@ if part>division
             iKx= ceil(index/M);
             if iKy==1
                 disp(['reading k-point',num2str(iKx),' ',num2str(iKy)])
+                if debug
+                    whos;
+                end;
             end;
             try
+                if version >0
+                    ekukvk_file=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'_1.mat'];
+                    ekukvk_fileGF=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'_1_GF.mat'];
+                else
                     ekukvk_file=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'_g.mat'];
                     ekukvk_fileGF=[dirstring,'/','kx_',num2str(kx_ind(1,iKx)),'_',num2str(kx_ind(2,iKx)),'ky_',num2str(ky_ind(1,iKy)),'_',num2str(ky_ind(2,iKy)),'_g_GF.mat'];
+                end;
                     if calcGreens
                         load(ekukvk_fileGF);
+                        if version >0
+                        else
+                        if ~(exist('vK','var'))
+                            vK=0*uK;
+                        end;
+                        end
                     else
                         try
                             load(ekukvk_file);
                         catch exception
+                            clear uK vK
                             load(ekukvk_fileGF);
                             uK = uK(siteIndices,:);
-                            vK = vK(siteIndices,:);
+                            if version >0
+                            if ~(exist('vK','var'))
+                                vK=0*uK;
+                            else
+                                vK = vK(siteIndices,:);
+                            end
+                            else
+                                vK = vK(siteIndices,:);
+                            end
+                        end
+                        if version >0
+                        else
+                        if ~(exist('vK','var'))
+                            vK=0*uK;
+                        end;
                         end
                     end;
             catch exception
@@ -328,15 +486,27 @@ if part>division
             if ~tetra
                 if ~calcGreens
                     Ek = repmat(Ek_vector, 1, nEnergyPoints) ;
+                    if version>0
+                     greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita ));
+                    else
                     greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita )) + ...
                         ((abs(vK)).^2)*(1./(E + Ek + 1i*ita ));
+                    end;
                 else
                     EnRep = repmat(Ek_vector',nBands,1);
-                    latticeGreensK(iKx, iKy, :, :) = (uK./(E - EnRep + 1i*ita))*(uK') + (vK./(E + EnRep + 1i*ita))*(vK');
+                    if version>0
+                    latticeGreensK(iKx, iKy, :, :) = (uK./(E(en) - EnRep + 1i*ita))*(uK');
+                    else
+                    latticeGreensK(iKx, iKy, :, :) = (uK./(E(en) - EnRep + 1i*ita))*(uK') + (vK./(E(en) + EnRep + 1i*ita))*(vK');
+                    end;
                 end;
             else
+                if version >0
                 ukall(iKx,iKy,:,:)=uK;
+                else
+                 ukall(iKx,iKy,:,:)=uK;
                 vkall(iKx,iKy,:,:)=vK;
+                end;
                 Ekall(iKx,iKy,:)=Ek_vector;
                 % store the edges twice to construct set of triangles that cover the whole area
 %                 if iKx==1
@@ -385,16 +555,28 @@ if part>division
                     % to do: vectorize the code!
                     for iband=1:nBands
                         disp(['Band ',num2str(iband),' of ',num2str(nBands)]);
+                        if version >0
+                            E=Ekall(:,:,iband);
+                            a=ukall(:,:,:,iband).*conj(ukall(:,:,:,iband));
+                            greensRealSpace(:, :) = greensRealSpace(:, :) + f(E,a,kx,ky,energy);
+                            E=Ekall(:,:,iband+nBands);
+                            a=ukall(:,:,:,iband+nBands).*conj(ukall(:,:,:,iband+nBands));
+                            greensRealSpace(:, :) = greensRealSpace(:, :) + f(E,a,kx,ky,energy);                           
+                        else
                         E=Ekall(:,:,iband);
                         a=ukall(:,:,:,iband).*conj(ukall(:,:,:,iband));
                         greensRealSpace(:, :) = greensRealSpace(:, :) + f(E,a,kx,ky,energy);
                         a=vkall(:,:,:,iband).*conj(vkall(:,:,:,iband));
                         greensRealSpace(:, :) = greensRealSpace(:, :) + f(E,a,kx,ky,-energy);
+                        end;
                     end;
         end;
     else
         latticeGreens = zeros(nBands, nBands);
         for i = 1:nBands
+            if debug
+                whos;
+            end;
             disp(['Integrating Bands (',num2str(i),' ,:) of ', num2str(nBands),'.']);
             for j = 1:nBands
                 if singular_quad
@@ -438,18 +620,31 @@ if part>division
         else
             ldos = (-(1/pi))*imag(greensRealSpace);
         end;
-        orbitalLDOSFarAway = ldos(1:efforb,:);
-        totalLDOSFarAway = sum(orbitalLDOSFarAway,1); %#ok<NASGU>
-        orbitalLDOSImp = ldos(efforb+1:2*efforb,:);
-        totalLDOSImp = sum(orbitalLDOSImp,1);%#ok<NASGU>
-        orbitalLDOSImpNN = ldos(2*efforb+1:3*efforb,:);
-        totalLDOSImpNN = sum(orbitalLDOSImpNN,1);%#ok<NASGU>
-        orbitalLDOSImpNNN = ldos(3*efforb+1:4*efforb,:);
-        totalLDOSImpNNN = sum(orbitalLDOSImpNNN,1);%#ok<NASGU>
-        % to be done: change filename to general string
-        save(outputfilename, 'energy', 'orbitalLDOSFarAway', 'orbitalLDOSImp', 'orbitalLDOSImpNN', 'orbitalLDOSImpNNN');
+        if isempty(nDosSitesfile)
+            orbitalLDOSFarAway = ldos(1:efforb,:);
+            totalLDOSFarAway = sum(orbitalLDOSFarAway,1); %#ok<NASGU>
+            orbitalLDOSImp = ldos(efforb+1:2*efforb,:);
+            totalLDOSImp = sum(orbitalLDOSImp,1);%#ok<NASGU>
+            orbitalLDOSImpNN = ldos(2*efforb+1:3*efforb,:);
+            totalLDOSImpNN = sum(orbitalLDOSImpNN,1);%#ok<NASGU>
+            orbitalLDOSImpNNN = ldos(3*efforb+1:4*efforb,:);
+            totalLDOSImpNNN = sum(orbitalLDOSImpNNN,1);%#ok<NASGU>
+            % to be done: change filename to general string
+            save(outputfilename, 'energy', 'orbitalLDOSFarAway', 'orbitalLDOSImp', 'orbitalLDOSImpNN', 'orbitalLDOSImpNNN');
+        else
+            % new output format
+            for n=1:nDosSites/efforb
+                orbitalLDOS((n-1)*efforb+(1:efforb),:)=ldos((n-1)*efforb+(1:efforb),:);
+            end;
+             save(outputfilename, 'energy', 'orbitalLDOS', 'LDOSsites','efforb');           
+        end
     else
-        save(outputfilename,'latticeGreens','N','nOrbitals','E');
+        % some arkward workaround for multiple energies
+        E1=E;
+        E=E1(en);
+        save(outputfilename,'latticeGreens','N','nOrbitals','E','sublattice');
+        E=E1;
     end;
 end
+end;
 r=1;

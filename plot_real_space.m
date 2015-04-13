@@ -9,10 +9,10 @@ if nargin < 3
     tickx={'$d_{z^2}$','$d_{x^2-y^2}$','$d_{yz}$','$d_{xz}$','$d_{xy}$'}; % orbitals order for FeSe (Tom)
 end;
 if nargin <4
-    nOrbitals=10;
+    nOrbitals=5
 end;
 if nargin <5
-    sublattice=1
+    sublattice=0
 end;
 fsz=20;
 load(inputfile,'-mat'); % BdG_homogeneous_FeSe_Toms_BS_6Dec13_GammaCut_3_N_9.mat
@@ -97,8 +97,10 @@ delta1Fe =  reshape(delta1Fe,nOrbitals/2, nOrbitals/2, 2*N^2);
 delta2Plot = zeros(nOrbitals/2*plotN, nOrbitals/2*plotN);
 effOrbitals=nOrbitals/2;
 else
+    plotN=3;
+    ceil((round(N/2)-1)/2)*2+1;
     delta1Fe=reshape(delta,nOrbitals,nOrbitals,N^2);
-    delta2Plot = zeros(nOrbitals*N, nOrbitals*N);
+    delta2Plot = zeros(nOrbitals*plotN, nOrbitals*plotN);
     effOrbitals=nOrbitals;
     latticeVectors1Fe=latticeVectorsDelta;
 end

@@ -13,7 +13,7 @@ if nargin < 1
     %flnm = 'Gamma_fese_Toms_BS.dat_rlist';
     flnm = 'Gamma_Tom_U_0.95.dat_rlist';
 end;
-r=read_complex_matrix(flnm,nOrbitals^2,nOrbitals^2);
+r=read_complex_matrix(flnm,nOrbitals^2,nOrbitals^2,2+1i);
 r = real(r);
 
 % extract Intra and Mixed pairing vertices (\Gamma_1111 & \Gamma_1221)
@@ -39,6 +39,11 @@ for i = 1:nOrbitals
             l1=l+orb2;
             k1=mod(k1-1,nOrbitals)+1;
             l1=mod(l1-1,nOrbitals)+1;
+        else
+            i1=i;
+            j1=j;
+            l1=l;
+            k1=k;
         end
         Gammafull(i1,j1,k1,l1,:) = r((i-1)*nOrbitals^3 + (j-1)*nOrbitals^2 + (k-1)*nOrbitals + (l-1) + 1,:);
             end
@@ -77,6 +82,8 @@ for i = -cut:cut
         count = count + 1;
         latticeVectorsSCCut(count,:) = [i j];
         GammaCut(:,:,:,:,count) = Gammafull1(:,:,:,:,((latticeVectorsSC(:,1) == i) & (latticeVectorsSC(:,2) == j)));
+        % symmetrize with respect to r <-> -r for spin-singlet channel
+        %GammaCut(:,:,:,:,count) = 0.5*(Gammafull1(:,:,:,:,((latticeVectorsSC(:,1) == i) & (latticeVectorsSC(:,2) == j)))+Gammafull1(:,:,:,:,((latticeVectorsSC(:,1) == -i) & (latticeVectorsSC(:,2) == -j))));
         % special care for the edges, assume certain relation of Fe1 and
         % Fe2 in elementary cell.
         if abs(sublattice)>0

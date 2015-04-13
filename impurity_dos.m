@@ -199,6 +199,9 @@ end
 TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) = ...
 TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) - mu*eye(nOrbitals); 
 [HSuper, superLatticeVectors] = supercell_hoppings(N, TBparameters, latticeVector);
+% similar code as in BdG_impurity to make the hoppings numerically a
+% Hermitean matrix
+HSuper=0.5*(HSuper+HSuper');
 [deltaSuper,superDeltaVectors] = supercell_delta(nOrbitals, delta, maxHop);
 %deltaSuper=sparse(deltaSuper);
 %HSuper=sparse(HSuper);

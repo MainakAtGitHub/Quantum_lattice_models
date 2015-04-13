@@ -26,7 +26,7 @@ fid = fopen(flnm);
 r=zeros(rows*columns,nLines-1);
 if fsize>0
     % skip header
-if skip>0
+if abs(skip)>0
     s1 = fscanf(fid, '%s\n', real(skip));
 end;
     n=0;

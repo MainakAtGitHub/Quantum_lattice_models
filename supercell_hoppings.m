@@ -1,4 +1,4 @@
-function [superHopping, superLatticeVectors] = supercell_hoppings(N, TBparameters, latticeVectors)
+function [t, superLatticeVectors] = supercell_hoppings(N, TBparameters, latticeVectors)
 
 nOrbitals = size(TBparameters,1);
 maxHop = max(max(abs(latticeVectors)));
@@ -71,6 +71,5 @@ for ix = 1:N
         end
     end
 end
-superHopping = t;           
                     
                     

@@ -13,6 +13,7 @@ end;
 if nargin <4
     plotall=false;
 end;
+%plotall=true;
 coloruf1=[250 	70 	22 ]/255;
 % pure red instead of orange
 coloruf1=[250 	0 	0 ]/255;
@@ -124,34 +125,34 @@ if plotall && (efforb>0)
         end;
     end
 end
-% if plotall
-% % impurity DOS
-% fig(2)=figure('Position',[200, 50, 500, 300]);
-% set(0,'DefaultAxesFontSize',fsz)
-% plot2=plot(energy,[orbitalLDOS(efforb+(1:efforb),:);sum(orbitalLDOS(efforb+(1:efforb),:),1)]);
-% setlabels(plot2,orb,plotrange);
-% if isunix
-%     print_pdf(['/tmp/',inputfile,'_Imp.pdf']);
-% end;
-% 
-% % NN dos
-% fig(3)=figure('Position',[200, 50, 500, 300]);
-% set(0,'DefaultAxesFontSize',fsz)
-% plot3=plot(energy,[orbitalLDOS(2*efforb+(1:efforb),:);sum(orbitalLDOS(2*efforb+(1:efforb),:),1)]);
-% setlabels(plot3,orb,plotrange);
-% if isunix
-%     print_pdf(['/tmp/',inputfile,'_Imp_NN.pdf']);
-% end;
-% 
-% % NNN dos
-% fig(4)=figure('Position',[200, 50, 500, 400]);
-% set(0,'DefaultAxesFontSize',fsz)
-% plot4=plot(energy,[orbitalLDOS(3*efforb+(1:efforb),:);sum(orbitalLDOS(3*efforb+(1:efforb),:),1)]);
-% setlabels(plot4,orb,plotrange);
-% if isunix
-%     print_pdf(['/tmp/',inputfile,'_Imp_NNN.pdf']);
-% end;
-% end;
+if plotall
+% impurity DOS
+fig(2)=figure('Position',[200, 50, 500, 300]);
+set(0,'DefaultAxesFontSize',fsz)
+plot2=plot(energy,[orbitalLDOS(efforb+(1:efforb),:);sum(orbitalLDOS(efforb+(1:efforb),:),1)]);
+setlabels(plot2,orb,plotrange);
+if isunix
+    print_pdf(['/tmp/',inputfile,'_Imp.pdf']);
+end;
+
+% NN dos
+fig(3)=figure('Position',[200, 50, 500, 300]);
+set(0,'DefaultAxesFontSize',fsz)
+plot3=plot(energy,[orbitalLDOS(2*efforb+(1:efforb),:);sum(orbitalLDOS(2*efforb+(1:efforb),:),1)]);
+setlabels(plot3,orb,plotrange);
+if isunix
+    print_pdf(['/tmp/',inputfile,'_Imp_NN.pdf']);
+end;
+
+% NNN dos
+fig(4)=figure('Position',[200, 50, 500, 400]);
+set(0,'DefaultAxesFontSize',fsz)
+plot4=plot(energy,[orbitalLDOS(3*efforb+(1:efforb),:);sum(orbitalLDOS(3*efforb+(1:efforb),:),1)]);
+setlabels(plot4,orb,plotrange);
+if isunix
+    print_pdf(['/tmp/',inputfile,'_Imp_NNN.pdf']);
+end;
+end;
 % compare total dos
 %figure5= figure('Position',[200, 50, 500, 300]);
 
