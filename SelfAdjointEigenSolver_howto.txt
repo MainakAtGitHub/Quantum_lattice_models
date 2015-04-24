@@ -1,0 +1,46 @@
+Setup of matrix diagonalization using external library Eigen3
+
+1) Make sure that the sources of Eigen3 are available in the system
+   http://eigen.tuxfamily.org/index.php?title=Main_Page
+   a) Download via
+   wget http://bitbucket.org/eigen/eigen/get/3.2.1.tar.gz
+   tar -xvvzf 3.2.1.tar.gz
+   b) install via
+   apt-get install libeigen3-dev
+
+2) Setup of the matlab compiler for c++ (check the following commands)
+   a) mex -setup c++
+   b) mex sh -setup
+
+3) Compile the program
+   compile_SelfAdjointEigenSolver
+   (put in the relative path when used method 1b) e.g. ./eigen-eigen-6b38706d90a9/ )
+
+4) Check the program
+   check_SelfAdjointEigenSolver
+
+5) Use it in your code; make sure that the compiled mex function SelfAdjointEigenSolver.mexa64
+   is in your current directory
+   instead of:
+
+   [V,E]=eig(A);
+   E=diag(E);
+
+   use
+   
+   [V,E]=SelfAdjointEigenSolver(A);
+
+   note: The program is only using the information in the upper triangle of
+   matrix A, e.g. if the supplied matrix is not symmetric (hermitean), the 
+   program just takes the upper triangle and assumes the lower triangle to
+   be the adjoint!
+
+6) Troubleshooting
+   a) Depending on the version, matlab might complain about an unsupported
+      compiler version; it might work nevertheless, but a save way is to
+      install also the older compiler via
+      apt-get install g++-4.X
+      where X has to be replaced by 4 6 7 (depending on the matlab version)
+      In order to call the older compiler one has to uncomment the following
+      line in mexopts.sh:
+                  # CXX='g++-4.7'

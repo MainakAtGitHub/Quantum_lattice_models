@@ -9,14 +9,23 @@ function [ nUpCal, nDownCal, deltaCal] = BdG_step( KE,delta, kT,nBands, SCIntera
     %tic
     %BdGMatrix1=sparse(BdGMatrix);
     %toc
-    tic
     % save some memory by giving back the eigenvalues in a vector
     % does not work under matlab v8.1 or smaller
     %[eVector, eValue] = eig(BdGMatrix,'vector');
+    try
+    tic
     [eVector, eValue] = eig(BdGMatrix);
+    toc
+    catch
+	    disp('error with buildin eig, using eigen3 library now')
+	    clear eVector eValue
+	    tic
+	    [eVector, eValue] =    SelfAdjointEigenSolver(BdGMatrix);
+	    toc
+    end
+
        % sparse matrix eigenvalue calculation is significantly slower!
         %[eVector, eValue] = eigs(BdGMatrix1,nBands);
-    toc
     % save some memory for following commands (here we need to save three
     % full arrays such that we get in MB:
     % 3*(2*N^2*nOrbitals)^2*8/1024/1024 (3.6G for N=25, 470M for N=15)
