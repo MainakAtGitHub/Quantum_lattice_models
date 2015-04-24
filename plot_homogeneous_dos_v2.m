@@ -10,7 +10,7 @@ end;
 if (~exist('tetra','var'))
     tetra=false;
 end;
-
+Displaynames={'d_{z^2}','d_{x^2-y^2}','d_{yz}','d_{xz}','d_{xy}'};
 if nargin <1
     % load relevant files
     TB_file='TB_hamiltonian_FeSe_2D.mat'
@@ -45,25 +45,34 @@ end;
 if ~exist('sublattice','var')
     sublattice=1;
 end;
+if ~exist('calcSC','var')
+    calcSC=true;
+end;
 % special convention for homogeneous DOS
 M=N*M;
-LDOSfileName0 = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
+if calcSC
+    LDOSfileName0 = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
+else
+        LDOSfileName0 = [casestring,'normal_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
+end
 
 if ~tetra
     LDOSfileName = [LDOSfileName0,sqstring , '_M_', num2str(M),'_ita_', num2str(ita)];
 else
     LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_tetra_corr1']
 end;
-
 disp('reading k-space calculated DOS ...');
 load(LDOSfileName,'-mat')
+
+if ~calcSC
+    bandDOS=bandDOSNormal
+end;
 
 % some smoothing if necessary
 de=energy(2)-energy(1);
 smooth=floor(smoothenergy/de);
 bandDOSNormal=sg_smooth(bandDOSNormal,smooth);
 bandDOS=sg_smooth(bandDOS,smooth);
-
 
 totalDOSNormal = sum(bandDOSNormal,1);
 totalDOS = sum(bandDOS,1);
@@ -131,7 +140,6 @@ set(plot1(2),'LineWidth',2,'LineStyle',':','Color',[0 0 0],'DisplayName','normal
 linestyles={':','-.','-','--','-'};
 colors={[1 0 0], [1 0 0], [0 1 0], [1 0 0], [0 0 1], [0 0 0]};
 markers={'','','o','','',''};
-Displaynames={'d_{z^2}','d_{x^2-y^2}','d_{yz}','d_{xz}','d_{xy}'};
 for n=1:sublatticefactor*nOrbitals
     if isempty(markers{n})
         set(plot1(n+2),'LineStyle',linestyles{n},'Color',colors{n},'DisplayName',Displaynames{n});

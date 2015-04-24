@@ -67,12 +67,17 @@ else
 end;
 
 
+% fix for missing on-site energy in tb parameters below
+%if sum((latticeVector(:,1)==0) & (latticeVector(:,2)==0))==0
+ %   TBparameters(:,:,end+1)=- mu*eye(nOrbitals);
+ %   latticeVector(end+1,:)=0*latticeVector(1,:);
+%end;
 nUnitCells = size(latticeVector,1);
-TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) = ...
-TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) - mu*eye(nOrbitals);
+%TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) = ...
+%TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) - mu*eye(nOrbitals);
 
 M=N*M;
-kx = (2*pi/M)*(0:(M - 1)) + pi/M;
+kx = (2*pi/M)*(0:(M - 1));% + pi/M;
 ky = kx;
 delKx = kx(2)-kx(1);
 delKy = delKx;
@@ -85,7 +90,8 @@ for iKx = 1:M
         for iKy = 1:M
             k = [kx(iKx) ky(iKy)];
             % diagonalizing for normal state DOS
-            kSpaceHopping = zeros(nOrbitals,nOrbitals);
+            kSpaceHopping = - mu*eye(nOrbitals);
+            %zeros(nOrbitals,nOrbitals);
             for iUnitCell = 1:nUnitCells
                 iLatticeVector = latticeVector(iUnitCell,1:2);
                 kSpaceHopping = kSpaceHopping + TBparameters(:,:,iUnitCell)*exp(1i*(iLatticeVector*k'));
@@ -102,7 +108,7 @@ for iKx = 1:M
                 iLatticeVectorDelta = latticeVectorsSC(iUnitCellDelta,:);
                 kSpaceGap = kSpaceGap + delta(:,:,iUnitCellDelta)*exp(1i*(iLatticeVectorDelta*k'));
             end
-            kSpaceHamiltonian = [kSpaceHopping -kSpaceGap; -kSpaceGap' -kSpaceHopping];
+            kSpaceHamiltonian = [kSpaceHopping -kSpaceGap; -kSpaceGap' -conj(kSpaceHopping)];
             [eigVector, eigValue] = eig(kSpaceHamiltonian);
             [eigValueK, sortingIndex] = sort(real(diag(eigValue)));
             eigVectorK = (eigVector(:,sortingIndex))';

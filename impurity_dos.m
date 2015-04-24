@@ -201,14 +201,16 @@ TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) - mu*eye(nOr
 [HSuper, superLatticeVectors] = supercell_hoppings(N, TBparameters, latticeVector);
 % similar code as in BdG_impurity to make the hoppings numerically a
 % Hermitean matrix
-HSuper=0.5*(HSuper+HSuper');
+nSuperCells = size(superLatticeVectors,1);
+for iUnitCell = 1:nSuperCells
+    HSuper(:,:,iUnitCell)=0.5*(HSuper(:,:,iUnitCell)+HSuper(:,:,iUnitCell)');
+end;
 [deltaSuper,superDeltaVectors] = supercell_delta(nOrbitals, delta, maxHop);
 %deltaSuper=sparse(deltaSuper);
 %HSuper=sparse(HSuper);
 % to be done: implementation of more complicated impurity potentials
 
 % supercell diagonalization
-nSuperCells = size(superLatticeVectors,1);
 end
 % variable not used ?
 %nUnitCellsDelta = size(superDeltaVectors,1);
@@ -323,7 +325,7 @@ for index=startindex:endindex
             kSpaceGap = kSpaceGap + deltaSuper(:,:,iUnitCell)*exp(1i*(iLatticeVector*k'));
         end
         KESuper = kSpaceHopping + HImpurity;
-        kSpaceHamiltonian = [KESuper -kSpaceGap; -kSpaceGap' -KESuper];
+        kSpaceHamiltonian = [KESuper -kSpaceGap; -kSpaceGap' -conj(KESuper)];
         [eigVector, eigValue] = eig(kSpaceHamiltonian);
         [eigValueK, sortingIndex] = sort(real(diag(eigValue)));
         if debug

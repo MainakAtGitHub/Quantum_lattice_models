@@ -8,7 +8,10 @@ function r=BdG_impurity_v3(inputfile)
 %       First find beta for converging solution. Now choose a range close
 %       to this beta, say [beta1 beta2] and for each iteration take new
 %       beta to be beta = rand
-
+global fullgamma cutek
+% set some default value
+% fast summation with energies close to 0
+cutek=NaN;
 if nargin <1
     %default Parameters
     N = 9;%input('Enter N   ');
@@ -80,7 +83,6 @@ nBands = N^2*nOrbitals;
 % kinetic energy
 H0 = lattice_translation(N, TBparameters, latticeVector);
 % ugly global variable
-global fullgamma
 if exist('Gamma','var')
     SCInteractionMatrix = lattice_translation(N, Gamma, latticeVectorsSC);
     fullgamma=false;
@@ -239,7 +241,7 @@ for i = 1:maxLoop
         if ~magnetic
             [ nUpCal, nDownCal, deltaCal ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix);
         else
-            KEdown = Hdown - mu*eye(nBands);
+            KEdown = conj(Hdown - mu*eye(nBands));
             [ nUpCal, nDownCal, deltaCal ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
         end;
     else

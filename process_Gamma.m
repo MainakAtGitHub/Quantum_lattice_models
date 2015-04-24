@@ -13,7 +13,7 @@ if nargin < 1
     %flnm = 'Gamma_fese_Toms_BS.dat_rlist';
     flnm = 'Gamma_Tom_U_0.95.dat_rlist';
 end;
-r=read_complex_matrix(flnm,nOrbitals^2,nOrbitals^2);
+r=read_complex_matrix(flnm,nOrbitals^2,nOrbitals^2,2+1i);
 r = real(r);
 
 % extract Intra and Mixed pairing vertices (\Gamma_1111 & \Gamma_1221)

@@ -1,6 +1,8 @@
 function h=plot_k_space_gap(inputfile)
     % load the input file to set the variables, gave up the old .mat file
     % format
+    Displaynames={'d_{z^2}','d_{x^2-y^2}','d_{yz}','d_{xz}','d_{xy}'};
+
      read_input_file=inputfile;
      read_input;
      read_input_file
@@ -9,10 +11,18 @@ if (~exist('Vimp','var'))
         disp('Warning: finite impurity potential, not homogeneous case.')
     end;
 end;
+for n=1:numel(Displaynames)
+    Displaynames{n}=['$',Displaynames{n},'$'];
+end;
 load(TB_file,'-mat');
 nOrbitals = size(TBparameters,1);
     load(Gamma_file,'-mat');
     load(BdGfileName,'-mat');
+    % swap real and imaginary part
+    delta=imag(delta)+1i*real(delta);
+   % we are calculating delta(nu,mu) instead of delta(mu,nu), so a
+   % transpose needed here!
+   delta=transpose(delta);
 N = sqrt(size(delta,1)/nOrbitals);
 if exist('latticeVectorsSC','var')
     nUnitCellsDelta = size(latticeVectorsSC,1);
@@ -30,16 +40,52 @@ end
 delta = deltaCenter;
 %delta(:,:,iUnitCellDelta)
 mxreal=max(abs(latticeVectorsSC(:)));
+if abs(sublattice)>0
+    mxreal=ceil(sqrt(2)*mxreal);
+end
 M=2*mxreal+1;
-for mu=1:nOrb
-    for nu=1:nOrb
+if abs(sublattice)>0
+    efforb=nOrbitals/2;
+else
+     efforb=nOrbitals;
+end;    
+allgaps=zeros(M*efforb);
+for mu=1:nOrbitals
+    
+    for nu=1:nOrbitals
+        
 realgap=zeros(M,M);
         % only works for square lattice
         for iUnitCellDelta = 1:nUnitCellsDelta
             iLatticeVectorDelta = latticeVectorsSC(iUnitCellDelta,:);
-            realgap(iLatticeVectorDelta(1)+mxreal+1,iLatticeVectorDelta(2)+mxreal+1)=delta(mu,nu,iUnitCellDelta);
+            % convert from 2Fe to 1Fe if needed
+            if abs(sublattice)>0 & nu<=nOrbitals/2
+                if mu<=nOrbitals/2%                i+j j-i; i+j j-i+1];     
+                    dx=iLatticeVectorDelta(1)+iLatticeVectorDelta(2);
+                    dy=-iLatticeVectorDelta(1)+iLatticeVectorDelta(2);
+                else
+                    dx=iLatticeVectorDelta(1)+iLatticeVectorDelta(2);
+                    dy=-iLatticeVectorDelta(1)+iLatticeVectorDelta(2)-1;
+                end
+                if (abs(dx)<mxreal) & (abs(dy) <mxreal)
+                realgap(dx+mxreal+1,dy+mxreal+1)=delta(mu,nu,iUnitCellDelta);
+                end
+            else
+                realgap(iLatticeVectorDelta(1)+mxreal+1,iLatticeVectorDelta(2)+mxreal+1)=delta(mu,nu,iUnitCellDelta);
+            end
         end
-    allgaps((mu-1)*M+1:(mu)*M,(nu-1)*M+1:(nu)*M)=real(realgap);
+        if abs(sublattice)>0
+            if (abs(sublattice)>0) & (nu<=nOrbitals/2)
+                if mu <=nOrbitals/2
+                    allgaps((mu-1)*M+1:(mu)*M,(nu-1)*M+1:(nu)*M)=allgaps((mu-1)*M+1:(mu)*M,(nu-1)*M+1:(nu)*M)+real(realgap);
+                else
+                    allgaps((mu-efforb-1)*M+1:(mu-efforb)*M,(nu-1)*M+1:(nu)*M)=allgaps((mu-efforb-1)*M+1:(mu-efforb)*M,(nu-1)*M+1:(nu)*M)+real(realgap);
+                end
+ 
+            end;
+        else
+            allgaps((mu-1)*M+1:(mu)*M,(nu-1)*M+1:(nu)*M)=real(realgap);
+        end
     end;
 end;
 
@@ -66,14 +112,14 @@ end;
  %       'DataAspectRatio',[1 1 .01]);
     %view(axes1,[0.5 90]);
     nkIntegration=M;
-    ylim([.5 nkIntegration*nOrb+0.5])
-    xlim([.5 nkIntegration*nOrb+0.5])
+    ylim([.5 nkIntegration*nOrbitals+0.5])
+    xlim([.5 nkIntegration*nOrbitals+0.5])
 %    grid(axes1,'on');
  %   hold(axes1,'all');
     % Create surf
     %surf(real(gaps),'Parent',axes1,'LineStyle','none');
-    maxabsekkn=max(max((real(allgaps))));
-    minabsekkn=min(min((real(allgaps))));
+    [maxabsekkn,pos]=max(real(allgaps(:)))
+    minabsekkn=min((real(allgaps(:))))
     global colorred
 colorred=false;
 mtix=10^(ceil(log(maxabsekkn)/log(10)));
@@ -136,6 +182,7 @@ set(0,'DefaultAxesFontSize',fsz)
    % colorbar
     cb=colorbar_rwb(q,maxabsekkn,ticks,labels);
  %   label_boxes(nOrb,nkIntegration,tickx);
+     label_boxes(efforb,M,Displaynames);
     string=[pth,'/',BdGfileName1,'real_space_all'];
     axis square
     print('-dpng',[string,'.png']);
@@ -193,10 +240,10 @@ for iKx = 1:M
             disp(['Done ',num2str(iKx), ' of ',num2str(M),' kx values.']);
         end;
 end
-for mu=1:nOrb
-    for nu=1:nOrb
+for mu=1:nOrbitals
+    for nu=1:nOrbitals
         % only works for square lattice
-    allgaps((mu-1)*M+1:(mu)*M,(nu-1)*M+1:(nu)*M)=  fftshift(real(kSpacegapall(:,:,mu,nu)));
+    allgaps((mu-1)*M+1:(mu)*M,(nu-1)*M+1:(nu)*M)=  fftshift(real(kSpacegapall(:,:,mu,nu)));%real(kSpacegapall(:,:,mu,nu));%
     end;
 end;
 
@@ -221,8 +268,8 @@ end;
  %       'DataAspectRatio',[1 1 .01]);
     %view(axes1,[0.5 90]);
     nkIntegration=M;
-    ylim([.5 nkIntegration*nOrb+0.5])
-    xlim([.5 nkIntegration*nOrb+0.5])
+    ylim([.5 nkIntegration*nOrbitals+0.5])
+    xlim([.5 nkIntegration*nOrbitals+0.5])
 %    grid(axes1,'on');
  %   hold(axes1,'all');
     % Create surf
@@ -286,11 +333,10 @@ set(0,'DefaultAxesFontSize',fsz)
     r=interp1(input*maxabsekkn,colormatrix(:,1),x);
     g=interp1(input*maxabsekkn,colormatrix(:,2),x);
     b=interp1(input*maxabsekkn,colormatrix(:,3),x);
-    set(q,'Colormap', [r',g',b']);
-    
+    set(q,'Colormap', [r',g',b']);    
    % colorbar
     cb=colorbar_rwb(q,maxabsekkn,ticks,labels);
- %   label_boxes(nOrb,nkIntegration,tickx);
+    label_boxes(efforb,M,Displaynames);
     string=[pth,'/',BdGfileName1,'k_space_all'];
     axis square
     print('-dpng',[string,'.png']);

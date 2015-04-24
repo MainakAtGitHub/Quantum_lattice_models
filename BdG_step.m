@@ -2,7 +2,7 @@ function [ nUpCal, nDownCal, deltaCal] = BdG_step( KE,delta, kT,nBands, SCIntera
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
     if ~exist('mKE','var')
-        BdGMatrix = [KE, -delta; -delta', -KE];
+        BdGMatrix = [KE, -delta; -delta', -conj(KE)];
     else
         BdGMatrix = [KE, -delta; -delta', mKE];
     end;
@@ -37,7 +37,7 @@ function [ nUpCal, nDownCal, deltaCal] = BdG_step( KE,delta, kT,nBands, SCIntera
     fermi = 1./(1 + exp(En/kT));
     nUpCal = (abs(eVector(1:nBands,:)).^2)*fermi;
     nDownCal = (abs(eVector((nBands + 1):end,:)).^2)*(1 - fermi);
-    global fullgamma
+    global fullgamma cutek
     if ~fullgamma
         deltaCal = SCInteractionMatrix.*((eVector(1:nBands,:)*(((eVector((nBands + 1):end,:))').*repmat(fermi,1,nBands))));
         % debuging code
@@ -49,9 +49,28 @@ function [ nUpCal, nDownCal, deltaCal] = BdG_step( KE,delta, kT,nBands, SCIntera
         deltaCal=zeros(nBands,nBands);
         nOrb=size(SCInteractionMatrix.int,1);
         N=int32(sqrt(nBands/nOrb));
+        % symmetrize with respect to particles/antiparticles
+        fermi=-.5+fermi;
         tic
+        if ~isnan(cutek)
+            % restrict summation over finite range of energies
+            maxdelta=max(max(abs(delta)));
+            if cutek < 0
+                cut=-maxdelta*cutek;
+            else
+                cut=cutek;
+                if cut < 24*maxdelta
+                    disp(['largest gap is ',num2str(maxdelta),' cut for summation set too small, setting to',num2str(24*maxdelta)]);
+                    cut=24*maxdelta;
+                end;
+            end;
+            eklist=find(abs(En)<cut);
+            eVector=eVector(:,eklist);
+            fermi=fermi(eklist);
+            disp(['summing over ',num2str(numel(fermi)), ' instead of ',num2str(2*nBands),' energies']);
+        end;
         deltaCal=delta_full_mex(eVector,fermi,int32(nBands),int32(nOrb),int32(N),SCInteractionMatrix.int(:),int32(SCInteractionMatrix.latt),deltaCal);
-        %                deltaCal=delta_full(eVector,fermi,int32(nBands),int32(nOrb),int32(N),SCInteractionMatrix.int(:),int32(SCInteractionMatrix.latt),deltaCal);
+        %deltaCal=delta_full(eVector,fermi,int32(nBands),int32(nOrb),int32(N),SCInteractionMatrix.int(:),int32(SCInteractionMatrix.latt),deltaCal);
         toc
     end
 end

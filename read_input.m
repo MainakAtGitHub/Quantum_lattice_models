@@ -37,9 +37,14 @@ while ischar(tline)
         disp([variablename,'=',num2str(number)])
         eval([variablename,'=number;']);
     else
-        %    b) <value> represents a string
-        disp([variablename,'=',read_input_path,value])
-        eval([variablename,'=[read_input_path,value];']);
+        if ~(value(1)=='''')
+            value=[read_input_path,value];
+            %    b) <value> represents a string
+            disp([variablename,'=',read_input_path,value])
+        else
+            value=value(2:end-1);
+        end
+        eval([variablename,'=[value];']);
     end
     end;
     tline = fgetl(fid);
