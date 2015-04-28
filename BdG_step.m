@@ -70,7 +70,7 @@ function [ nUpCal, nDownCal, deltaCal] = BdG_step( KE,delta, kT,nBands, SCIntera
             fermi=fermi(eklist);
             disp(['summing over ',num2str(numel(fermi)), ' instead of ',num2str(2*nBands),' energies']);
         end;
-        deltaCal=delta_full_mex(eVector,fermi,int32(nBands),int32(nOrb),int32(N),SCInteractionMatrix.int(:),int32(SCInteractionMatrix.latt),deltaCal);
+        deltaCal=delta_full_mex(eVector,fermi,int32(nBands),int32(nOrb),int32(N),SCInteractionMatrix.int(:)+0*1i,int32(SCInteractionMatrix.latt),deltaCal);
         %deltaCal=delta_full(eVector,fermi,int32(nBands),int32(nOrb),int32(N),SCInteractionMatrix.int(:),int32(SCInteractionMatrix.latt),deltaCal);
         toc
     end

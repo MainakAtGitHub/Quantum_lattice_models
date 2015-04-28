@@ -8,11 +8,12 @@ cfg.GlobalDataSyncMethod='NoSync';
 
 ComplexMatrixType=coder.newtype('double',[inf,inf],'complex',1);
 VectorType=coder.newtype('double',[inf,1],'complex',0);
+CVectorType=coder.newtype('double',[inf,1],'complex',1);
 Int32=coder.newtype('int32',[1,1],'complex',0);
 lattice_type=coder.newtype('int32',[inf,2],'complex',0);
 
 %codegen -O enable:openmp -config cfg delta_full -args {ComplexMatrixType, VectorType, Int32, Int32, Int32, VectorType, lattice_type, ComplexMatrixType} -c
-codegen -O enable:openmp -config cfg delta_full -args {ComplexMatrixType, VectorType, Int32, Int32, Int32, VectorType, lattice_type, ComplexMatrixType} 
+codegen -O enable:openmp -config cfg delta_full -args {ComplexMatrixType, VectorType, Int32, Int32, Int32, CVectorType, lattice_type, ComplexMatrixType} 
 
 % 
 %     Description: 'class MexCodeConfig: MEX configuration objects with C code.'

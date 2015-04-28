@@ -19,10 +19,10 @@ nOrbitals = size(TBparameters,1);
     load(Gamma_file,'-mat');
     load(BdGfileName,'-mat');
     % swap real and imaginary part
-    delta=imag(delta)+1i*real(delta);
+   % delta=imag(delta)+1i*real(delta);
    % we are calculating delta(nu,mu) instead of delta(mu,nu), so a
    % transpose needed here!
-   delta=transpose(delta);
+%   delta=transpose(delta);
 N = sqrt(size(delta,1)/nOrbitals);
 if exist('latticeVectorsSC','var')
     nUnitCellsDelta = size(latticeVectorsSC,1);

@@ -14,7 +14,14 @@ if nargin < 1
     flnm = 'Gamma_Tom_U_0.95.dat_rlist';
 end;
 r=read_complex_matrix(flnm,nOrbitals^2,nOrbitals^2,2+1i);
-r = real(r);
+cmplx=1;
+if ~cmplx
+    disp(['Taking real part of interactions: maximum real part: ',num2str(max(real(r(:)))),' maximum imaginary part: ',num2str(max(imag(r(:))))]);
+    r = real(r);
+    cmpstr='';
+else
+    cmpstr='_comp';
+end;
 
 % extract Intra and Mixed pairing vertices (\Gamma_1111 & \Gamma_1221)
 Gammafull = zeros(nOrbitals,nOrbitals,nOrbitals,nOrbitals,nSites^2);
@@ -31,6 +38,8 @@ for i = 1:nOrbitals
         %count = count + 1;
         %cnt=(i-1)*nOrbitals^3 + (i-1)*nOrbitals^2 + (j-1)*nOrbitals + (j-1) + 1;
         if abs(sublattice)>0
+            % swap Fe1 <-> Fe2 to account for different definition of
+            % Fourier transformation in the 2 sublattice case
             i1=i+orb2;
             j1=j+orb2;
             i1=mod(i1-1,nOrbitals)+1;
@@ -70,7 +79,7 @@ Gammafull1 = - Gammafull; % change potential's sign convention
 Gammafull.int=Gammafull1;
 Gammafull.latt=latticeVectors;
 latticeVectorsSC = latticeVectors;
-save([flnm,'full.mat'], 'Gammafull');
+save([flnm,'full',cmpstr,'.mat'], 'Gammafull');
 
 % % Shortening the range
 cut = input('enter the Gamma cut   ');
@@ -114,7 +123,7 @@ for i = -cut:cut
 end
 Gammafull.int=GammaCut;
 Gammafull.latt=latticeVectorsSCCut;
-save([flnm,'cut',num2str(cut),'full.mat'], 'Gammafull');
+save([flnm,'cut',num2str(cut),'full',cmpstr,'.mat'], 'Gammafull');
 % Gammafull=Gammatemp;
 % latticeVectorsSC=latticeVectorsSCtemp;
 % 

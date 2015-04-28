@@ -35,7 +35,9 @@ parfor mu=1:nBands
             mu2=(ymu-1)*nOrb+(xmu-1)*nOrb*N;
             nu3=(ynu-1)*nOrb+(xnu-1)*nOrb*N;
             l4=mod(nu-1,nOrb)+1;            % indices for orbitals
-            index0=(ind(1)-1)*nOrb^4+(l1-1)*nOrb^2+(l4-1)*nOrb;
+            %index0=(ind(1)-1)*nOrb^4+(l1-1)*nOrb^2+(l4-1)*nOrb;
+            % different order in matlab and c++ !
+            index0=(ind(1)-1)*nOrb^4+(l1-1)*nOrb+(l4-1)*nOrb^2;
                        % index0=(ind(1)-1)*nOrb^4+l1+(l4-1)*nOrb^3;
            % index0m=(indm(1)-1)*nOrb^4+l4+(l1-1)*nOrb^2;
             %l2=l1;
@@ -44,7 +46,9 @@ parfor mu=1:nBands
                 % remove the vectorization to get another speedup ?
                 tmpvar=zeros(nOrb,1)+1i*zeros(nOrb,1);
                 for l3 = 1:nOrb
-                    index=index0+(l2)+(l3-1)*nOrb^3;
+                    %index=index0+(l2)+(l3-1)*nOrb^3;
+                    % different order in matlab and c++ !
+                    index=index0+(l2-1)*nOrb^3+l3;
                                        % index=index0+(l2-1)*nOrb+(l3-1)*nOrb^2;
 
                    % indexm=index0m+(l3-1)*nOrb+(l2-1)*nOrb^2;
