@@ -1,4 +1,4 @@
-function h=plot_k_space_gap(inputfile)
+function [allgapsr]=plot_k_space_gap(inputfile)
     % load the input file to set the variables, gave up the old .mat file
     % format
     Displaynames={'d_{z^2}','d_{x^2-y^2}','d_{yz}','d_{xz}','d_{xy}'};
@@ -18,11 +18,15 @@ load(TB_file,'-mat');
 nOrbitals = size(TBparameters,1);
     load(Gamma_file,'-mat');
     load(BdGfileName,'-mat');
+    % make real part largest component (unless in BdG code already done)
+        [~, index]=max(abs(delta(:)));
+    delta=delta*exp(-1i*angle(delta(index)));
     % swap real and imaginary part
    % delta=imag(delta)+1i*real(delta);
+   %delta=abs(delta);
    % we are calculating delta(nu,mu) instead of delta(mu,nu), so a
    % transpose needed here!
-%   delta=transpose(delta);
+   delta=transpose(delta);
 N = sqrt(size(delta,1)/nOrbitals);
 if exist('latticeVectorsSC','var')
     nUnitCellsDelta = size(latticeVectorsSC,1);
@@ -40,6 +44,9 @@ end
 delta = deltaCenter;
 %delta(:,:,iUnitCellDelta)
 mxreal=max(abs(latticeVectorsSC(:)));
+if ~exist('sublattice','var')
+    sublattice=input('sublattice: ');
+end;
 if abs(sublattice)>0
     mxreal=ceil(sqrt(2)*mxreal);
 end
@@ -49,6 +56,8 @@ if abs(sublattice)>0
 else
      efforb=nOrbitals;
 end;    
+
+
 allgaps=zeros(M*efforb);
 for mu=1:nOrbitals
     
@@ -58,29 +67,59 @@ realgap=zeros(M,M);
         % only works for square lattice
         for iUnitCellDelta = 1:nUnitCellsDelta
             iLatticeVectorDelta = latticeVectorsSC(iUnitCellDelta,:);
+            negiUnitCellDelta=find(sum(-latticeVectorsSC==repmat(iLatticeVectorDelta,nUnitCellsDelta,1),2)==2);
+            jUnitCellDelta=iUnitCellDelta;
             % convert from 2Fe to 1Fe if needed
-            if abs(sublattice)>0 & nu<=nOrbitals/2
-                if mu<=nOrbitals/2%                i+j j-i; i+j j-i+1];     
-                    dx=iLatticeVectorDelta(1)+iLatticeVectorDelta(2);
-                    dy=-iLatticeVectorDelta(1)+iLatticeVectorDelta(2);
+            if abs(sublattice)>0
+                if nu<=nOrbitals/2
+                    if mu<=nOrbitals/2%                i+j j-i; i+j j-i+1];
+                        dy=iLatticeVectorDelta(1)+iLatticeVectorDelta(2);
+                        dx=-iLatticeVectorDelta(1)+iLatticeVectorDelta(2);
+                    else
+                        dy=iLatticeVectorDelta(1)+iLatticeVectorDelta(2);
+                        dx=-iLatticeVectorDelta(1)+iLatticeVectorDelta(2)-1;
+                        if abs(dx) < abs(dy)
+                            %dy=100;
+                        end;
+                    end
                 else
-                    dx=iLatticeVectorDelta(1)+iLatticeVectorDelta(2);
-                    dy=-iLatticeVectorDelta(1)+iLatticeVectorDelta(2)-1;
+                    if mu>nOrbitals/2%                i+j j-i; i+j j-i+1];
+                        dy=10;%iLatticeVectorDelta(1)+iLatticeVectorDelta(2);
+                        dx=-iLatticeVectorDelta(1)+iLatticeVectorDelta(2);
+                         jUnitCellDelta=negiUnitCellDelta;
+                         if abs(dx) == abs(dy)
+                           % dy=100;
+                        end;
+                   else
+                        dy=10%;iLatticeVectorDelta(1)+iLatticeVectorDelta(2);
+                        dx=-iLatticeVectorDelta(1)+iLatticeVectorDelta(2)-1;
+                        jUnitCellDelta=negiUnitCellDelta;
+                        if abs(dx) > abs(dy)
+                            dy=100;
+                        end;
+                    end
                 end
+                
                 if (abs(dx)<mxreal) & (abs(dy) <mxreal)
-                realgap(dx+mxreal+1,dy+mxreal+1)=delta(mu,nu,iUnitCellDelta);
+                    realgap(dx+mxreal+1,dy+mxreal+1)=delta(mu,nu,jUnitCellDelta);
                 end
             else
                 realgap(iLatticeVectorDelta(1)+mxreal+1,iLatticeVectorDelta(2)+mxreal+1)=delta(mu,nu,iUnitCellDelta);
             end
         end
         if abs(sublattice)>0
-            if (abs(sublattice)>0) & (nu<=nOrbitals/2)
+            if (nu<=nOrbitals/2)
                 if mu <=nOrbitals/2
                     allgaps((mu-1)*M+1:(mu)*M,(nu-1)*M+1:(nu)*M)=allgaps((mu-1)*M+1:(mu)*M,(nu-1)*M+1:(nu)*M)+real(realgap);
                 else
                     allgaps((mu-efforb-1)*M+1:(mu-efforb)*M,(nu-1)*M+1:(nu)*M)=allgaps((mu-efforb-1)*M+1:(mu-efforb)*M,(nu-1)*M+1:(nu)*M)+real(realgap);
                 end
+            else
+                if mu <=nOrbitals/2
+                    allgaps((mu-1)*M+1:(mu)*M,(nu-efforb-1)*M+1:(nu-efforb)*M)=allgaps((mu-1)*M+1:(mu)*M,(nu-efforb-1)*M+1:(nu-efforb)*M)+real(realgap);
+                else
+                    allgaps((mu-efforb-1)*M+1:(mu-efforb)*M,(nu-efforb-1)*M+1:(nu-efforb)*M)=allgaps((mu-efforb-1)*M+1:(mu-efforb)*M,(nu-efforb-1)*M+1:(nu-efforb)*M)+real(realgap);
+                end                
  
             end;
         else
@@ -89,7 +128,7 @@ realgap=zeros(M,M);
     end;
 end;
 
-
+allgapsr=allgaps;
 
 % if nOrb>1
 % xz=rem(ordering,5);
@@ -156,7 +195,7 @@ set(0,'DefaultAxesFontSize',fsz)
     color2=[1 1 1]; % white
     color3=[0 0 1]; % blue
     %if ~colorred
-    input=[-10 -1 0 1 10]+.5;
+    input_v=[-10 -1 0 1 10]+.5;
     colormatrix=[color1; color1;color2;color3; color3];
     %else
     %    input=[0 1 10];
@@ -174,9 +213,9 @@ set(0,'DefaultAxesFontSize',fsz)
     %    x=-x(end:-1:1);
     %end
     %    end
-    r=interp1(input*maxabsekkn,colormatrix(:,1),x);
-    g=interp1(input*maxabsekkn,colormatrix(:,2),x);
-    b=interp1(input*maxabsekkn,colormatrix(:,3),x);
+    r=interp1(input_v*maxabsekkn,colormatrix(:,1),x);
+    g=interp1(input_v*maxabsekkn,colormatrix(:,2),x);
+    b=interp1(input_v*maxabsekkn,colormatrix(:,3),x);
     set(q,'Colormap', [r',g',b']);
     
    % colorbar
@@ -187,7 +226,9 @@ set(0,'DefaultAxesFontSize',fsz)
     axis square
     print('-dpng',[string,'.png']);
 %end;
-
+if abs(sublattice) >0
+    return;
+end;
 
 
 nUnitCells = size(latticeVector,1);
@@ -312,7 +353,7 @@ set(0,'DefaultAxesFontSize',fsz)
     color2=[1 1 1]; % white
     color3=[0 0 1]; % blue
     %if ~colorred
-    input=[-10 -1 0 1 10]+.5;
+    input_v=[-10 -1 0 1 10]+.5;
     colormatrix=[color1; color1;color2;color3; color3];
     %else
     %    input=[0 1 10];
@@ -330,9 +371,9 @@ set(0,'DefaultAxesFontSize',fsz)
     %    x=-x(end:-1:1);
     %end
     %    end
-    r=interp1(input*maxabsekkn,colormatrix(:,1),x);
-    g=interp1(input*maxabsekkn,colormatrix(:,2),x);
-    b=interp1(input*maxabsekkn,colormatrix(:,3),x);
+    r=interp1(input_v*maxabsekkn,colormatrix(:,1),x);
+    g=interp1(input_v*maxabsekkn,colormatrix(:,2),x);
+    b=interp1(input_v*maxabsekkn,colormatrix(:,3),x);
     set(q,'Colormap', [r',g',b']);    
    % colorbar
     cb=colorbar_rwb(q,maxabsekkn,ticks,labels);

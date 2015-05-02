@@ -19,7 +19,7 @@ else
     fullgamma=true;
     latticeVectorsSC=Gammafull.latt;
 end;
-delta_hom=homogenize_delta(delta,latticeVectorsSC,nOrb,newN);
+delta_hom=homogenize_delta(delta,latticeVectorsSC,nOrb,N,newN);
 nup1=nUp(1:nOrbitals);
 ndown1=nDown(1:nOrbitals);
 cutoff=1e-17;

@@ -27,7 +27,7 @@ parfor mu=1:nBands
             d(2)=d(2)+N;
         end
         ind=int32(find(sum(latt==repmat(d,szlatt(1),1),2)==2));
-        indm=int32(find(sum(latt==repmat(-d,szlatt(1),1),2)==2));
+        %indm=int32(find(sum(latt==repmat(-d,szlatt(1),1),2)==2));
         %if nu==85
          %   nu
         %end

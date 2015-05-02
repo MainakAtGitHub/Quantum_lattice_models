@@ -1,4 +1,4 @@
-function delta_hom=homogenize_delta(delta,latticeVectorsSC,nOrb,N)
+function delta_hom=homogenize_delta(delta,latticeVectorsSC,nOrb,N,newN)
 % calculate average delta over all lattice positions and put this value to
 % the homogenized delta
 szlV=size(latticeVectorsSC);
@@ -34,7 +34,7 @@ for n=1:szlV(1)
     del(:,:,n)=deltamatrix/N^2;
 end;
 % put in the averaged gaps to the new guess
-delta_hom = lattice_translation(N, del, latticeVectorsSC);
+delta_hom = lattice_translation(newN, del, latticeVectorsSC);
 if singlet
     delta_hom=0.5*delta_hom;
 end;

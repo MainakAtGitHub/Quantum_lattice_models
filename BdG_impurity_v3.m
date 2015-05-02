@@ -74,14 +74,26 @@ end;
 if ~exist('magnetic','var')
     magnetic=false;
 end;
+% supercell calculation
+if ~exist('super','var')
+    super=false;
+end;
+% supercell size for BdG
+if (~exist('M_super','var') && (super== true))
+    M_super=M;
+end;
 % spin polarized calculation
 if ~exist('spinpolarized','var')
     spinpolarized=false;
 end;
 % BdG matrix blocks
 nBands = N^2*nOrbitals;
-% kinetic energy
-H0 = lattice_translation(N, TBparameters, latticeVector);
+if ~super
+    % kinetic energy
+    H0 = lattice_translation(N, TBparameters, latticeVector);
+else
+    [H0, superLatticeVectors] = supercell_hoppings(N, TBparameters, latticeVector);
+end;
 % ugly global variable
 if exist('Gamma','var')
     SCInteractionMatrix = lattice_translation(N, Gamma, latticeVectorsSC);
@@ -211,13 +223,24 @@ end;
 
 % setting of Hamiltonian
 Himp=get_Himp(Vimp,N,nOrbitals,sublattice);
-H = H0 + Himp;
+if ~super
+    H = H0 + Himp;
+else
+    [HSuper, superLatticeVectors] = supercell_hoppings(N, TBparameters, latticeVector);
+end;
 % avoid some numerical inaccurancy; for some reason lattice_translation as
 % well as the general impurity potential (hoppings)
 % gives back a non-hermitian matrix with sum(sum(abs(H-H'))) ~ 1e-13
-H=0.5*(H+H');
-clear Himp;
-clear H0;
+if ~super
+    H=0.5*(H+H');
+    clear Himp;
+    clear H0;
+else
+    nSuperCells = size(superLatticeVectors,1);
+    for iUnitCell = 1:nSuperCells
+        HSuper(:,:,iUnitCell)=0.5*(HSuper(:,:,iUnitCell)+HSuper(:,:,iUnitCell)');
+    end;
+end;
 if magnetic
     % do a non-magnetic simulation
     if ~exist('Vimpdown','var')
@@ -236,30 +259,48 @@ end;
 
 % BdG iterations
 for i = 1:maxLoop
-    KE = H - mu*eye(nBands);
-    if ~spinpolarized
-        if ~magnetic
-            [ nUpCal, nDownCal, deltaCal ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix);
+    if ~super
+        KE = H - mu*eye(nBands);
+        if ~spinpolarized
+            if ~magnetic
+                [ nUpCal, nDownCal, deltaCal ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix);
+            else
+                KEdown = conj(Hdown - mu*eye(nBands));
+                [ nUpCal, nDownCal, deltaCal ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
+            end;
         else
-            KEdown = conj(Hdown - mu*eye(nBands));
-            [ nUpCal, nDownCal, deltaCal ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
-        end;
+            mudown=mu;
+            % put a magnetic field here
+            if exist('field','var')
+                mu=mu+field;
+                mudown=mu-field;
+            end;
+            if ~magnetic
+                KEdown = H - mudown*eye(nBands);
+                [ nUpCal, nDownCal, deltaCal ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
+                % [ nUpCaldown, nDownCaldown, deltaCaldown ] = BdG_step( KEdown, conj(-delta'), kT, nBands, SCInteractionMatrix,-KE);
+            else
+                KEdown = Hdown - mudown*eye(nBands);
+                [ nUpCal, nDownCal, deltaCal ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
+                % [ nUpCaldown, nDownCaldown, deltaCaldown ] = BdG_step( KEdown, conj(-delta'), kT, nBands, SCInteractionMatrix,-KE);
+            end;
+        end
     else
-        mudown=mu;
-        % put a magnetic field here
-        if exist('field','var')
-            mu=mu+field;
-            mudown=mu-field;
-        end;    
-        if ~magnetic
-            KEdown = H - mudown*eye(nBands);
-            [ nUpCal, nDownCal, deltaCal ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
-           % [ nUpCaldown, nDownCaldown, deltaCaldown ] = BdG_step( KEdown, conj(-delta'), kT, nBands, SCInteractionMatrix,-KE);
-        else
-            KEdown = Hdown - mudown*eye(nBands);
-            [ nUpCal, nDownCal, deltaCal ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
-           % [ nUpCaldown, nDownCaldown, deltaCaldown ] = BdG_step( KEdown, conj(-delta'), kT, nBands, SCInteractionMatrix,-KE);
-        end;
+                if ~spinpolarized
+                    if ~magnetic
+                        % set the supercell parameters
+                        BZ=supercell_parameters(M_super);
+                        % 1 supercell only
+                        %BZ.k=[0 0;0 0 ; 0 0];
+                        %BZ.weight=[1; 1;1]/3;
+                        %BZ.mu=mu;
+                        [ nUpCal, nDownCal, deltaCal] = BdG_step_super( HSuper,delta, kT,nBands, SCInteractionMatrix,BZ,Himp,mu);
+                    else
+                        disp('not implemented')
+                    end
+                else
+                    disp('not implemented')
+                end
     end
 %     BdGMatrix = [KE -delta; -delta' -KE];
 %     if memorymanagement
@@ -328,8 +369,8 @@ for i = 1:maxLoop
     nAcc = [nAcc; mean(nAvg)];   
     % fix phase of delta (mostly not necessary, but always gives the same
     % result, largest gap set to be positive
-    [~, index]=max(abs(delta(:)));
-    delta=delta*exp(-1i*angle(delta(index)));
+   % [~, index]=max(abs(delta(:)));
+   % delta=delta*exp(-1i*angle(delta(index)));
     % second possible observables
     deltaMaxNN = max(max(abs(delta(iNNsiteRange, jNNsiteRange))));
     deltaMaxNNN = max(max(abs(delta(iNNNsiteRange, jNNNsiteRange))));
