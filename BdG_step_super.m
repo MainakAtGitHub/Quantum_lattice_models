@@ -33,6 +33,7 @@ for index=startindex:endindex
             kSpaceGap = kSpaceGap + deltaSuper(:,:,iUnitCell)*exp(1i*(iLatticeVector*k'));
         end
         KESuper = kSpaceHopping + HImpurity-mu*eye(nBands);
+        KESuper=0.5*[KESuper+KESuper'];
        % BdGMatrix = [KE, -delta; -delta', -conj(KE)];
         BdGMatrix = [KESuper -kSpaceGap; -kSpaceGap' -conj(KESuper)];
     else

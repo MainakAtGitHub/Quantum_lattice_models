@@ -236,10 +236,10 @@ if ~super
     clear Himp;
     clear H0;
 else
-    nSuperCells = size(superLatticeVectors,1);
-    for iUnitCell = 1:nSuperCells
-        HSuper(:,:,iUnitCell)=0.5*(HSuper(:,:,iUnitCell)+HSuper(:,:,iUnitCell)');
-    end;
+    %nSuperCells = size(superLatticeVectors,1);
+    %for iUnitCell = 1:nSuperCells
+    %    HSuper(:,:,iUnitCell)=0.5*(HSuper(:,:,iUnitCell)+HSuper(:,:,iUnitCell)');
+    %end;
 end;
 if magnetic
     % do a non-magnetic simulation
