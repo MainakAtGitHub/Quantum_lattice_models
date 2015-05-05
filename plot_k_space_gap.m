@@ -2,7 +2,7 @@ function [allgapsr]=plot_k_space_gap(inputfile)
     % load the input file to set the variables, gave up the old .mat file
     % format
     Displaynames={'d_{z^2}','d_{x^2-y^2}','d_{yz}','d_{xz}','d_{xy}'};
-
+    Displaynames={'d_{xy}','d_{x^2-y^2}','d_{xz}','d_{yz}','d_{z^2}'};
      read_input_file=inputfile;
      read_input;
      read_input_file

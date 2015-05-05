@@ -111,11 +111,16 @@ ylabel({'DOS [1/eV]'});
 %axis('square'); title('Normal Vs SC dos')
 % Create legend
 legend show
-
+copydir=''
+    if ~isempty(copydir)
+        pth=copydir;
+    else
+        [pth,~,~]=fileparts(inputfile);
+    end;
 if tetra
-    pdffile1=['/tmp/',inputfile,'_normal_SC_tetra',num2str(smoothenergy),'.pdf']
+    pdffile1=[pth,inputfile,'_normal_SC_tetra',num2str(smoothenergy),'.pdf']
 else
-    pdffile1=['/tmp/',inputfile,'_normal_SC.pdf']
+    pdffile1=[pth,inputfile,'_normal_SC.pdf']
 end
 
 print_pdf(pdffile1);

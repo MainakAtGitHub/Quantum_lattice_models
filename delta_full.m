@@ -8,7 +8,7 @@ parfor mu=1:nBands
     d=int32([0,0]);
     ymu=int32(mod(idivide(mu-1,int32(nOrb)),N)+1);
     xmu=int32(idivide(mu-1,int32(N*nOrb))+1);
-    l1=mod(mu-1,nOrb)+1;
+    l4=mod(mu-1,nOrb)+1;
     for nu=1:nBands
         ynu=int32(mod(idivide(nu-1,int32(nOrb)),N)+1);
         xnu=int32(idivide(nu-1,int32(N*nOrb))+1);
@@ -34,7 +34,7 @@ parfor mu=1:nBands
         if ~isempty(ind)
             mu2=(ymu-1)*nOrb+(xmu-1)*nOrb*N;
             nu3=(ynu-1)*nOrb+(xnu-1)*nOrb*N;
-            l4=mod(nu-1,nOrb)+1;            % indices for orbitals
+            l1=mod(nu-1,nOrb)+1;            % indices for orbitals
             %index0=(ind(1)-1)*nOrb^4+(l1-1)*nOrb^2+(l4-1)*nOrb;
             % different order in matlab and c++ !
             index0=(ind(1)-1)*nOrb^4+(l1-1)*nOrb+(l4-1)*nOrb^2;
@@ -67,7 +67,7 @@ parfor mu=1:nBands
                        % int(index)
                     %end;
                 end
-                deltaCal(nu,mu)=deltaCal(nu,mu)+sum(tmpvar);
+                deltaCal(mu,nu)=deltaCal(mu,nu)+sum(tmpvar);
             end
         end
     end
