@@ -48,7 +48,7 @@ if ~exist('sublattice','var')
     sublattice=input('sublattice: ');
 end;
 if abs(sublattice)>0
-    mxreal=ceil(sqrt(2)*mxreal);
+    mxreal=ceil(sqrt(2)*mxreal+1);
 end
 M=2*mxreal+1;
 if abs(sublattice)>0
@@ -71,10 +71,10 @@ realgap=zeros(M,M);
             jUnitCellDelta=iUnitCellDelta;
             % convert from 2Fe to 1Fe if needed
             if abs(sublattice)>0
-                if nu<=nOrbitals/2
-                    if mu<=nOrbitals/2%                i+j j-i; i+j j-i+1];
+                if xor(nu<=nOrbitals/2,sublattice==-1)
+                    if xor(mu<=nOrbitals/2,sublattice==-1)%                i+j j-i; i+j j-i+1];
                         dy=iLatticeVectorDelta(1)+iLatticeVectorDelta(2);
-                        dx=-iLatticeVectorDelta(1)+iLatticeVectorDelta(2);
+                        dx=-iLatticeVectorDelta(1)+iLatticeVectorDelta(2);    
                     else
                         dy=iLatticeVectorDelta(1)+iLatticeVectorDelta(2);
                         dx=-iLatticeVectorDelta(1)+iLatticeVectorDelta(2)-1;
@@ -83,7 +83,7 @@ realgap=zeros(M,M);
                         end;
                     end
                 else
-                    if mu>nOrbitals/2%                i+j j-i; i+j j-i+1];
+                    if xor(mu>nOrbitals/2,sublattice==-1)%                i+j j-i; i+j j-i+1];
                         dy=10;%iLatticeVectorDelta(1)+iLatticeVectorDelta(2);
                         dx=-iLatticeVectorDelta(1)+iLatticeVectorDelta(2);
                          jUnitCellDelta=negiUnitCellDelta;
@@ -227,7 +227,7 @@ set(0,'DefaultAxesFontSize',fsz)
     print('-dpng',[string,'.png']);
 %end;
 if abs(sublattice) >0
-    return;
+   % return;
 end;
 
 

@@ -20,12 +20,7 @@ for n=1:sztb(1)
     end;
     TBparameters(tb(n,4),tb(n,5),rowColIdx)=TBparameters(tb(n,4),tb(n,5),rowColIdx)+tb(n,6);
 end;
-sublattice=1;
-if nOrb==5
-    sublattice=0;
-elseif nOrb==1
-    sublattice=0;
-end;
+sublattice=input('enter sublattice 0,1,-1: ');
 save([tbfile,'.mat'],'TBparameters','latticeVector','sublattice');
 %tb=[];
 %sztb=size(TBparameters);

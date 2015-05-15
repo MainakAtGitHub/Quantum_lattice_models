@@ -1,4 +1,6 @@
 function l=label_boxes(nOrb,numl,tickx)
+a=tickx(1:nOrb);
+tickx=a;
 set(gca,'Xtick',0.5:numl:5*numl+0.5);
 set(gca,'XtickLabel','')
 set(gca,'Ytick',0.5:numl:5*numl+0.5);

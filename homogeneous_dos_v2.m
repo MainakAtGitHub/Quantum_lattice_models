@@ -91,10 +91,12 @@ for iKx = 1:M
             k = [kx(iKx) ky(iKy)];
             % diagonalizing for normal state DOS
             kSpaceHopping = - mu*eye(nOrbitals);
+            kSpaceHoppingc = - mu*eye(nOrbitals);
             %zeros(nOrbitals,nOrbitals);
             for iUnitCell = 1:nUnitCells
                 iLatticeVector = latticeVector(iUnitCell,1:2);
                 kSpaceHopping = kSpaceHopping + TBparameters(:,:,iUnitCell)*exp(1i*(iLatticeVector*k'));
+                kSpaceHoppingc = kSpaceHoppingc + TBparameters(:,:,iUnitCell)*exp(-1i*(iLatticeVector*k'));
             end                        
             [eigVectorNormal, eigValueNormal] = eig(kSpaceHopping);
             [eigValueKNormal, sortingIndexNormal] = sort(real(diag(eigValueNormal)));
@@ -104,11 +106,12 @@ for iKx = 1:M
             % diagonalizing for SC state DOS
             if calcSC
             kSpaceGap = zeros(nOrbitals,nOrbitals);
+            kSpaceGapc = zeros(nOrbitals,nOrbitals);
             for iUnitCellDelta = 1:nUnitCellsDelta
                 iLatticeVectorDelta = latticeVectorsSC(iUnitCellDelta,:);
                 kSpaceGap = kSpaceGap + delta(:,:,iUnitCellDelta)*exp(1i*(iLatticeVectorDelta*k'));
             end
-            kSpaceHamiltonian = [kSpaceHopping -kSpaceGap; -kSpaceGap' -conj(kSpaceHopping)];
+            kSpaceHamiltonian = [kSpaceHopping -kSpaceGap; -kSpaceGap' -conj(kSpaceHoppingc)];
             [eigVector, eigValue] = eig(kSpaceHamiltonian);
             [eigValueK, sortingIndex] = sort(real(diag(eigValue)));
             eigVectorK = (eigVector(:,sortingIndex))';

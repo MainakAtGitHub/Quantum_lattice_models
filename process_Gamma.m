@@ -91,10 +91,10 @@ for i = -(ceil(N/2)-1):(ceil(N/2)-1)
         Gamma2Fe = Gamma(:,:,count);
         switch sublattice
             case 1
-                latticeVectors1Fe = [latticeVectors1Fe; i+j j-i; i+j j-i+1];     
+                latticeVectors1Fe = [latticeVectors1Fe;j-i i+j ; j-i+1 i+j ];     
             case -1
 %                latticeVectors1Fe = [latticeVectors1Fe; i+j j-i+1; i+j j-i];
-                        latticeVectors1Fe = [latticeVectors1Fe; i+j j-i+1; i+j j-i];
+                        latticeVectors1Fe = [latticeVectors1Fe;j-i+1 i+j ;j-i i+j ];
         end;  
         if sublattice >0
             Gamma1Fe = [Gamma1Fe Gamma2Fe(1:nOrbitals/2,:)];

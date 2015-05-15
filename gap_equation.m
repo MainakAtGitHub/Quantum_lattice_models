@@ -23,7 +23,7 @@
     eVector = eVector(:,sortIndex);
     fermi = 1./(1 + exp(En/kT));
     if ~fullgamma
-        deltaCal = deltaCal+SCInteractionMatrix.*((eVector(1:nBands,:)*(((eVector((nBands + 1):end,:))').*repmat(fermi,1,nBands))));
+        deltaCal = SCInteractionMatrix.*((eVector(1:nBands,:)*(((eVector((nBands + 1):end,:))').*repmat(fermi,1,nBands))));
         % debuging code
         %for n=1:100
         %    dc1(n)=SCInteractionMatrix(1,n).*((eVector(n,:)*(((eVector((nBands + 1),:))').*repmat(fermi,1,1))));
@@ -34,7 +34,7 @@
         nOrb=size(SCInteractionMatrix.int,1);
         N=int32(sqrt(nBands/nOrb));
         % symmetrize with respect to particles/antiparticles
-        fermi=-.5+fermi;
+        %fermi=-.5+fermi;
         tic
         if ~isnan(cutek)
             % restrict summation over finite range of energies

@@ -37,7 +37,7 @@ for i = 1:nOrbitals
             for l=1:nOrbitals
         %count = count + 1;
         %cnt=(i-1)*nOrbitals^3 + (i-1)*nOrbitals^2 + (j-1)*nOrbitals + (j-1) + 1;
-        if abs(sublattice)>0
+        if abs(sublattice)>2
             % swap Fe1 <-> Fe2 to account for different definition of
             % Fourier transformation in the 2 sublattice case
             i1=i+orb2;
@@ -79,7 +79,7 @@ Gammafull1 = - Gammafull; % change potential's sign convention
 Gammafull.int=Gammafull1;
 Gammafull.latt=latticeVectors;
 latticeVectorsSC = latticeVectors;
-save([flnm,'full',cmpstr,'.mat'], 'Gammafull');
+save([flnm,'full',cmpstr,'sl_swap.mat'], 'Gammafull');
 
 % % Shortening the range
 cut = input('enter the Gamma cut   ');
@@ -96,9 +96,9 @@ for i = -cut:cut
         % special care for the edges, assume certain relation of Fe1 and
         % Fe2 in elementary cell.
         if abs(sublattice)>0
-        if ((i==-cut) | (j==cut))
-            for l1=1:orb2                              
-                for l4=orb2+1:nOrbitals
+        if ((i==-cut*sublattice) | (j==cut*sublattice))
+            for l4=1:orb2                              
+                for l1=orb2+1:nOrbitals
                     GammaCut(l1,:,:,l4,count)=zeros(nOrbitals,nOrbitals);
                     GammaCut(:,l1,l4,:,count)=zeros(nOrbitals,nOrbitals);
                 end
@@ -107,9 +107,9 @@ for i = -cut:cut
             %GammaCut(1:nOrbitals/2,nOrbitals/2+1:nOrbitals,:,:,count)=zeros(nOrbitals/2,nOrbitals/2,nOrbitals,nOrbitals);
             %GammaCut(:,:,nOrbitals/2+1:nOrbitals,1:nOrbitals/2,count)=zeros(nOrbitals,nOrbitals,nOrbitals/2,nOrbitals/2);
         end;
-        if ((i==cut) | (j==-cut))
-            for l1=orb2+1:nOrbitals
-                for l4=1:orb2
+        if ((i==cut*sublattice) | (j==-cut*sublattice))
+            for l4=orb2+1:nOrbitals
+                for l1=1:orb2
                     GammaCut(l1,:,:,l4,count)=zeros(nOrbitals,nOrbitals);
                     GammaCut(:,l1,l4,:,count)=zeros(nOrbitals,nOrbitals);
                 end
@@ -123,7 +123,7 @@ for i = -cut:cut
 end
 Gammafull.int=GammaCut;
 Gammafull.latt=latticeVectorsSCCut;
-save([flnm,'cut',num2str(cut),'full',cmpstr,'.mat'], 'Gammafull');
+save([flnm,'cut',num2str(cut),'full',cmpstr,'sl_swap.mat'], 'Gammafull');
 % Gammafull=Gammatemp;
 % latticeVectorsSC=latticeVectorsSCtemp;
 % 

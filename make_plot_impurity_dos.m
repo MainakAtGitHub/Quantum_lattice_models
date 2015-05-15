@@ -11,7 +11,7 @@ if nargin <3
     plrange=inf;
 end;
 if nargin <4
-    plotall=true;
+    plotall=false;
 end;
 %plotall=true;
 coloruf1=[250 	70 	22 ]/255;

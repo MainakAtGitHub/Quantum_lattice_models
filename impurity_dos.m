@@ -203,9 +203,14 @@ TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) - mu*eye(nOr
 % Hermitean matrix
 nSuperCells = size(superLatticeVectors,1);
 for iUnitCell = 1:nSuperCells
-    HSuper(:,:,iUnitCell)=0.5*(HSuper(:,:,iUnitCell)+HSuper(:,:,iUnitCell)');
+    % does not work, need to check for non Hermitian hoppings
+%    HSuper(:,:,iUnitCell)=0.5*(HSuper(:,:,iUnitCell)+HSuper(:,:,iUnitCell)');
 end;
+%delta=diag(diag(delta));
 [deltaSuper,superDeltaVectors] = supercell_delta(nOrbitals, delta, maxHop);
+%H0 = lattice_translation(N, TBparameters, latticeVector);
+%maxHop1 = max(max(abs(latticeVector)));
+%[HSuper, superLatticeVectors] = supercell_delta(nOrbitals,H0, maxHop1);
 %deltaSuper=sparse(deltaSuper);
 %HSuper=sparse(HSuper);
 % to be done: implementation of more complicated impurity potentials
@@ -318,14 +323,18 @@ for index=startindex:endindex
         disp([iKx iKy]);
         k = [kx(iKx) ky(iKy)];
         kSpaceHopping = 0;
+        kSpaceHoppingc=0;
         kSpaceGap = 0;
         for iUnitCell = 1:nSuperCells
             iLatticeVector = superLatticeVectors(iUnitCell,:);
             kSpaceHopping = kSpaceHopping + HSuper(:,:,iUnitCell)*exp(1i*(iLatticeVector*k'));
+            kSpaceHoppingc = kSpaceHoppingc + HSuper(:,:,iUnitCell)*exp(-1i*(iLatticeVector*k'));
             kSpaceGap = kSpaceGap + deltaSuper(:,:,iUnitCell)*exp(1i*(iLatticeVector*k'));
         end
         KESuper = kSpaceHopping + HImpurity;
-        kSpaceHamiltonian = [KESuper -kSpaceGap; -kSpaceGap' -conj(KESuper)];
+        KESuperc = kSpaceHoppingc + HImpurity;
+        kSpaceHamiltonian = [KESuper -kSpaceGap; -kSpaceGap' -conj(KESuperc)];
+        % symmetrize here!
         [eigVector, eigValue] = eig(kSpaceHamiltonian);
         [eigValueK, sortingIndex] = sort(real(diag(eigValue)));
         if debug
@@ -478,9 +487,9 @@ if part>division
                 if ~calcGreens
                     Ek = repmat(Ek_vector, 1, nEnergyPoints) ;
                     if version>0
-                     greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E(en) - Ek + 1i*ita ));
+                     greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita ));
                     else
-                    greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E(en) - Ek + 1i*ita )) + ...
+                    greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita )) + ...
                         ((abs(vK)).^2)*(1./(E + Ek + 1i*ita ));
                     end;
                 else
