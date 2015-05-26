@@ -335,6 +335,7 @@ for index=startindex:endindex
         KESuperc = kSpaceHoppingc + HImpurity;
         kSpaceHamiltonian = [KESuper -kSpaceGap; -kSpaceGap' -conj(KESuperc)];
         % symmetrize here!
+	kSpaceHamiltonian=0.5*(kSpaceHamiltonian+kSpaceHamiltonian');
         [eigVector, eigValue] = eig(kSpaceHamiltonian);
         [eigValueK, sortingIndex] = sort(real(diag(eigValue)));
         if debug
@@ -538,7 +539,8 @@ if part>division
             %if ~tetra
                 for iEnergyPoint = 1:nEnergyPoints
                     if singular_quad
-                        greensRealSpace(iSite, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*singular_double_quad(1./squeeze(greensKSpace(:, :, iSite, iEnergyPoint)));
+                       % greensRealSpace(iSite, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*singular_double_quad(1./squeeze(greensKSpace(:, :, iSite, iEnergyPoint)));
+                        greensRealSpace(iSite, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*singular_double_quad_mex(1./squeeze(greensKSpace(:, :, iSite, iEnergyPoint)));
                     else
                         greensRealSpace(iSite, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*sum(sum(squeeze(greensKSpace(:, :, iSite, iEnergyPoint))));
                     end;
@@ -580,7 +582,8 @@ if part>division
             disp(['Integrating Bands (',num2str(i),' ,:) of ', num2str(nBands),'.']);
             for j = 1:nBands
                 if singular_quad
-                    latticeGreens(i, j) = (1/(2*pi))^2*delKx*delKy*singular_double_quad(1./squeeze(latticeGreensK(:,:,i,j)));
+                    %latticeGreens(i, j) = (1/(2*pi))^2*delKx*delKy*singular_double_quad(1./squeeze(latticeGreensK(:,:,i,j)));
+                    latticeGreens(i, j) = (1/(2*pi))^2*delKx*delKy*singular_double_quad_mex(1./squeeze(latticeGreensK(:,:,i,j)));
                 else
                     latticeGreens(i, j) = (1/(2*pi))^2*delKx*delKy*sum(sum(squeeze(latticeGreensK(:,:,i,j))));
                 end

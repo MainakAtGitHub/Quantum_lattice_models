@@ -1,10 +1,13 @@
-function p=process_Gamma_full(flnm,nOrbitals,sublattice)
+function p=process_Gamma_full(flnm,nOrbitals,sublattice,factor)
 % read Gamma from file
 if nargin <2
     nOrbitals = 10;
 end;
 if nargin <3
     sublattice=1;
+end;
+if nargin <4
+    factor=1;
 end;
 nSites = 11;
 list_plane_small_l=load('list_plane_small_l.csv');
@@ -22,7 +25,9 @@ if ~cmplx
 else
     cmpstr='_comp';
 end;
-
+if ~(factor==1)
+    cmpstr=[cmpstr,'_factor_',num2str(factor)];
+end;
 % extract Intra and Mixed pairing vertices (\Gamma_1111 & \Gamma_1221)
 Gammafull = zeros(nOrbitals,nOrbitals,nOrbitals,nOrbitals,nSites^2);
 count = 0;
@@ -76,7 +81,7 @@ latticeVectors = -list_plane_small_l(:,1:2);
 
 % saving
 Gammafull1 = - Gammafull; % change potential's sign convention
-Gammafull.int=Gammafull1;
+Gammafull.int=Gammafull1*factor;
 Gammafull.latt=latticeVectors;
 latticeVectorsSC = latticeVectors;
 save([flnm,'full',cmpstr,'sl_swap.mat'], 'Gammafull');
@@ -121,7 +126,7 @@ for i = -cut:cut
         end;
     end
 end
-Gammafull.int=GammaCut;
+Gammafull.int=GammaCut*factor;
 Gammafull.latt=latticeVectorsSCCut;
 save([flnm,'cut',num2str(cut),'full',cmpstr,'sl_swap.mat'], 'Gammafull');
 % Gammafull=Gammatemp;

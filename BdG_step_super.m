@@ -26,16 +26,20 @@ for index=startindex:endindex
         k = BZ.k(index,:);
         disp(k);
         kSpaceHopping = 0;
+        kSpaceHoppingc=0;
         kSpaceGap = 0;
         for iUnitCell = 1:nSuperCells
             iLatticeVector = superLatticeVectors(iUnitCell,:);
             kSpaceHopping = kSpaceHopping + HSuper(:,:,iUnitCell)*exp(1i*(iLatticeVector*k'));
+            kSpaceHoppingc = kSpaceHoppingc + HSuper(:,:,iUnitCell)*exp(-1i*(iLatticeVector*k'));
             kSpaceGap = kSpaceGap + deltaSuper(:,:,iUnitCell)*exp(1i*(iLatticeVector*k'));
         end
         KESuper = kSpaceHopping + HImpurity-mu*eye(nBands);
+        KESuperc = kSpaceHoppingc + HImpurity;
         KESuper=0.5*[KESuper+KESuper'];
+        KESuperc=0.5*[KESuperc+KESuperc'];
        % BdGMatrix = [KE, -delta; -delta', -conj(KE)];
-        BdGMatrix = [KESuper -kSpaceGap; -kSpaceGap' -conj(KESuper)];
+        BdGMatrix = [KESuper -kSpaceGap; -kSpaceGap' -conj(KESuperc)];
     else
         disp('not implemented');
         %BdGMatrix = [KE, -delta; -delta', mKE];

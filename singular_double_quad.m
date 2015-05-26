@@ -8,11 +8,8 @@ function I = singular_double_quad(B)
 % Ref: singular_quad
 
 N = size(B);
-B_1D = zeros(N(2),1);
-    for j = 1:N(2)
-        I_1 = singular_quad(B(:,j));% integrate over first dimension
-        B_1D(j) = I_1; 
+B_1D = zeros(N(2),1)*1i;
+    parfor j = 1:N(2)
+        B_1D(j)= singular_quad(B(:,j));% integrate over first dimension
     end
 I = singular_quad(1./B_1D);% integrate over second dimension
- 
-

@@ -31,7 +31,7 @@ function I = singular_quad(B)
 %         I = I + I_n;
 %     end
 M = length(B)-1;    
-I = 0;
+I = 0*1i;
  for n = 1:M
      a = B(n + 1) - B(n);
      b = B(n);
