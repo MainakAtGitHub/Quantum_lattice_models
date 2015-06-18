@@ -1,4 +1,8 @@
-function Himp=get_Himp(Vimp,N,nOrbitals,sublattice)
+function Himp=get_Himp(Vimp,N,nOrbitals,sublattice,randompot,BdGfileName)
+if nargin <5
+    randompot=0;
+end;
+
 % get_Himp(Vimp,N,nOrbitals,sublattice) gives back the Hamiltonian for the
 % impurity or sets of impurities given in the input file Vimp
 nBands = N^2*nOrbitals;
@@ -64,6 +68,44 @@ else
         end;
     end;
 end;
+if randompot>0
+    % add a random potential for splitting of degenerate states
+    % try to load previously used potential information
+    try
+        [pathstr,name,ext] =fileparts(BdGfileName);
+        potentialfile=[pathstr,filesep,name,'rnd',ext];
+        load(potentialfile);
+        Hrand=0*Himp;
+        for n=1:size(randomcells,1)
+            [iRange, jRange] = find_lattice_translation_index(N, nOrbitals, randomcells(n,:),randomcells(n,:));
+            Hrand(iRange, jRange)=diag(randompotentials(n,:));
+        end;
+    catch
+        fraction=2;
+        threshold=0.5;
+        disp('Generating random potentials on every ',num2str(fraction),' site with threshold of ',num2str(threshold));
+        Hrand=0*Himp;
+        randomcells=[];
+        randompotentials=[];
+        for nx=1:N
+            for ny=1:N
+                % decide whether to put a random potential
+                rnd=rand(1);
+                if rnd >1/fraction
+                    randomcells=[randomcells;nx,ny];
+                    [iRange, jRange] = find_lattice_translation_index(N, nOrbitals, [nx,ny], [nx,ny]);
+                    rndpot=rand(1,nOrbitals)-0.5;
+                    rndpot=rndpot.*(abs(rndpot)>0.5*threshold);
+                    randompotentials=[randompotentials;rndpot];
+                    Hrand(iRange, jRange)=diag(rndpot);
+                end;
+            end
+        end;
+        save(potentialfile,'randompotentials','randomcells');
+    end;
+    Himp=Himp+Hrand*randompot;
+end;
+
 
 
 

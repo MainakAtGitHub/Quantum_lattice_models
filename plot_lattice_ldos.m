@@ -37,9 +37,8 @@ end;
 if ~(exist('sublattice','var'))
     disp('Sublattice not defined, using +1')
    % sublattice = input('Sublattice not defined. Please enter: ');
-    sublattice = 1
+    sublattice = 0
 end;
-
 
 % total LDOS at Fe sites
 latticeGreensDiag = diag(latticeGreens);
@@ -95,7 +94,13 @@ else
 %    end
 end
 else
-    ldos2plot=ldos;
+    if nOrbitals>1
+        nOrbitals
+        ld=reshape(ldos,nOrbitals,N,N)
+        ldos2plot=squeeze(sum(ld,1));
+    else
+        ldos2plot=ldos;
+    end
 end;
 
 figure1=figure;
@@ -133,6 +138,11 @@ end;
 if datarealmax<0
     datarealmax=-datarealmax;
     showcolorbar=false;
+end;
+if false
+% do some image processing
+ldos2plot=gaussian_periodic(ldos2plot);
+ldos2plot=ldos2plot-ldos2plot(1,1)+0.5;
 end;
 % plotting (using pcolor)
 if pcolorplot
@@ -181,6 +191,8 @@ elseif isequal(map,'bma');
     bma_map(figure1);
 elseif isequal(map,'song');
     song_map(figure1);
+elseif isequal(map,'fujita');
+    fujita_map(figure1);
 end;
 if isequal(scale,'')
     caxis([datarealmin,datarealmax])

@@ -1,4 +1,4 @@
-function h=plot_homogeneous_dos_v2(inputfile,smoothenergy)
+function h=plot_homogeneous_dos_v2(inputfile,smoothenergy,energybar)
 
 % Modified homogeneous_dos.m
 % takes \Delta_ij as input and constructs \Delta_i0.
@@ -40,7 +40,9 @@ if nargin < 2
 end
 sqstring='';
 if (exist('singular_quad','var'))
-    sqstring='sum';
+%    if isequal(singular_quad,1)
+        sqstring='sum';
+ %   end;
 end;
 if ~exist('sublattice','var')
     sublattice=1;
@@ -76,7 +78,12 @@ bandDOS=sg_smooth(bandDOS,smooth);
 
 totalDOSNormal = sum(bandDOSNormal,1);
 totalDOS = sum(bandDOS,1);
-
+copydir='/tmp/'
+    if ~isempty(copydir)
+        pth=copydir;
+    else
+        [pth,~,~]=fileparts(inputfile);
+    end;
 k = findstr(inputfile, '/');
 if ~isempty(k)
     	inputfile=inputfile(k(numel(k))+1:length(inputfile));
@@ -85,7 +92,14 @@ end;
 fsz=14;
 
 % Plotting
-fig1= figure('Position',[150, 100, 500, 300]);
+if ~exist('energybar','var')
+    fig1= figure('Position',[200, 100, 500, 300]);
+    barenergy='';
+else
+    fig1= figure('Position',[200, 50, 300, 200]);
+    barenergy=num2str(energybar);
+end;
+
 set(0,'DefaultAxesFontSize',fsz)
 %hold on
 if sublattice==0
@@ -111,16 +125,13 @@ ylabel({'DOS [1/eV]'});
 %axis('square'); title('Normal Vs SC dos')
 % Create legend
 legend show
-copydir=''
-    if ~isempty(copydir)
-        pth=copydir;
-    else
-        [pth,~,~]=fileparts(inputfile);
-    end;
+if exist('energybar','var')
+    line(energybar*[1 1],[0 ylim_curr(2)],'LineWidth',6,'Color',[0 0 1]);
+end;
 if tetra
-    pdffile1=[pth,inputfile,'_normal_SC_tetra',num2str(smoothenergy),'.pdf']
+    pdffile1=[pth,inputfile,barenergy,'_normal_SC_tetra',num2str(smoothenergy),'.pdf']
 else
-    pdffile1=[pth,inputfile,'_normal_SC.pdf']
+    pdffile1=[pth,inputfile,barenergy,'_normal_SC.pdf']
 end
 
 print_pdf(pdffile1);
@@ -128,7 +139,8 @@ print_pdf(pdffile1);
 coloruf1=[250 	70 	22 ]/255;
 coloruf2= [0 	48 	135]/255;
 
-fig2= figure('Position',[200, 50, 500, 300]);
+fig2= figure('Position',[150, 100, 500, 300]);
+
 set(0,'DefaultAxesFontSize',fsz)
 totDOS=sublatticefactor*totalDOS;
 %plot(energy, (5/nOrbitals)*totalDOS, 'k');
@@ -159,10 +171,10 @@ end;
 %set(plot1(6),'LineStyle','--','Color',[1 0 0],'DisplayName','d_{xz}');
 %set(plot1(7),'Color',[0 0 1],'DisplayName','d_{xy}');
 %set(plot1(2),'LineWidth',2,'LineStyle',':','Color',[0 0 0],'DisplayName','normal state');
-
 xlim(plotrange);
 ylim_curr = get(gca,'ylim');
 set(gca, 'ylim', [0 ylim_curr(2)]);
+set(gca, 'ylim', [0 3.5]);
 %axis('square'); 
 %title('Orbital resolved SC dos')
 % Create xlabel

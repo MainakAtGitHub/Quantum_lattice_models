@@ -1,7 +1,10 @@
-function [Impparameters, ImpVector] = process_impurity_tb_tom( filename, kz)
+function [Impparameters, ImpVector] = process_impurity_tb_tom( filename, kz,swap)
 fid = fopen(filename);
 if nargin < 2
     kz=NaN
+end;
+if nargin <3
+    swap= false;
 end;
 % read string in first line
 oldformat=false;
@@ -53,6 +56,11 @@ im=max(abs(imag(Impparameters(:))));
 if im < 1e-8
     disp(['Only taking real part, imaginary part is small:',num2str(im)]);
     Impparameters=real(Impparameters);
+end;
+% swap Fe(1) <-> Fe(2)
+if swap
+    disp('Swapping Fe(1) and Fe(2)');
+    Impparameters=swap_matrix(Impparameters);
 end;
 save([filename,'_conv_z',num2str(kz),'.mat'],'Impparameters','ImpVector');
 % number2=0;

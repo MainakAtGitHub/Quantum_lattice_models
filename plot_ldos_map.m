@@ -57,6 +57,7 @@ xlim(axes1,[min(X(:)) max(X(:))]);
 ylim(axes1,[min(Y(:)) max(Y(:))]);
 grid(axes1,'on');
 hold(axes1,'all');
+minldos=min(localLdos(:));
 if nargin < 3 | isnan(datarealmax)
     datarealmax=max(abs(localLdos(:)));
 else
@@ -97,6 +98,8 @@ elseif isequal(map,'bma');
     bma_map(figure1);
 elseif isequal(map,'song');
     song_map(figure1);
+elseif isequal(map,'fujita');
+    fujita_map(figure1)
 end;
 
 %view([0 90])
@@ -246,6 +249,15 @@ switch axistype
                 
         end;
 end
+if minldos < 0
+    annotation(figure1,'textbox',...
+    [0.085 0.0443859649122805 0.873511184910166 0.0690451293797412],...
+    'String',['negative LDOS! ',num2str(minldos)],...
+    'FontSize',16,...
+    'FitBoxToText','off',...
+    'LineStyle','none');
+disp([ldosfile,' has negative LDOS values'])
+end;
 if ~nolabel
 zposstring=['z=',sprintf('%1.3G',zpos/RDiscrete(3)),' c'];
 zposstring='';

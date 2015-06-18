@@ -40,7 +40,7 @@ while ischar(tline)
         if ~(value(1)=='''')
             value=[read_input_path,value];
             %    b) <value> represents a string
-            disp([variablename,'=',read_input_path,value])
+            disp([variablename,'=',value])
         else
             value=value(2:end-1);
         end
