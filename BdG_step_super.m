@@ -1,4 +1,4 @@
-function [ nUpCal_super, nDownCal_super, deltaCal_super] = BdG_step_super( HSuper,delta, kT,nBands, SCInteractionMatrix,BZ,HImpurity,mu,mKE)
+function [ nUpCal_super, nDownCal_super, deltaCal_super, En] = BdG_step_super( HSuper,delta, kT,nBands, SCInteractionMatrix,BZ,HImpurity,mu,mKE)
 % supercell version of BdG_step
 % BZ contains information about the number of k-points to be used and
 % symmetries to be explored

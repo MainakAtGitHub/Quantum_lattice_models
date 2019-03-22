@@ -1,4 +1,4 @@
-function r=BdG_impurity_v3(inputfile)
+function r=BdG_impurity_v3(inputfile,mode)
 
 % Modified impurity BdG code to include
 % 1. Convergence check parameter as 
@@ -8,7 +8,14 @@ function r=BdG_impurity_v3(inputfile)
 %       First find beta for converging solution. Now choose a range close
 %       to this beta, say [beta1 beta2] and for each iteration take new
 %       beta to be beta = rand
-global fullgamma cutek
+global fullgamma cutek dress
+if nargin < 2
+    mode=0;
+else
+    if isdeployed
+        mode=str2double(mode);
+    end
+end
 % set some default value
 % fast summation with energies close to 0
 cutek=NaN;
@@ -216,6 +223,9 @@ end;
 if ~(exist('hom','var'))
     hom=false;
 end;
+if ~(exist('dress','var'))
+    dress=[];
+end;
 % write out a warning
 if ~mixdelta
     disp('Warning: Not mixing delta, only converging nUp, nDown, mu.');
@@ -257,16 +267,19 @@ if magnetic
     end;
 end;
 
+if mode==1
+    maxLoop=1;
+end
 % BdG iterations
 for i = 1:maxLoop
     if ~super
         KE = H - mu*eye(nBands);
         if ~spinpolarized
             if ~magnetic
-                [ nUpCal, nDownCal, deltaCal ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix);
+                [ nUpCal, nDownCal, deltaCal, En ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix);
             else
                 KEdown = conj(Hdown - mu*eye(nBands));
-                [ nUpCal, nDownCal, deltaCal ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
+                [ nUpCal, nDownCal, deltaCal, En ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
             end;
         else
             mudown=mu;
@@ -277,11 +290,11 @@ for i = 1:maxLoop
             end;
             if ~magnetic
                 KEdown = H - mudown*eye(nBands);
-                [ nUpCal, nDownCal, deltaCal ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
+                [ nUpCal, nDownCal, deltaCal, En ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
                 % [ nUpCaldown, nDownCaldown, deltaCaldown ] = BdG_step( KEdown, conj(-delta'), kT, nBands, SCInteractionMatrix,-KE);
             else
                 KEdown = Hdown - mudown*eye(nBands);
-                [ nUpCal, nDownCal, deltaCal ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
+                [ nUpCal, nDownCal, deltaCal, En ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
                 % [ nUpCaldown, nDownCaldown, deltaCaldown ] = BdG_step( KEdown, conj(-delta'), kT, nBands, SCInteractionMatrix,-KE);
             end;
         end
@@ -294,7 +307,7 @@ for i = 1:maxLoop
                         %BZ.k=[0 0;0 0 ; 0 0];
                         %BZ.weight=[1; 1;1]/3;
                         %BZ.mu=mu;
-                        [ nUpCal, nDownCal, deltaCal] = BdG_step_super( HSuper,delta, kT,nBands, SCInteractionMatrix,BZ,Himp,mu);
+                        [ nUpCal, nDownCal, deltaCal, En ] = BdG_step_super( HSuper,delta, kT,nBands, SCInteractionMatrix,BZ,Himp,mu);
                     else
                         disp('not implemented')
                     end
@@ -321,6 +334,10 @@ for i = 1:maxLoop
 %     deltaCal = SCInteractionMatrix.*((eVector(1:nBands,:)*(((eVector((nBands + 1):end,:))').*repmat(fermi,1,nBands))));
     %clear eVector
     % convergence criterium: norm (as defined for vector)
+    if mode==1
+        dlmwrite([inputfile,'_fill'],(1/N^2)*sum(nUpCal + nDownCal),'precision',10);
+        return;
+    end
     deltaDiff = norm(deltaCal(:) - delta(:))/norm(delta(:));
     nDiff = abs((1/N^2)*sum(nUpCal + nDownCal) - n0)/n0;
   %  if spinpolarized
@@ -357,6 +374,9 @@ for i = 1:maxLoop
        % end
     end;
     nAvg = (1/N^2)*(sum(nUp + nDown));
+    %BM convention
+    %    nAvg = (1/N^2)*(sum(nUpCal + nDownCal));
+
    % if spinpolarized
    %     nAvg(2) = (1/N^2)*(sum(nUpdown + nDowndown));
    % end
@@ -378,13 +398,19 @@ for i = 1:maxLoop
     %deltaMinAcc = [deltaMinAcc; min(min(real(delta)))]; 
     deltaMaxAcc = [deltaMaxAcc; deltaMaxNN];
     deltaMinAcc = [deltaMinAcc; deltaMaxNNN];
+    % include the lowest 50 eigenenergies into the file
+    if exist('energiesAcc','var')
+        energiesAcc=[energiesAcc; En(nBands+1:nBands+50)'];
+    else
+        energiesAcc=[En(nBands+1:nBands+50)'];
+    end;
     muAcc = [muAcc; mu];
     deltaDiffAcc = [deltaDiffAcc; sum(deltaDiff)];
     disp([num2str(i),' ndiff= ',num2str(nDiff), ' deltaDiff= ',num2str( deltaDiff), ' deltaMaxNN= ',num2str(deltaMaxNN)]);
     if ~spinpolarized
-        save(BdGfileName,'nAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','muAcc','mu', 'nUp','nDown');
+        save(BdGfileName,'nAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu', 'nUp','nDown');
     else
-        save(BdGfileName,'nAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown');
+        save(BdGfileName,'nAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown');
     end
 end
 if i < maxLoop

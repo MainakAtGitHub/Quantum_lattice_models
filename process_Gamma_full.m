@@ -81,6 +81,7 @@ latticeVectors = -list_plane_small_l(:,1:2);
 
 % saving
 Gammafull1 = - Gammafull; % change potential's sign convention
+clear Gammafull
 Gammafull.int=Gammafull1*factor;
 Gammafull.latt=latticeVectors;
 latticeVectorsSC = latticeVectors;

@@ -4,31 +4,55 @@ function h=plot_homogeneous_dos_v2(inputfile,smoothenergy,energybar)
 % takes \Delta_ij as input and constructs \Delta_i0.
 
 if (~exist('plotrange','var'))
-    plotrange=[-0.2 0.2];
+    plotrange=[-0.02 0.03];
 end;
 
 if (~exist('tetra','var'))
     tetra=false;
 end;
 Displaynames={'d_{z^2}','d_{x^2-y^2}','d_{yz}','d_{xz}','d_{xy}'};
-if nargin <1
-    % load relevant files
-    TB_file='TB_hamiltonian_FeSe_2D.mat'
-    %latticeVectors = latticeVector;
-    BdGfileName='BdG_homogeneous_FeSe_Milan_GammaCut_2_N_9(1).mat'
-    Gamma_file='Gamma_FeSe_Milan_GammaCut_2.mat'
-    M = input('Enter no of k-points   ');% no of K points in x
-    ita = input('Enter ita   '); % broadening
-    firstEnergy = input('Enter starting energy   ');
-    lastEnergy = input('Enter last energy   ');
-    nEnergyPoints = input('Enter no of energy points   ');
-else
+% if nargin <1
+%     % load relevant files
+%     TB_file='TB_hamiltonian_FeSe_2D.mat'
+%     %latticeVectors = latticeVector;
+%     BdGfileName='BdG_homogeneous_FeSe_Milan_GammaCut_2_N_9(1).mat'
+%     Gamma_file='Gamma_FeSe_Milan_GammaCut_2.mat'
+%     M = input('Enter no of k-points   ');% no of K points in x
+%     ita = input('Enter ita   '); % broadening
+%     firstEnergy = input('Enter starting energy   ');
+%     lastEnergy = input('Enter last energy   ');
+%     nEnergyPoints = input('Enter no of energy points   ');
+% else
     % load the input file to set the variables, gave up the old .mat file
     % format
      read_input_file=inputfile;
+     if ~exist('calcSC','var')
+    calcSC=true;
+end;
+     try
      read_input;
      read_input_file
+     % special convention for homogeneous DOS
+M=N*M;
+if calcSC
+    LDOSfileName0 = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
+else
+        LDOSfileName0 = [casestring,'normal_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
+end
+
+if ~tetra
+    LDOSfileName = [LDOSfileName0, '_M_', num2str(M),'_ita_', num2str(ita)];
+else
+    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_tetra_corr1']
 end;
+disp('reading k-space calculated DOS ...');
+load(LDOSfileName,'-mat')
+     catch
+         load(inputfile,'-mat')
+         LDOSfileName=inputfile;
+
+     end;
+%end;
 
 if nargin < 2
     if ~tetra
@@ -47,24 +71,8 @@ end;
 if ~exist('sublattice','var')
     sublattice=1;
 end;
-if ~exist('calcSC','var')
-    calcSC=true;
-end;
-% special convention for homogeneous DOS
-M=N*M;
-if calcSC
-    LDOSfileName0 = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
-else
-        LDOSfileName0 = [casestring,'normal_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
-end
 
-if ~tetra
-    LDOSfileName = [LDOSfileName0,sqstring , '_M_', num2str(M),'_ita_', num2str(ita)];
-else
-    LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_tetra_corr1']
-end;
-disp('reading k-space calculated DOS ...');
-load(LDOSfileName,'-mat')
+
 
 if ~calcSC
     bandDOS=bandDOSNormal
@@ -144,6 +152,9 @@ fig2= figure('Position',[150, 100, 500, 300]);
 set(0,'DefaultAxesFontSize',fsz)
 totDOS=sublatticefactor*totalDOS;
 %plot(energy, (5/nOrbitals)*totalDOS, 'k');
+if ~exist('nOrbitals','var')
+    nOrbitals=size(bandDOS,1);
+end;
 plot1=plot(energy, [totDOS;sublatticefactor*totalDOSNormal;bandDOS(1:sublatticefactor*nOrbitals,:)]);
 %, 'r');
 % plot(energy, bandDOS(2,:), 'g');

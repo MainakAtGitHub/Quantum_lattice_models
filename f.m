@@ -7,7 +7,7 @@ function d1=f(E,a,kx,ky,e)
 d1=zeros(size(a,3),length(e));
 % d2=d1;
 %fprintf(1,['\nof ',num2str(size(kx,1)),' are done:  ']);
-for i=1:size(kx,1)-1
+for i=1:size(E,1)-1
 %       Printing Progress to the Command Window
        %testoutput(i,i-1);
        %i1=i;
@@ -17,15 +17,15 @@ for i=1:size(kx,1)-1
        % use a second variable for the contribution of one row of triangles
        % to reduce the error from the additions
        tmp=0;
-    for j=1:size(ky,2)-1
+    for j=1:size(E,2)-1
         i1=i;
         j1=j;
         k1=[kx(i1,j1),ky(i1,j1);kx(i1,j1+1),ky(i1,j1+1);kx(i1+1,j1),ky(i1+1,j1)];
         k2=[kx(i1+1,j1+1),ky(i1+1,j1+1);kx(i1,j1+1),ky(i1,j1+1);kx(i1+1,j1),ky(i1+1,j1)];
-        if i1==size(kx,1)-1
+        if i1==size(E,1)-1
            i1=1;
         end; 
-        if j1==size(ky,2)-1
+        if j1==size(E,2)-1
             j1=1;
         end;
      E1=[E(i1,j1);E(i1,j1+1);E(i1+1,j1)]; %triangle without point i+1,j+1

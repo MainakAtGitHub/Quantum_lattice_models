@@ -17,6 +17,7 @@ else
     while ~(strcmp('substitutions:',s))
         [s]= fscanf(fid, '%s', 1)
     end;
+    [s]= fscanf(fid, '%s', 25)
     % read number of matrices and number of orbitals, ignoring the first
     % lines
 [number]= fscanf(fid, ' %d ', 1)
@@ -30,24 +31,24 @@ number1=0
 for n=1:number
     rrp= fscanf(fid, '\t%d', 6);
     line1=fscanf(fid,readstring1,2*nOrb^2);
-    line2=reshape(line1,2,nOrb^2)
+    line2=reshape(line1,2,nOrb^2);
     line3=line2(1,:)+1i*line2(2,:);
     matrix=reshape(line3,nOrb,nOrb);
    % lv=[rrp(1)-rrp(4),rrp(2)-rrp(5),rrp(3)-rrp(6)];
-    lv=[rrp(1:6)']:
-    if ~isnan(kz)
+    lv=rrp(1:6)';
+  
     if (lv(3)==0) && (lv(6)==0) 
         number1=number1+1;
         %latticeVector(number1,:)=[rrp(1)-rrp(4),rrp(2)-rrp(5),rrp(3)-rrp(6)];
                 ImpVector(number1,:)=lv;
                 % do a transpose due to convention differences!
-        Impparameters(:,:,number1)=matrix;
+        Impparameters(:,:,number1)=matrix';
     else
-       number1=number1+1;
+    if ~isnan(kz)     number1=number1+1;
        lv(3)=0;
        lv(6)=0;
        ImpVector(number1,:)=lv;
-       Impparameters(:,:,number1)=matrix*exp(1i*(rrp(3)-rrp(6))*kz*pi);
+       Impparameters(:,:,number1)=matrix'*exp(1i*(rrp(3)-rrp(6))*kz*pi);
     end;
     end;
 end;
@@ -62,7 +63,7 @@ if swap
     disp('Swapping Fe(1) and Fe(2)');
     Impparameters=swap_matrix(Impparameters);
 end;
-save([filename,'_conv_z',num2str(kz),'.mat'],'Impparameters','ImpVector');
+save([filename,'_conv_z_transpose',num2str(kz),'.mat'],'Impparameters','ImpVector');
 % number2=0;
 % for orb1=1:nOrb
 %     for orb2=1:nOrb

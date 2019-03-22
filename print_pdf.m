@@ -58,7 +58,12 @@ end
 set(fig, 'PaperPositionMode', 'auto');
 % Print to eps file
 tmp_nam = [tempname '.eps'];
-print('-depsc2', '-noui', '-painters', ['-f' num2str(fig)], '-r864', tmp_nam);
+if verLessThan('matlab', '8.4')
+    fignum=fig;
+else
+    fignum=fig.Number;
+end;
+print('-depsc2', '-noui', '-painters', ['-f' num2str(fignum)], '-r864', tmp_nam);
 % Fix the line styles
 %fix_lines(tmp_nam);
 % Construct the filename

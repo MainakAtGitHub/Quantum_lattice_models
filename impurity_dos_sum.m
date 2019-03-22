@@ -388,6 +388,14 @@ end;
 else
     LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita),'_e_',num2str(E(en)),sqstring];
 end;
+    if isempty(dirprefix)
+        outputfilename=[LDOSfileName];
+    else
+        outputfilename=[dirprefix,LDOSfileName];
+    end;
+if exist(outputfilename, 'file') == 2
+    disp([outputfilename,' already exists, not calculating, please delete it before recalculating it.']);
+else
 % do the summation
 if part>division
     if division>0
@@ -561,11 +569,6 @@ if part>division
       %  end;
    % end
     disp('Writing out LDOS ...');
-    if isempty(dirprefix)
-        outputfilename=[LDOSfileName];
-    else
-        outputfilename=[dirprefix,LDOSfileName];
-    end;
 
     if ~calcGreens
 %         if tetra
@@ -600,6 +603,7 @@ if part>division
         save(outputfilename,'latticeGreens','N','nOrbitals','E','sublattice');
         E=E1;
     end;
+end
 end
 end;
 r=1;

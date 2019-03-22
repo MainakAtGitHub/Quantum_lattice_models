@@ -96,7 +96,7 @@ if remove_bragg
         %#   equal to the 5 largest values                                   %#   descending order
         % manual removal for special map, to
         % be adapted!
-        if true
+        if false
             localLdosk2=localLdosk1*0;
             localLdosk2(31)=localLdosk1(31);
             localLdosk2(571)=localLdosk1(571);

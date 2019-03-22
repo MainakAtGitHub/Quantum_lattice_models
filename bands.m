@@ -65,7 +65,9 @@ for iK = 1:numk
             % diagonalizing for normal state DOS
             kSpaceHopping = 0;
             for iUnitCell = 1:nUnitCells
-                iLatticeVector = latticeVector(iUnitCell,:);
+                %convert to 2D lattice vector (assuming third dimension is
+                %zero)
+                iLatticeVector = latticeVector(iUnitCell,1:2);
                 exp(1i*(iLatticeVector*k'));
                 kSpaceHopping = kSpaceHopping + TBparameters(:,:,iUnitCell)*exp(1i*(iLatticeVector*k'));
             end                        
@@ -94,6 +96,7 @@ for iK = 1:numk
 end
 figure;
 plot(kSpaceEigenValuesNormal);
+return
 save(LDOSfileName, 'energy', 'bandDOSNormal', 'bandDOS', '-mat');
 if (usejava('jvm') && ~feature('ShowFigureWindows'))
     disp(['please plot the result using plot_homogeneous_dos_v2(''',LDOSfileName,''')']);

@@ -103,6 +103,22 @@ if nOrb==1
 wv=real(wannierValues(:,:,:,1));
 wannierValues=wv;
 end;
+% add outer grid for w90 produced wannier functions
+if mod(ypoints,2)==0
+    disp('check map, probably w90 map with missing outer boundaries');
+    mp=wannierValues(:,:,1,1);
+    yp2=ypoints/2;
+    wannierValues(ypoints+1,:,:,:)=0.5*wannierValues(1,:,:,:);
+    wannierValues(1,:,:,:)=0.5*wannierValues(1,:,:,:);
+    mp=wannierValues(:,:,1,1);
+    wannierValues(:,ypoints+1,:,:)=0.5*wannierValues(:,1,:,:);
+    wannierValues(:,1,:,:)=0.5*wannierValues(:,1,:,:);
+xGrid=[xGrid,xGrid(end)+(xGrid(end)-xGrid(end-1))]-xGrid(yp2+1);
+yGrid=[yGrid,yGrid(end)+(yGrid(end)-yGrid(end-1))]-yGrid(yp2+1);
+    % only works for symmetric WF
+    % look for the symmetric position   
+end
+
 %wannierValuest=wannierValues;
 % for i=1:nOrb
 %     for z=1:zpoints

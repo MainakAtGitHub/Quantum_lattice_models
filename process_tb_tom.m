@@ -10,6 +10,10 @@ if oldformat
     [number]= fscanf(fid, ' %d', 1);
 else
     % read number of matrices and number of orbitals
+   % fix for vca input: activate next two lines
+   %string = fscanf(fid, '%s \n',3);
+   %oldformat=true
+
 [number]= fscanf(fid, ' %d', 1);
 end;
 [nOrb]= fscanf(fid, '%d', 1);
@@ -37,6 +41,7 @@ for n=1:number
     line2=reshape(line1,2,nOrb^2);
     line3=line2(1,:)+1i*line2(2,:);
     matrix=reshape(line3,nOrb,nOrb);
+    if abs(sum(matrix(:)))>0
    % lv=[rrp(1)-rrp(4),rrp(2)-rrp(5),rrp(3)-rrp(6)];
     lv=[rrp(1),rrp(2),rrp(3)];
     if isnan(kz)
@@ -81,6 +86,7 @@ for n=1:number
         end;
   
     end;
+    end
 end;
     % only consider real part?
 im=max(abs(imag(TBparameters(:))));

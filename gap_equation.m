@@ -20,6 +20,10 @@
     % 3*(2*N^2*nOrbitals)^2*8/1024/1024 (3.6G for N=25, 470M for N=15)
     % save some memory for following commands
     clear eValue
+    % dressing of the eVector
+    if ~isempty(dress)
+        eVector=eVector.*repmat(dress',nBands*2/numel(dress),nBands*2);
+    end;
     eVector = eVector(:,sortIndex);
     fermi = 1./(1 + exp(En/kT));
     if ~fullgamma

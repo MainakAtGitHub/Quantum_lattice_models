@@ -18,9 +18,25 @@ for n=1:sztb(1)
         rowColIdx=size(latticeVector,1);   
         TBparameters(nOrb,nOrb,rowColIdx)=0;
     end;
-    TBparameters(tb(n,4),tb(n,5),rowColIdx)=TBparameters(tb(n,4),tb(n,5),rowColIdx)+tb(n,6);
+    try
+        TBparameters(tb(n,4),tb(n,5),rowColIdx)=TBparameters(tb(n,4),tb(n,5),rowColIdx)+tb(n,6)+1i*tb(n,7);
+    catch
+        TBparameters(tb(n,4),tb(n,5),rowColIdx)=TBparameters(tb(n,4),tb(n,5),rowColIdx)+tb(n,6);
+    end;
 end;
 sublattice=input('enter sublattice 0,1,-1: ');
+% check for CC
+tb1=permute(TBparameters,[2,1,3]);
+if sum(abs(tb1(:)))-sum(abs(TBparameters(:)))>1e-3
+    disp('adding cc!');
+    tbtmp=TBparameters;
+    for i=1:size(TBparameters,3)
+        % figure out r and -r
+        lattvec=-repmat(latticeVector(i,:),size(latticeVector,1),1);
+        negindex=find(sum(latticeVector==lattvec,2)==size(latticeVector,2))        
+        TBparameters(:,:,i)=0.5*(tbtmp(:,:,i)+tb1(:,:,negindex));%-diag(diag(tbtmp(:,:,i)));
+    end
+end
 save([tbfile,'.mat'],'TBparameters','latticeVector','sublattice');
 %tb=[];
 %sztb=size(TBparameters);

@@ -204,7 +204,7 @@ for iEnergyPoint = 1:nEnergyPoints
             greensKSpace = greensKSpace + greensKSpaceIBand;
         end
         if singular_quad
-            %greensDiagonal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*singular_double_quad(1./greensKSpace);
+           %greensDiagonal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*singular_double_quad(1./greensKSpace);
             greensDiagonal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*singular_double_quad_mex(1./greensKSpace);
         else
             greensDiagonal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*sum(sum(greensKSpace));
@@ -266,10 +266,13 @@ figure;
 plot(energy, (5/nOrbitals)*totalDOS, 'k');
 hold
 plot(energy, bandDOS(1,:), 'r');
+try
 plot(energy, bandDOS(2,:), 'g');
 plot(energy, bandDOS(3,:), 'c');
 plot(energy, bandDOS(4,:), 'm');
 plot(energy, bandDOS(5,:), 'b');
+catch
+end;
 axis('square'); title('Orbital resolved SC dos')
 % Create legend
 legend show

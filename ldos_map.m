@@ -50,12 +50,37 @@ end;
 % E = Greensenergy;
 % some double code with impurity_dos (please check, if making
 % modifications)
-
+if nargin < 2
+    set_ldosfilename;
+%LDOSfileName0 = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
+%LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_ita_', num2str(ita),'_e_',num2str(E)];
+else
+    % input of another filename also accepted
+    LDOSfileName=ldosflnm
+end;
+    
+load(LDOSfileName,'-mat')
+if diagonal_GF
+    if (diagonal_GF==2)
+        diagonal_string='diag_orb'
+        % make greens function diagonal in orbitals
+        latticeGreens=latticeGreens.*repmat(eye(nOrbitals),N^2,N^2);
+    elseif (diagonal_GF==3)
+        diagonal_string='diag_local'
+        latticeGreens=latticeGreens.*kron(eye(N^2),ones(nOrbitals));
+    else
+        diagonal_string='diag'
+        latticeGreens=diag(diag(latticeGreens));
+    end;
+else
+    diagonal_string='';
+end;
 %load('./calc/U_0955/LDOS_FeSe_Tom__Vimp_5_N_15_M_10_ita_0.001_e_-0.0084','-mat');
 %lattice_greens_supercell_FeSe_N_15_M_9_U_0955_Vimp_5_E_minPt0084.mat
 shift = [51 51 41];
 %sizeWannier = [101 101 81];
 RDiscrete = [40 40 80];
+wfolder='';
 load(wannier_filename,'-mat');
 szw=size(wannierValues);
 if length(szw)==2
@@ -137,6 +162,20 @@ else
     diagonal_string='';
 end;
 for zGridPoint = zGridRange
+    [a,b,c]=fileparts(LDOSfileName);
+    if ~isempty(a)
+        a=[a,filesep];
+    end;
+     if ~isempty(wfolder)
+        wfolder=[wfolder,filesep];
+    end;
+    if ~(exist([a,wfolder],'dir'))
+        mkdir([a,wfolder])
+    end;
+    ldosmapfilename=[a,wfolder,b,c,'_z_',num2str(zGridPoint),diagonal_string];
+    if exist(ldosmapfilename, 'file') == 2
+        disp([ldosmapfilename,' already exists, not calculating, please delete it before recalculating it.']);
+    else
 localLdos=0*xmesh;
     disp(['Calculating ',num2str(zGridPoint), 'of (',num2str(zGridRange(1)),'..',num2str(zGridRange(numel(zGridRange))),')']);
     for s=1:numel(xmesh)
@@ -202,8 +241,8 @@ localLdos=0*xmesh;
         end
     end
     % output of result
-    ldosmapfilename=[LDOSfileName,'_z_',num2str(zGridPoint),diagonal_string];
     % save the output together with geometry information necessary to plot
     save(ldosmapfilename,'localLdos','xGridRange','yGridRange','shift','sizeWannier','RDiscrete','sublattice');
+    end
 end
 end

@@ -1,4 +1,4 @@
-function [figure1,datarealmax]=plot_ldos_map(ldosfile,scale,datarealmax,cut,rotated)
+function [figure1,datarealmax]=plot_ldos_map(ldosfile,scale,datarealmax,cut,rotated,marker)
 if nargin < 2
     % default no sqrt scale!
     scale=''
@@ -13,6 +13,9 @@ nolabel=false;
 if cut<0
     nolabel=true;
     cut=-cut;
+end;
+if nargin < 6
+    marker=[];
 end;
 % to be modified for different Wannier mesh
 %RDiscrete = [40 40 80]; % default value, correct value should be in "ldosfile"
@@ -194,6 +197,21 @@ switch axistype
                     boxx=cut/2*RDiscrete(1)*boxx+offset(1);
                     boxy=cut/2*RDiscrete(2)*boxy+offset(2);
                     plot3(boxx,boxy,z*1.02,'k');
+                    % plot some small boxes as marker
+                    if ~isempty(marker)
+                        for a=1:numel(marker)
+                            boxx=[0 1 1 0 0];
+                            boxy=[ 0 0 1 1 0];
+                            marker(a)
+                            boxx=marker(a).pos(1)+(max(marker(a).xrange)-min(marker(a).xrange)+1)*boxx+min(marker(a).xrange)
+                            boxx=boxx+xGridRange(1)-1;
+                            boxy=marker(a).pos(2)+(max(marker(a).yrange)-min(marker(a).yrange)+1)*boxy+min(marker(a).yrange)
+                            boxy=boxy+yGridRange(1)-1;
+                            plot3(boxx,boxy,z*1.02,'g');
+                            labels = num2str(a,'%d');    %'
+                            text(boxx(:),boxy(:),z(:), labels, 'horizontal','left', 'vertical','bottom');
+                        end
+                    end;
                     boxscale=3;
                     boxcolor='white';
                     % plot white box
@@ -304,6 +322,11 @@ if nolabel
     set(childr,'visible','on');
     set(axes1,'visible','on');
     set(h,'visible','on');
-            view(axes1,[45 90]);
+    if rotated=='r'
+    view(axes1,[45 90]);
+    else %if rotated=='n'
+    view(axes1,[0 90])
+    
+    end
 end
 end;
