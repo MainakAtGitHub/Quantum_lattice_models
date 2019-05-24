@@ -342,14 +342,15 @@ for index=startindex:endindex
         [eigValueK, sortingIndex] = sort(real(diag(eigValue)));
         if debug
             whos;
-        end;
+        end
         clear eigValue
         eigVectorK = (eigVector(:,sortingIndex));
+        clear eigVector
         if version >0
             Ek_vector=eigValueK;
         else
             Ek_vector=eigValueK((nBands + 1):end);
-        end;
+        end
         clear eigValueK
         if ~calcGreens
             if version >0
@@ -386,7 +387,8 @@ for index=startindex:endindex
             else
                 uK = eigVectorK(1:nBands,(nBands+1):end);
                 vK = eigVectorK((nBands+1):end,(nBands+1):end);
-            end;
+            end
+            clear eigVectorK
             if division==0
                 EnRep = repmat(Ek_vector',nBands,1);
                 if version >0
@@ -396,9 +398,9 @@ for index=startindex:endindex
                 end
             else
                 if version >0
-                save(ekukvk_fileGF,'uK','Ek_vector');
+                save(ekukvk_fileGF,'uK','Ek_vector','-v7.3');
                 else
-                save(ekukvk_fileGF,'uK','vK','Ek_vector');
+                save(ekukvk_fileGF,'uK','vK','Ek_vector','-v7.3');
                 end
             end;
 
@@ -641,7 +643,11 @@ if part>division
             for n=1:nDosSites/efforb
                 orbitalLDOS((n-1)*efforb+(1:efforb),:)=ldos((n-1)*efforb+(1:efforb),:);
             end;
+            if exist('dress','var')
+                save(outputfilename, 'energy', 'orbitalLDOS', 'LDOSsites','efforb','dress');           
+            else
              save(outputfilename, 'energy', 'orbitalLDOS', 'LDOSsites','efforb');           
+            end
         end
     else
         % some arkward workaround for multiple energies

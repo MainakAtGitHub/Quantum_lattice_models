@@ -2,7 +2,7 @@ function h=colorbar_rwb(figure1,maxabsekkn,ticks,labels,abs)
 global colorred
     global fsz;
  if isempty(fsz)
- fsz=40;
+ fsz=10;
  end;
 color1=[1 0 0]; % red
 %color2=[0 0 0]; % black

@@ -22,6 +22,13 @@ else
     SCInteractionMatrix=0.05*SCInteractionMatrix;
 end;
 delta=SCInteractionMatrix;
-save([Gamma_file,'guess',num2str(N)],'delta','mu','nUp','nDown');
-delta=delta.*(rand(size(delta))*2-1);
-save([Gamma_file,'guess',num2str(N),'rand'],'delta','mu','nUp','nDown');
+clear SCInteractionMatrix;
+if size(delta,1)>11000
+    save([Gamma_file,'guess',num2str(N)],'delta','mu','nUp','nDown','-v7.3');
+    delta=delta.*(rand(size(delta))*2-1);
+    save([Gamma_file,'guess',num2str(N),'rand'],'delta','mu','nUp','nDown','-v7.3');
+else
+    save([Gamma_file,'guess',num2str(N)],'delta','mu','nUp','nDown');
+    delta=delta.*(rand(size(delta))*2-1);
+    save([Gamma_file,'guess',num2str(N),'rand'],'delta','mu','nUp','nDown');
+end

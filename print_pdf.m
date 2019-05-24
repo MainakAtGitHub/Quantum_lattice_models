@@ -70,6 +70,11 @@ print('-depsc2', '-noui', '-painters', ['-f' num2str(fignum)], '-r864', tmp_nam)
 if numel(name) < 5 || ~strcmpi(name(end-3:end), '.pdf')
     name = [name '.pdf']; % Add the missing extension
 end
+
+% manual fix for "~"
+if name(1)=="~"
+    name=['/home/kreisel',name(2:end)];
+end
 % Construct the command string for ghostscript. This assumes that the
 % ghostscript binary is on your path - you can also give the complete path,
 % e.g. cmd = '"C:\Program Files\gs\gs8.63\bin\gswin32c.exe"';

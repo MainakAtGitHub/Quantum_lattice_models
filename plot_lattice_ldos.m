@@ -35,7 +35,7 @@ if ~(exist('nOrbitals','var'))
     nOrbitals = 10;
 end;
 if ~(exist('sublattice','var'))
-    disp('Sublattice not defined, using +1')
+    disp('Sublattice not defined, using 0')
    % sublattice = input('Sublattice not defined. Please enter: ');
     sublattice = 0
 end;

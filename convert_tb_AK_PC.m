@@ -1,5 +1,9 @@
 function [TBparameters,latticeVector]=convert_tb_AK_PC(tbfile)
+try
 tb=load(tbfile,'-ascii');
+catch
+    load(tbfile,'tb','-mat');
+end;
 %cut=0;
 nOrb=max(max(tb(:,4:5)))
 sztb=size(tb);

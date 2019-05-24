@@ -5,12 +5,16 @@ function h=plot_homogeneous_dos_v2(inputfile,smoothenergy,energybar)
 
 if (~exist('plotrange','var'))
     plotrange=[-0.02 0.03];
+        plotrange=[-0.05 0.08];
+
 end;
 
 if (~exist('tetra','var'))
     tetra=false;
 end;
 Displaynames={'d_{z^2}','d_{x^2-y^2}','d_{yz}','d_{xz}','d_{xy}'};
+Displaynames={'d_{xy}','d_{x^2-y^2}','d_{yz}','d_{xz}','d_{z^2}'};
+
 % if nargin <1
 %     % load relevant files
 %     TB_file='TB_hamiltonian_FeSe_2D.mat'
