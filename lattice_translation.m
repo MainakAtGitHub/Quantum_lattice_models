@@ -5,6 +5,10 @@ function t = lattice_translation(N, TBparameters, latticeVectors)
 % first. eg. (1,1)->(1,2)-> .... (1,N) (2,1)->(2,2)....
 % Row gives hopping from all other lattice sites to the Row lattice site.
 
+
+% to be done: generalize to systems that are not NxN but N(1)xN(2), i.e.
+% rectangular
+
 nOrbitals = size(TBparameters,1);
 maxHop = max(max(abs(latticeVectors)));
 minSystemSize = 2*maxHop + 1;

@@ -16,7 +16,7 @@ else
         mode=str2double(mode);
     end
 end
-% set some default value
+% set some default value (kept for backward compatibility)
 % fast summation with energies close to 0
 cutek=NaN;
 if nargin <1
@@ -42,74 +42,84 @@ if nargin <1
 else
     % otherwise read inputfile
     try
-        % old input format with mat-file
+        % old input format with mat-file (backward compatibility)
         load(inputfile);
     catch %err
-        % new text-based input format
+        % new text-based input format (reads in text file and sets
+        % variables accordingly)
         read_input_file=inputfile;
         read_input;
         read_input_file
-    end;
-end;
+    end
+end
 
 
 
-% input files
+% input files: tight-binding model
 load(TB_file)
 % any reason for these double variables?
 % latticeVectors = latticeVector;
+% pairing interaction
 load(Gamma_file,'-mat')
 % default: same input as output filename, can be removed later
 %if ~(exist('input_fileName','var'))
 %    input_fileName=BdGfileName;
 %end;
+
+% load mean fields from previous iteration or seed
 load(BdGfileName,'-mat');
 if ~exist('sublattice','var')
     % sublattice= {-1,0,1} to define whether there are two sites per
     % elementary cell and which site is first
     sublattice=1
-end;
+end
 % a switch to produce more output
 if ~exist('debug','var')
     debug=false;
-end;
-% switch to activate memory management actions (clear, sparse, 
+end
+% switch to activate memory management actions (clear, sparse matrix
+% arrays)
 if ~exist('memorymanagement','var')
     memorymanagement=false;
-end;
-% magnetic calculation
+end
+% magnetic calculation ?
 if ~exist('magnetic','var')
     magnetic=false;
-end;
+end
 % supercell calculation
 if ~exist('super','var')
     super=false;
-end;
+end
 % supercell size for BdG
 if (~exist('M_super','var') && (super== true))
     M_super=M;
-end;
-% spin polarized calculation
+end
+% spin polarized calculation (including a Zeeman magnetic field)?
 if ~exist('spinpolarized','var')
     spinpolarized=false;
-end;
-% BdG matrix blocks
+end
+% BdG matrix blocks (to be done: make it work for non-square system sizes)
 nBands = N^2*nOrbitals;
+
 if ~super
     % kinetic energy
     H0 = lattice_translation(N, TBparameters, latticeVector);
 else
     [H0, superLatticeVectors] = supercell_hoppings(N, TBparameters, latticeVector);
-end;
-% ugly global variable
+end
+
+% ugly global variable to treat full orbital dependent pairing interaction
 if exist('Gamma','var')
     SCInteractionMatrix = lattice_translation(N, Gamma, latticeVectorsSC);
     fullgamma=false;
 else
     fullgamma=true;
     SCInteractionMatrix=Gammafull;
-end;
-%Himp = zeros(size(H0));
+end
+
+% fix the position of the impurity unit cell
+% to be done: allow for different impurity positions; allow for multiple
+% impurities
 impCell = [ceil(N/2) ceil(N/2)];
 % % allow for general impurity potentials
 % if ~ischar(Vimp)
@@ -146,19 +156,20 @@ switch sublattice
 %         else
 %         end;
         
-        % Indices of sites NN and NNN to impurity
+        % Indices of sites NN and NNN to impurity (for status output only)
         iNNsiteRange = iImpNNRange(1:nOrbitals/2);
         jNNsiteRange = jImpNNRange(1:nOrbitals/2);
         iNNNsiteRange = iImpNNRange((1+nOrbitals/2):nOrbitals);
         jNNNsiteRange = jNNsiteRange;
     case -1
-        % to be implemented (not tested)
+        % to be implemented (not tested), reversed relative position of
+        % Fe(1) and Fe(2)
         iNNsiteRange = iImpNNRange(1:nOrbitals/2);
         jNNsiteRange = jImpNNRange(1:nOrbitals/2);
         iNNNsiteRange = iImpNNRange((1+nOrbitals/2):nOrbitals);
         jNNNsiteRange = jNNsiteRange;
     case 0
-%         % no sublattice (5 orbital)
+%         % no sublattice (5 orbital or 1 band model)
 %         if ~ischar(Vimp)
 %         if numel(Vimp)==1
 %             Himp(iRange, jRange) = Vimp*eye(nOrbitals, nOrbitals);
@@ -173,17 +184,20 @@ switch sublattice
         [iImpNNNRange, jImpNNNRange] = find_lattice_translation_index(N, nOrbitals, impNNNCell, impCell);
         iNNNsiteRange = iImpNNNRange(1:nOrbitals);
         jNNNsiteRange = jImpNNNRange(1:nOrbitals);
-end;
+end
 %Self consistency iteration
-% % initial guess
+% initial guess for the density of up-electrons (if not set in the input
+% already)
 if ~(exist('nUp','var'))
     fillup=0.5*n0/nOrbitals;
     nUp = fillup*ones(nBands,1);
-end;
+end
+% same for down electrons (set to half filling as well)
 if ~(exist('nDown','var'))
     filldown=0.5*n0/nOrbitals;
     nDown = filldown*ones(nBands,1);
-end;
+end
+
 if spinpolarized
     if ~(exist('nUpdown','var'))
         nUpdown = nDown;
@@ -203,33 +217,42 @@ end
 %end;
 if ~(exist('deltaMaxAcc','var'))
  deltaMaxAcc = [];
-end;
+end
 if ~(exist('deltaMinAcc','var'))
  deltaMinAcc = [];
-end;
+end
 if ~(exist('deltaDiffAcc','var'))
  deltaDiffAcc = [];
-end;
+end
 if ~(exist('muAcc','var'))
  muAcc = [];
-end;
+end
 if ~(exist('nAcc','var'))
  nAcc=[];
-end;
+end
 % by default mix delta
 if ~(exist('mixdelta','var'))
     mixdelta=true;
-end;
+end
 if ~(exist('hom','var'))
     hom=false;
-end;
+end
 if ~(exist('dress','var'))
     dress=[];
-end;
+end
+
+% New stuff here: correlated electrons (including U, U', J, J')
+if ~(exist('correlated','var'))
+    correlated=false;
+end
+if correlated
+    spinpolarized=true;
+end
+
 % write out a warning
 if ~mixdelta
     disp('Warning: Not mixing delta, only converging nUp, nDown, mu.');
-end;
+end
 
 % setting of Hamiltonian
 Himp=get_Himp(Vimp,N,nOrbitals,sublattice);
@@ -237,7 +260,7 @@ if ~super
     H = H0 + Himp;
 else
     [HSuper, superLatticeVectors] = supercell_hoppings(N, TBparameters, latticeVector);
-end;
+end
 % avoid some numerical inaccurancy; for some reason lattice_translation as
 % well as the general impurity potential (hoppings)
 % gives back a non-hermitian matrix with sum(sum(abs(H-H'))) ~ 1e-13
@@ -250,29 +273,41 @@ else
     %for iUnitCell = 1:nSuperCells
     %    HSuper(:,:,iUnitCell)=0.5*(HSuper(:,:,iUnitCell)+HSuper(:,:,iUnitCell)');
     %end;
-end;
+end
+
 if magnetic
-    % do a non-magnetic simulation
+    % do a magnetic simulation with magnetic impurity
+    % some default behavior: If Vimpdown not defined, use a potential
+    % scatterer
     if ~exist('Vimpdown','var')
         Vimpdown=Vimp
-    end;
+    end
+    % set the impurity Hamiltonian for down spins
     Himpdown=get_Himp(Vimpdown,N,nOrbitals,sublattice);
+    % set the normal state Hamiltonian for down electrons:
     Hdown=H0+Himpdown;
-    Hdown=0.5*(Hdown+Hdown');
+    Hdown=0.5*(Hdown+Hdown'); % make it explicitely Hermitian (numerical inaccurancy)
+    % save memory
     clear Himpdown
+    % if spin-polarized, i.e. with Zeeman term, use two chemical potentials
+    % for up and down electrons
     if spinpolarized
         if ~exist('mudown','var')
             mudown=mu
-        end;
-    end;
-end;
+        end
+    end
+end
 
+% single shot calculation: just diagonalize and exit
 if mode==1
     maxLoop=1;
 end
-% BdG iterations
+
+% BdG iterations: up to maxLoop
 for i = 1:maxLoop
+    % two cases for supercell calculations here, first the usual one
     if ~super
+        % setup of the kinetic energy (including chemical potential)
         KE = H - mu*eye(nBands);
         if ~spinpolarized
             if ~magnetic
@@ -280,14 +315,14 @@ for i = 1:maxLoop
             else
                 KEdown = conj(Hdown - mu*eye(nBands));
                 [ nUpCal, nDownCal, deltaCal, En ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
-            end;
+            end
         else
             mudown=mu;
             % put a magnetic field here
             if exist('field','var')
                 mu=mu+field;
                 mudown=mu-field;
-            end;
+            end
             if ~magnetic
                 KEdown = H - mudown*eye(nBands);
                 [ nUpCal, nDownCal, deltaCal, En ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
@@ -296,24 +331,25 @@ for i = 1:maxLoop
                 KEdown = Hdown - mudown*eye(nBands);
                 [ nUpCal, nDownCal, deltaCal, En ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
                 % [ nUpCaldown, nDownCaldown, deltaCaldown ] = BdG_step( KEdown, conj(-delta'), kT, nBands, SCInteractionMatrix,-KE);
-            end;
+            end
         end
     else
-                if ~spinpolarized
-                    if ~magnetic
-                        % set the supercell parameters
-                        BZ=supercell_parameters(M_super);
-                        % 1 supercell only
-                        %BZ.k=[0 0;0 0 ; 0 0];
-                        %BZ.weight=[1; 1;1]/3;
-                        %BZ.mu=mu;
-                        [ nUpCal, nDownCal, deltaCal, En ] = BdG_step_super( HSuper,delta, kT,nBands, SCInteractionMatrix,BZ,Himp,mu);
-                    else
-                        disp('not implemented')
-                    end
-                else
-                    disp('not implemented')
-                end
+        if ~spinpolarized
+            if ~magnetic
+                % set the supercell parameters
+                BZ=supercell_parameters(M_super);
+                % 1 supercell only
+                %BZ.k=[0 0;0 0 ; 0 0];
+                %BZ.weight=[1; 1;1]/3;
+                %BZ.mu=mu;
+                % first version of supercell calculation (not well tested)
+                [ nUpCal, nDownCal, deltaCal, En ] = BdG_step_super( HSuper,delta, kT,nBands, SCInteractionMatrix,BZ,Himp,mu);
+            else
+                disp('not implemented')
+            end
+        else
+            disp('not implemented')
+        end
     end
 %     BdGMatrix = [KE -delta; -delta' -KE];
 %     if memorymanagement
@@ -372,7 +408,7 @@ for i = 1:maxLoop
        % else
         %    delta = beta*delta + 0.5*(1-beta)*(deltaCal-deltaCaldown');
        % end
-    end;
+    end
     nAvg = (1/N^2)*(sum(nUp + nDown));
     %BM convention
     %    nAvg = (1/N^2)*(sum(nUpCal + nDownCal));
