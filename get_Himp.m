@@ -46,6 +46,8 @@ else
     numimp=size(imp_vec,1);
     for n=1:numimp
         cellvector=impCell+imp_vec(n,:);
+        % does the same as the following lines
+        % cellvector=periodic_latticevectors(cellvector,N);
         cellvector(1)=mod(cellvector(1)-1,N)+1;
         cellvector(2)=mod(cellvector(2)-1,N)+1;
         [iRange, jRange] = find_lattice_translation_index(N, nOrbitals, cellvector, cellvector);

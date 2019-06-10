@@ -1,4 +1,4 @@
-function [figure5,ax1]=make_plot_impurity_dos(inputfile,smoothenergy,plrange,plotall,omega0)
+function [figure5,ax1]=make_plot_impurity_dos(inputfile,smoothenergy,plrange,plotall,omega0,figure5)
 global plotrange homogeneous
 if isempty(homogeneous)
     homogeneous=false
@@ -12,7 +12,13 @@ if nargin <3
 end;
 if nargin <4
     plotall=true;
+end
+if plrange<0
+    plotall=false
 end;
+if nargin < 5
+    omega0=[];
+end
 %plotall=true;
 coloruf1=[250 	70 	22 ]/255;
 % pure red instead of orange
@@ -108,9 +114,10 @@ clear tmp;
 
 % get filename of inputfile without path (doesn't work in windows yet)
 k = findstr(inputfile, '/');
+inputfile_orig=inputfile;
 if ~isempty(k)
     	inputfile=inputfile(k(numel(k))+1:length(inputfile));
-end;
+end
 
 if plotall && (efforb>0)
     % plot all results orbital resolved, makes only sense for more than one
@@ -157,9 +164,13 @@ end;
 %figure5= figure('Position',[200, 50, 500, 300]);
 
 % plot the position dependence of the summed lattice ldos
+if nargin < 6
 figure5= figure('Position',[150, 100, 500, 300]);
 ax1 = gca;
 set(0,'DefaultAxesFontSize',fsz)
+else
+    hold on
+end
 
 % plot all sites or up to the plrange, or the sites given in plrange
 % set up the summed ldos
@@ -168,11 +179,16 @@ if length(plrange)>1
 else
     plrange=min(plrange,nDosSites);
     plrng=1:plrange;
-end;
+end
 plrange=min(plrange,nDosSites);
 for n=plrng
     sumorbitalLDOS(n,:)=sum(orbitalLDOS(efforb*(n-1)+(1:efforb),:),1);
-end;
+end
+if isempty(plrng)
+    % averaged spectra
+        sumorbitalLDOS=sum(orbitalLDOS,1)*efforb/size(orbitalLDOS,1);
+end
+
 plot5=plot(energy,sumorbitalLDOS);
 
 % if plot_NNN
@@ -226,17 +242,21 @@ ylabel({'LDOS [1/eV]'});
 legend('Location','northwest')
 legend('Location','northeast')
 %legend show
-if exist('omega0','var')
+if ~isempty(omega0)
     % put in vertical bars at the energies omega0
     %your point goes here
     l1=line([omega0 omega0],get(gca,'YLim'),'LineWidth',2,'Color',1-coloruf1);
         l2=line(-[omega0 omega0],get(gca,'YLim'),'LineWidth',2,'Color',1-coloruf2);
 uistack(l1,'bottom')
 uistack(l2,'bottom')
-end;
+end
 fndpeaks=false;
 if isunix
-    print_pdf(['/tmp/',inputfile,'_tot.pdf']);
+    if isempty(plrng)
+        print_pdf([inputfile_orig,'_averaged.pdf']);
+    else
+        print_pdf(['/tmp/',inputfile,'_tot.pdf']);
+    end
     if fndpeaks
     if smoothenergy>0
         peakdistance=ceil(20*smoothenergy/de);

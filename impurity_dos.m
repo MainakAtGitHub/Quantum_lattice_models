@@ -144,7 +144,7 @@ if ~calcGreens
                     % far away point!
                     cell=[ 1 1];
                 else
-                    cell=impCell+LDOSsites(n,:);
+                    cell=periodic_latticevectors(impCell+LDOSsites(n,:),N);
                 end
                 siteIndex=((cell(1)-1)*N + cell(2) - 1)*nOrbitals +(1:efforb);
             end
@@ -483,7 +483,7 @@ if part>division
                     load(ekukvk_fileGF);
                 else
                     load(ekukvk_file);
-                end;
+                end
 
             end
             % careful: double code here, change both when doing any
