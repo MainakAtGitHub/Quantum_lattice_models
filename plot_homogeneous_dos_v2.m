@@ -3,11 +3,6 @@ function h=plot_homogeneous_dos_v2(inputfile,smoothenergy,energybar)
 % Modified homogeneous_dos.m
 % takes \Delta_ij as input and constructs \Delta_i0.
 
-if (~exist('plotrange','var'))
-    plotrange=[-0.02 0.03];
-        plotrange=[-0.05 0.08];
-
-end;
 
 if (~exist('tetra','var'))
     tetra=false;
@@ -37,6 +32,16 @@ end;
      read_input;
      read_input_file
      % special convention for homogeneous DOS
+     if (~exist('plotrange','var'))
+    if (exist('firstEnergy','var'))
+        plotrange=[firstEnergy lastEnergy];
+    else
+        plotrange=[-0.02 0.03];
+        plotrange=[-0.05 0.08];
+    end;
+end
+
+     
 M=N*M;
 if calcSC
     LDOSfileName0 = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
@@ -189,7 +194,7 @@ end;
 xlim(plotrange);
 ylim_curr = get(gca,'ylim');
 set(gca, 'ylim', [0 ylim_curr(2)]);
-set(gca, 'ylim', [0 3.5]);
+%set(gca, 'ylim', [0 3.5]);
 %axis('square'); 
 %title('Orbital resolved SC dos')
 % Create xlabel
