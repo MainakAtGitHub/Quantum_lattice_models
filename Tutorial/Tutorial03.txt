@@ -30,6 +30,14 @@ C) Plot the result with
 
 >> plot_homogeneous_dos_v2('~/docs/Mainak/Tutorial/input_1band_SC.txt')
 
+Two plots should pop up (they show the normal state density of states and the
+one in the superconducting state). The second plot is supposed to be orbitally
+resolved (for a one-band system, that one looks identical to the total DOS
+plot). Additionally, PDF files should be generated in the /tmp/ folder. You
+can look for them with
+
+$ ls -ltr /tmp/
+
 D) Doing multiple calculations with different M, and ita is possible
 For this purpose, just copy the input file to another file, edit the latter by
 changing M, ita, nEnergyPoints and do another run

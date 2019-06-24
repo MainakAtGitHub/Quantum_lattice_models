@@ -87,11 +87,30 @@ if ~calcSC
     bandDOS=bandDOSNormal
 end;
 
+if tetra
 % some smoothing if necessary
 de=energy(2)-energy(1);
 smooth=floor(smoothenergy/de);
 bandDOSNormal=sg_smooth(bandDOSNormal,smooth);
 bandDOS=sg_smooth(bandDOS,smooth);
+else
+    if smoothenergy >0
+    % calculate the differentical conductance, i.e. convolution with
+    % derivative of Fermi function
+    de=energy(2)-energy(1);
+    egrid=-(400*de):de:(400*de);
+    temperature=smoothenergy;
+    dF=-fermi_prime_func(egrid/temperature);
+    dF=dF/sum(dF);
+        for sz=1:size(bandDOSNormal,1)
+     bandDOSNormal(sz,:)=conv(bandDOSNormal(sz,:)',dF,'same')';
+        end
+              for sz=1:size(bandDOS,1)
+     bandDOS(sz,:)=conv(bandDOS(sz,:)',dF,'same')';
+              end
+%    disp('to be implemented')
+    end
+end
 
 totalDOSNormal = sum(bandDOSNormal,1);
 totalDOS = sum(bandDOS,1);

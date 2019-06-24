@@ -95,8 +95,16 @@ orb={orb{1:efforb},orb{6}};
 % some smoothing if necessary
 de=energy(2)-energy(1);
 smooth=floor(smoothenergy/de);
+    egrid=-(400*de):de:(400*de);
+    temperature=4/11400;
+    dF=-fermi_prime_func(egrid/temperature);
+    dF=dF/sum(dF);
 for n=1:nDosSites
     tmp=sg_smooth(orbitalLDOS((n-1)*efforb+(1:efforb),:),smooth);
+    % do some smoothing with temperature
+    for sz=1:size(tmp,1)
+    tmp(sz,:)=conv(tmp(sz,:)',dF,'same')';
+    end
     tmp(tmp<0)=0;
     orbitalLDOS((n-1)*efforb+(1:efforb),:)=tmp;
 end;
@@ -187,6 +195,15 @@ end
 if isempty(plrng)
     % averaged spectra
         sumorbitalLDOS=sum(orbitalLDOS,1)*efforb/size(orbitalLDOS,1);
+        % do a correction for the supercell code (when using singular_quad)
+        k=strfind(inputfile,'sum');
+        if isempty(k)
+            % do the correction
+            k1=strfind(inputfile,'_M_');
+            k2=strfind(inputfile,'_ita_');
+            M=str2num(inputfile(k1+3:k2-1));
+        end
+        sumorbitalLDOS=sumorbitalLDOS*(M^2)/(M-1)^2;
 end
 
 plot5=plot(energy,sumorbitalLDOS);
