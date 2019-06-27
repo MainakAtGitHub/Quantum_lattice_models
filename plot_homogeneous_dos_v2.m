@@ -1,4 +1,4 @@
-function h=plot_homogeneous_dos_v2(inputfile,smoothenergy,energybar)
+function [fig1,fig2,energy,plotres]=plot_homogeneous_dos_v2(inputfile,smoothenergy,energybar)
 
 % Modified homogeneous_dos.m
 % takes \Delta_ij as input and constructs \Delta_i0.
@@ -29,6 +29,7 @@ Displaynames={'d_{xy}','d_{x^2-y^2}','d_{yz}','d_{xz}','d_{z^2}'};
     calcSC=true;
 end;
      try
+         singular_quad=true;
      read_input;
      read_input_file
      % special convention for homogeneous DOS
@@ -53,7 +54,10 @@ if ~tetra
     LDOSfileName = [LDOSfileName0, '_M_', num2str(M),'_ita_', num2str(ita)];
 else
     LDOSfileName = [LDOSfileName0 , '_M_', num2str(M),'_tetra_corr1']
-end;
+end
+if ~singular_quad
+        LDOSfileName = [LDOSfileName0, 'sum_M_', num2str(M),'_ita_', num2str(ita)];
+end
 disp('reading k-space calculated DOS ...');
 load(LDOSfileName,'-mat')
      catch
@@ -87,7 +91,8 @@ if ~calcSC
     bandDOS=bandDOSNormal
 end;
 
-if tetra
+%if tetra
+    if false
 % some smoothing if necessary
 de=energy(2)-energy(1);
 smooth=floor(smoothenergy/de);

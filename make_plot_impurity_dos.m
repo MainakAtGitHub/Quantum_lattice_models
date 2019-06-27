@@ -1,4 +1,4 @@
-function [figure5,ax1]=make_plot_impurity_dos(inputfile,smoothenergy,plrange,plotall,omega0,figure5)
+function [figure5,energy,sumorbitalLDOS]=make_plot_impurity_dos(inputfile,smoothenergy,plrange,plotall,omega0,figure5)
 global plotrange homogeneous
 if isempty(homogeneous)
     homogeneous=false
@@ -96,16 +96,21 @@ orb={orb{1:efforb},orb{6}};
 de=energy(2)-energy(1);
 smooth=floor(smoothenergy/de);
     egrid=-(400*de):de:(400*de);
-    temperature=4/11400;
+    %global temperature
+    temperature=2/11400;
     dF=-fermi_prime_func(egrid/temperature);
     dF=dF/sum(dF);
 for n=1:nDosSites
     tmp=sg_smooth(orbitalLDOS((n-1)*efforb+(1:efforb),:),smooth);
     % do some smoothing with temperature
+    if temperature >0
     for sz=1:size(tmp,1)
-    tmp(sz,:)=conv(tmp(sz,:)',dF,'same')';
+        % repeat points on the boundaries
+        tmp1=[repmat(tmp(sz,1),1,floor(numel(dF)/2)),tmp(sz,:),repmat(tmp(sz,end),1,floor(numel(dF)/2))];
+    tmp(sz,:)=conv(tmp1',dF,'valid')';
     end
     tmp(tmp<0)=0;
+    end
     orbitalLDOS((n-1)*efforb+(1:efforb),:)=tmp;
 end;
 clear tmp;
@@ -177,7 +182,8 @@ figure5= figure('Position',[150, 100, 500, 300]);
 ax1 = gca;
 set(0,'DefaultAxesFontSize',fsz)
 else
-    hold on
+   figure(figure5)
+ hold on
 end
 
 % plot all sites or up to the plrange, or the sites given in plrange
@@ -205,9 +211,10 @@ if isempty(plrng)
         end
         sumorbitalLDOS=sumorbitalLDOS*(M^2)/(M-1)^2;
 end
-
 plot5=plot(energy,sumorbitalLDOS);
 
+[e,e_minp]=find(abs(energy)==min(abs(energy)));
+sumorbitalLDOS(e_minp)
 % if plot_NNN
 %     plot5=plot(energy,[sum(orbitalLDOS((1:efforb),:),1);sum(orbitalLDOS(efforb+(1:efforb),:),1);sum(orbitalLDOS(2*efforb+(1:efforb),:),1);sum(orbitalLDOS(3*efforb+(1:efforb),:),1)]);
 % else

@@ -111,8 +111,8 @@ mean-fields. This can be conveniently obtained with the script
 
 >> generate_initialguess(35,'~/docs/Mainak/Tutorial/Gamma_1_NN.mat',0.85);
 
-First argument "35" is the real space size, needs to be equal to the number M
-in the input file, whe have "M=35".
+First argument "35" is the real space size, needs to be equal to the number N
+in the input file, whe have "N=35".
 Second argument: usually take the filename of the pairing interaction (replace
 path with the correct one where the file "Gamma_1_NN.mat" is located.
 Third argument: average density, should be identical to the number n0 in the
@@ -133,6 +133,14 @@ $ cp Gamma_1_NN.matguess35 1band_N_35_U_1.mat
 
 To set up a second calculation, one can also do
 $ cp Gamma_1_NN.matguess35rand 1band_N_35_U_1_rand.mat
+
+and use an input text file with the keyword
+BdGfileName=1band_N_35_U_1_rand.mat
+-> This will then allow us to run two independent calculations in parallel,
+one will use the file 1band_N_35_U_1.mat to store the mean fiels, the other
+will use 1band_N_35_U_1_rand.mat to store the mean fiels. The latter is
+however another (bad) initial guess. Optimally both calculations converge to
+the same mean fields.
 
 C) Now, we have in the same (but arbitrarily located directory) the following
 files:

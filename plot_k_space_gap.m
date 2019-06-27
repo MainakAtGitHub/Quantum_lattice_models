@@ -125,6 +125,7 @@ realgap=zeros(M,M);
             end;
         else
             allgaps((mu-1)*M+1:(mu)*M,(nu-1)*M+1:(nu)*M)=real(realgap);
+            
         end
     end;
 end;
@@ -238,7 +239,7 @@ TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) - mu*eye(nOr
 
 M=N*M;
 M=100;
-kx = (2*pi/M)*(0:(M - 1)) + pi/M;
+kx = (2*pi/M)*(0:(M - 1)) %+ pi/M;
 ky = kx;
 delKx = kx(2)-kx(1);
 delKy = delKx;
@@ -285,7 +286,14 @@ end
 for mu=1:nOrbitals
     for nu=1:nOrbitals
         % only works for square lattice
-    allgaps((mu-1)*M+1:(mu)*M,(nu-1)*M+1:(nu)*M)=  fftshift(real(kSpacegapall(:,:,mu,nu)));%real(kSpacegapall(:,:,mu,nu));%
+        % figure out whether the value is real or imaginary
+        mxr=max(max(abs(real(kSpacegapall(:,:,mu,nu)))));
+        mxi=max(max(abs(imag(kSpacegapall(:,:,mu,nu)))));
+        %if mxr>mxi
+            allgaps((mu-1)*M+1:(mu)*M,(nu-1)*M+1:(nu)*M)=  fftshift((kSpacegapall(:,:,mu,nu)));%real(kSpacegapall(:,:,mu,nu));%
+        %else
+        %    allgaps((mu-1)*M+1:(mu)*M,(nu-1)*M+1:(nu)*M)=  fftshift(imag(kSpacegapall(:,:,mu,nu)));%real(kSpacegapall(:,:,mu,nu));%
+        %end
     end;
 end;
 
