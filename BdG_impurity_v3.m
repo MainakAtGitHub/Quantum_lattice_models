@@ -67,6 +67,8 @@ load(Gamma_file,'-mat')
 %end;
 
 % load mean fields from previous iteration or seed
+% fix for existing function mu
+mu=0;
 load(BdGfileName,'-mat');
 if ~exist('sublattice','var')
     % sublattice= {-1,0,1} to define whether there are two sites per
