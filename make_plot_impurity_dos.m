@@ -211,7 +211,7 @@ if isempty(plrng)
         end
         sumorbitalLDOS=sumorbitalLDOS*(M^2)/(M-1)^2;
 end
-plot5=plot(energy,sumorbitalLDOS);
+plot5=plot(energy,sumorbitalLDOS(plrng,:));
 
 [e,e_minp]=find(abs(energy)==min(abs(energy)));
 sumorbitalLDOS(e_minp)
