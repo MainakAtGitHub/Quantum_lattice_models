@@ -72,8 +72,9 @@ if numel(name) < 5 || ~strcmpi(name(end-3:end), '.pdf')
 end
 
 % manual fix for "~"
-if name(1)=="~"
-    name=['/home/kreisel',name(2:end)];
+if name(1)=='~'
+    [~,home_path]=system('echo -n $HOME');
+    name=[home_path,name(2:end)];
 end
 % Construct the command string for ghostscript. This assumes that the
 % ghostscript binary is on your path - you can also give the complete path,

@@ -97,7 +97,7 @@ delta1Fe =  reshape(delta1Fe,nOrbitals/2, nOrbitals/2, 2*N^2);
 delta2Plot = zeros(nOrbitals/2*plotN, nOrbitals/2*plotN);
 effOrbitals=nOrbitals/2;
 else
-    plotN=3;
+    plotN=5;
     ceil((round(N/2)-1)/2)*2+1;
     delta1Fe=reshape(delta,nOrbitals,nOrbitals,N^2);
     delta2Plot = zeros(nOrbitals*plotN, nOrbitals*plotN);

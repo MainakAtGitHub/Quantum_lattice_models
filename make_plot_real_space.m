@@ -1,6 +1,6 @@
 function make_plot_real_space(inputfile)
 
-Displaynames={'d_{z^2}','d_{x^2-y^2}','d_{yz}','d_{xz}','d_{xy}'};
+Displaynames={'$d_{xy}$','$d_{x^2-y^2}$','$d_{xz}$','$d_{yz}$','$d_{x^2-y^2}$'};
 
      read_input_file=inputfile;
      read_input;
