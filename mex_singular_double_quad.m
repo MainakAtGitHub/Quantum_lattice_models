@@ -5,6 +5,7 @@ cfg.ResponsivenessChecks=true;
 cfg.SaturateOnIntegerOverflow=false;
 cfg.EnableAutoExtrinsicCalls=false;
 cfg.GlobalDataSyncMethod='NoSync';
+cfg.PostCodeGenCommand = 'buildInfo.addLinkFlags(''-fopenmp'')'; 
 
 ComplexMatrixType=coder.newtype('double',[inf,inf],'complex',1);
 VectorType=coder.newtype('double',[inf,1],'complex',0);
