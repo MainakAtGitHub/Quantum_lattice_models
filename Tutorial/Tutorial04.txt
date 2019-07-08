@@ -1,0 +1,149 @@
+In this tutorial, impurities are added to the system:
+
+There are already implemented three possible ways to include an impurity
+
+a) setting the keyword Vimp to a numeric value yields a calculation with a
+potential scatterer (on-site, delta function scatterer only) in all orbitals
+put to the value that is specified by
+Vimp=-1
+yields a calculation with an attactive potential of -1 (eV),
+Vimp=1
+a calculation with a repulsive potential of +1 (eV)
+
+b) for a magnetic scatterer one needs to set the keyword
+magnetic=true
+and specify additionally potential for the down component:
+Vimpdown=1
+Vimp=-1
+does a pure magnetic potential with +/- 1 eV
+Vimpdonw=0.5
+Vimp=-1
+is a superposition of a magnetic and potential scatterer
+(again for multiorbital systems, the potential will be put the diagonal in
+orbitals)
+
+c) setting the keyword Vimp to a char variable will make the code read in a
+matlab data file with the corresponding filename. These files can have
+multiple impurities, and additionally a more complicated orbital structure.
+The file needs to have the two variables
+imp_matr (2 x n matrix where n is the number of impurities) and imp_vec
+(norb x norb x n matrix where norb is the number of orbitals), see the matlab
+function get_Himp.m to understand how the impurity part of the Hamiltonian is
+set up.
+
+
+1) Understand how the impurity matrix is set up:
+
+The function 
+get_Himp(Vimp,N,nOrbitals,sublattice)
+Vimp -> impurity potential value
+N -> size of the system in x and y direction, (N x N)
+nOrbitals -> number of orbitals (for 1 band system is set to 1)
+sublattice -> set to 0 for now (only relevant for 10 orbital calculations in
+FeSC)
+gives back the part of the Hamiltonian that corresponds to the impurity
+potential. A minimal call would be
+
+>> get_Himp(1,1,1,0)
+which gives just back a (1x1) matrix with the value 1
+
+>> get_Himp(-1,3,1,0)
+gives back the Hamiltonian matrix corresponding to an impurity at the center
+with potential -1
+
+2) Do some calculations including one single (potential scatterer)
+
+Steps are similar as for setting up new calculations with different
+temperature for example. Start from an already converged homogeneous
+calculation and
+a) copy the input text file to another filename
+
+$ cp input_1band_SC.txt input_1band_SC_Vimp_1.txt
+
+b) copy the data file with the converged mean fields to another filename (use
+some systematics with the filenames)
+
+$ cp 1band_N_35_U_1.mat 1band_N_35_U_1_Vimp_1.mat
+
+c) edit the input text file and change the Vimp keyword to
+Vimp=1
+and the BdGfileName keyword to the filename used in b)
+BdGfileName=1band_N_35_U_1_Vimp_1.mat
+
+d) do a convergence using BdG_impurity_v3 where you supply the new input file
+as argument. You can follow the convergence again from outside by calling
+plot_BdG_impurity_v3 with the filename from b) as argument.
+Once converged, you can plot the order parameter map which should show some
+interesting structure at the center
+
+e) Since it is not a homogeneous calculation, one cannot use the
+homogeneous_dos_v2 script for calcuation of the density of states, instead one
+needs to call the impurity_dos script with three input parameters
+impurity_dos(inputfile, division, part)
+
+Note: Please start with the keyword
+M=15 (not the default M=30) in the input file, read also part g) first! 
+
+inputfile -> the filename (including path if applicable) of the input text file
+division -> a number that tells in how many chunks the calculation should be
+divided; for small size calculations to be done on one single computer, just
+set it to 1
+part -> a number from [1 to division+1] that tells which part the current
+computer should do, usually set it to 1 when doing calculations on one single
+computer only
+
+The script needs to be called at least (division+1) times, thus a minimal
+calculation would be
+>> impurity_dos('./Tutorial/f30/kT0002/input_1band_SC_Vimp_1.txt', 1, 1);
+>> impurity_dos('./Tutorial/f30/kT0002/input_1band_SC_Vimp_1.txt', 1, 2);
+
+The first precalculates the eigenvalues and eigenvectors of a "supercell
+implementation" and stores these in a sub-directory that is named according to
+the casestring keyword in the input file.
+The second command reads in this data and calculates the local density of
+states. (By default the LDOS at the center and at neigbored places is
+calculated; one can also provide a file that specifies which spectra should be
+calculated.)
+
+Note that the second part can be executed multiple times while changing the
+ita keyword in the input file to make the spectra look nice; also the range in
+energy can be modified by changing the firstEnergy and lastEnergy keywords
+together with the nEnergyPoints keyword.
+firstEnergy=-1
+nEnergyPoints=2500
+lastEnergy=1
+calculates the LDOS at 2500 points between -1 and 1.
+Be aware that LDOS data from previous runs will be overwritten if you only
+change these keywords; new files will be created if the ita keyword is
+modified.
+
+
+Note that the temporary folder might fill up with significant data, so
+consider to use "scratch" directories with symlinks to set up your
+calculations.
+
+f) Plot the result using the script
+>> make_plot_impurity_dos(inputfile)
+
+This time, you need to specifiy the filename created by the script
+"impurity_dos" from step e)
+
+>> make_plot_impurity_dos('./Tutorial/f30/kT0002/LDOS_1band_Mainak_U_1_n_0425_Vimp_-0.15_N_29_M_15_ita_1e-04')
+
+-> Note: the actual filename depends on the calculation; also on the way the
+density of states is calculated (summed or using singular_quad).
+
+g) To improve the quality of the plot for the local density of states, you can
+change the ita keyword, or increase the supercell size by increasing the
+keyword "M" in the input file and then redo all steps in e) (calling the
+script (division+1) times.
+Setting
+M=30
+will use 30x30=900 k-points for the calculation, i.e. store 900 files in the
+sub directory, setting
+M=60
+will use 60x60=3600 k-points and store 3600 files in the sub-directory; be
+careful with this number. Note that commensurate values, i.e. starting with
+M=15, then M=30 and M=60 will re-use the previously calculated ones.
+Doing a calculation with M=15, then M=19, then M=29, then M=59 will be very
+bad because none of the previously calculated results can be re-used.
