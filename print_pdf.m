@@ -42,7 +42,7 @@ if nargin < 2
     fig = gcf;
 end
 % workaround for KU computer:
-cmd='gs';
+cmd='bla_gs';
 if isunix
     [status,string]=system('lsb_release -c');
     if status==0
@@ -71,38 +71,45 @@ if numel(name) < 5 || ~strcmpi(name(end-3:end), '.pdf')
     name = [name '.pdf']; % Add the missing extension
 end
 
-% manual fix for "~"
-if name(1)=='~'
-    [~,home_path]=system('echo -n $HOME');
-    name=[home_path,name(2:end)];
-end
-% Construct the command string for ghostscript. This assumes that the
-% ghostscript binary is on your path - you can also give the complete path,
-% e.g. cmd = '"C:\Program Files\gs\gs8.63\bin\gswin32c.exe"';
-if ispc
-    cmd = [cmd 'win32c.exe'];
-end
-options = [' -q -dNOPAUSE -dBATCH -dEPSCrop -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -sOutputFile="' name '" -f "' tmp_nam '"'];
-% options = [' -dNOPAUSE -dBATCH -dEPSCrop -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -sOutputFile="' name '" -f "' tmp_nam '"'];
-% Convert to pdf
-[status result] = system([cmd options]);
-% Check status
-if status
-    % Something went wrong
-    if isempty(strfind(result, 'not recognized'))
-        fprintf('%s\n', result);
-    else
-        % Ghostscript isn't on the path - try to find it
-        cmd = find_ghostscript;
-        if isempty(cmd)
-            fprintf('Ghostscript not found.\n');
+try
+    % manual fix for "~"
+    if name(1)=='~'
+        [~,home_path]=system('echo -n $HOME');
+        name=[home_path,name(2:end)];
+    end
+    % Construct the command string for ghostscript. This assumes that the
+    % ghostscript binary is on your path - you can also give the complete path,
+    % e.g. cmd = '"C:\Program Files\gs\gs8.63\bin\gswin32c.exe"';
+    if ispc
+        cmd = [cmd 'win32c.exe'];
+    end
+    options = [' -q -dNOPAUSE -dBATCH -dEPSCrop -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -sOutputFile="' name '" -f "' tmp_nam '"'];
+    % options = [' -dNOPAUSE -dBATCH -dEPSCrop -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -sOutputFile="' name '" -f "' tmp_nam '"'];
+    % Convert to pdf
+    [status result] = system([cmd options]);
+    % Check status
+    if status
+        % Something went wrong
+        if isempty(strfind(result, 'not recognized'))
+            error('%s\n', result);
         else
-            system([cmd options]);
+            % Ghostscript isn't on the path - try to find it
+            cmd = find_ghostscript;
+            if isempty(cmd)
+                %fprintf('Ghostscript not found.\n');
+                error('Ghostscript not found.\n')
+            else
+                system([cmd options]);
+            end
         end
     end
+    % Delete the temporary file
+    delete(tmp_nam);
+catch e
+    fprintf(1,'The identifier was:\n%s',e.identifier);
+    fprintf(1,'There was an error! The message was:\n%s',e.message);
+    disp(['Exporting to PDF did not work, saving to EPS instead, file is',tmp_nam]);
 end
-% Delete the temporary file
-delete(tmp_nam);
 return
 
 function cmd = find_ghostscript
