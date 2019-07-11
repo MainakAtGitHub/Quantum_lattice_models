@@ -42,7 +42,7 @@ if nargin < 2
     fig = gcf;
 end
 % workaround for KU computer:
-cmd='bla_gs';
+cmd='gs';
 if isunix
     [status,string]=system('lsb_release -c');
     if status==0
