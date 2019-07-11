@@ -97,11 +97,12 @@ de=energy(2)-energy(1);
 smooth=floor(smoothenergy/de);
     egrid=-(400*de):de:(400*de);
     %global temperature
-    temperature=2/11400;
+    temperature=smoothenergy;%2/11400;
     dF=-fermi_prime_func(egrid/temperature);
     dF=dF/sum(dF);
 for n=1:nDosSites
-    tmp=sg_smooth(orbitalLDOS((n-1)*efforb+(1:efforb),:),smooth);
+    %tmp=sg_smooth(orbitalLDOS((n-1)*efforb+(1:efforb),:),smooth);
+    tmp=orbitalLDOS((n-1)*efforb+(1:efforb),:);
     % do some smoothing with temperature
     if temperature >0
     for sz=1:size(tmp,1)
