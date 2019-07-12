@@ -267,19 +267,7 @@ if ~super
 else
     [HSuper, superLatticeVectors] = supercell_hoppings(N, TBparameters, latticeVector);
 end
-% avoid some numerical inaccurancy; for some reason lattice_translation as
-% well as the general impurity potential (hoppings)
-% gives back a non-hermitian matrix with sum(sum(abs(H-H'))) ~ 1e-13
-if ~super
-    H=0.5*(H+H');
-    clear Himp;
-    clear H0;
-else
-    %nSuperCells = size(superLatticeVectors,1);
-    %for iUnitCell = 1:nSuperCells
-    %    HSuper(:,:,iUnitCell)=0.5*(HSuper(:,:,iUnitCell)+HSuper(:,:,iUnitCell)');
-    %end;
-end
+
 
 if magnetic
     % do a magnetic simulation with magnetic impurity
@@ -304,6 +292,19 @@ if magnetic
     end
 end
 
+% avoid some numerical inaccurancy; for some reason lattice_translation as
+% well as the general impurity potential (hoppings)
+% gives back a non-hermitian matrix with sum(sum(abs(H-H'))) ~ 1e-13
+if ~super
+    H=0.5*(H+H');
+    clear Himp;
+    clear H0;
+else
+    %nSuperCells = size(superLatticeVectors,1);
+    %for iUnitCell = 1:nSuperCells
+    %    HSuper(:,:,iUnitCell)=0.5*(HSuper(:,:,iUnitCell)+HSuper(:,:,iUnitCell)');
+    %end;
+end
 % single shot calculation: just diagonalize and exit
 if mode==1
     maxLoop=1;

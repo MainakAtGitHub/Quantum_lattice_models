@@ -16,7 +16,7 @@ and specify additionally potential for the down component:
 Vimpdown=1
 Vimp=-1
 does a pure magnetic potential with +/- 1 eV
-Vimpdonw=0.5
+Vimpdown=0.5
 Vimp=-1
 is a superposition of a magnetic and potential scatterer
 (again for multiorbital systems, the potential will be put the diagonal in
