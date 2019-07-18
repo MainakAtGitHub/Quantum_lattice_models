@@ -1,0 +1,81 @@
+This part of the tutorial shows how to calculate maps of the density of
+states, both using the lattice model only, and also using Wannier function
+information in principle.
+
+Different from the previous setup, we need to calculate the full Green's
+function G(R,R',omega) for this purpose, where R and R' label lattice
+positions of the system and omega is a frequency value.
+
+As input, see for example PhD thesis of Peayush Choubey, we need again the
+eigenvalues and eigenvectors of the system (for the different values of the
+supercell k-vectors).
+
+Steps to perform this calculation
+
+1) Precalculation of the eigenvalues and eigenvectors and store them in a
+temporary directory.
+
+To actually store the full eigenvectors (not only the values on single points
+in real space (imp, NN, NNN), the keyword
+
+calcGreens=true
+
+needs to be set in the input file.
+Additionally, one needs to fix the value of the energy where the LDOS map
+should be calculated. The keyword
+
+Greensenergy=-0.0036
+
+calculates the Green's function for omega=-0.0036
+(The energy is chosen at an interesting point in the spectrum, i.e. where some
+impurity bound states are seen for example.)
+
+Then, the precalculation of the eigenvalues and eigenvectors needs to be done
+(potentially again, if in the previous run only part of the eigenvectors has
+been stored), see section e) of the previous Tutorial document.
+
+>> impurity_dos('./Tutorial/input_1band_SC_mag_V.txt',1,1)
+
+Note at this point that the required storage for the full eigenvectors is much
+bigger than just for 4 points on the lattice, thus make sure not to use too
+many supercells for this calculation, i.e. copy the input file to another
+filename (in the same! directory) and change the M keyword accordingly.
+
+2) Calculate the Green's function by integrating over the supercell momenta,
+similar as in the calculation of the spectra, one needs to call the
+impurity_dos function, but with the last argument beeing a larger integer than
+the second argument:
+
+>> impurity_dos('./Tutorial/input_1band_SC_mag_V.txt',1,2)
+
+This is the same script, and the same way of calling it. Depending on the
+keyword calcGreens (whether it is set to true or false), it calculates the
+density of states, or the Green's function for one single energy value.
+
+
+3) Take the trace of the Green's function (for one fixed energy value) to
+calculate a map of the local density of states.
+Taking the trace is a quick operation, so it is just done in the plot routine.
+
+plot_lattice_ldos('./Tutorial/LDOS_1band_Mainak_U_1_n_0425_Vimp_-0.15_N_29_M_15_ita_1e-04_e_-0.0036')
+
+Note that the filename has to be replaced with the filename of the result of
+the actual calculation; the filename is similar to the density of states
+calcualtions, except for the suffix "_e_-0.0036", i.e. one can calcuate and
+plot maps for different energies in the same folder by having multiple input
+files which deviate by the value as set by the Greensenergy keyword.
+
+4) When using the Wannier method, do the Wannier transformation (Wannier
+functions are needed for this purpose), and then calculate the continuum local
+density of states.
+
+This calculation is done with the "ldos_map" script, but needs the Wannier function
+to be set up and converted to the correct format, and given with the
+wannier_filename keyword, for example
+wannier_filename=WanF_Bi_2Sr_2CaCu_2O_8_vac_100_100_100_ReIm.out_conv.mat
+
+The script plot_ldos_map is then used to plot the corresponding maps; other
+scripts are for more specialized functions related to QPI:
+plot_ldos_map_ft_holographic.m	plot_ldos_map_ft.m  plot_ldos_map_ft_path.m
+plot_ldos_map.m  plot_ldos_map_spectrum.m
+
