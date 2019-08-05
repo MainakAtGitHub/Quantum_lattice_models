@@ -1,6 +1,9 @@
-function [TBparameters,latticeVector]=convert_tb_AK_PC(tbfile)
+function [TBparameters,latticeVector]=convert_tb_AK_PC(tbfile,sublattice)
 % read in a standart tight binding file (similar to output from FPLO,
 % Wannier90 and convert to the matlab file as introtuced by Peayush
+% second argument sets the "sublattice" value that is required for 10
+% orbital calculations on FeSC, if ommitted, the program will ask for user
+% input
 
 % also allow to load matlab files containing the matrix
 try
@@ -40,8 +43,10 @@ for n=1:sztb(1)
         TBparameters(tb(n,4),tb(n,5),rowColIdx)=TBparameters(tb(n,4),tb(n,5),rowColIdx)+tb(n,6);
     end
 end
-% special cases for sublattice calculations (1Fe cell vs. 2Fe cell):
-sublattice=input('enter sublattice 0,1,-1: ');
+if nargin < 2
+    % special cases for sublattice calculations (1Fe cell vs. 2Fe cell):
+    sublattice=input('enter sublattice 0,1,-1: ');
+end
 % check for complex conjugate, if not present, add the corresponding terms
 % which sometimes are removed from the input tight-binding files
 tb1=permute(TBparameters,[2,1,3]);
