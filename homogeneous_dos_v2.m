@@ -150,7 +150,7 @@ for iEnergyPoint = 1:nEnergyPoints
         end
         if singular_quad 
             %greensDiagonalNormal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*singular_double_quad(1./greensKSpaceNormal);
-            greensDiagonalNormal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*singular_double_quad_mex(1./greensKSpaceNormal);
+            greensDiagonalNormal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*singular_double_quad_mex(add_BZ_boundary(1./greensKSpaceNormal));
         else
             greensDiagonalNormal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*sum(sum(greensKSpaceNormal));
         end;
@@ -205,7 +205,7 @@ for iEnergyPoint = 1:nEnergyPoints
         end
         if singular_quad
            %greensDiagonal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*singular_double_quad(1./greensKSpace);
-            greensDiagonal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*singular_double_quad_mex(1./greensKSpace);
+            greensDiagonal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*singular_double_quad_mex(add_BZ_boundary(1./greensKSpace));
         else
             greensDiagonal(jBand, iEnergyPoint) = (1/(2*pi))^2*delKx*delKy*sum(sum(greensKSpace));
         end;
