@@ -1,4 +1,4 @@
-function [kSpaceEigenValuesNormal,kSpaceEigenVectorsNormal]=bands_klist(inputfile,klistfile)
+function [kSpaceEigenValuesNormal,kSpaceEigenVectorsNormal]=bands_klist(inputfile,klist)
 
 % for given inputfile (*.txt) and a file containing k-points, calculate the eigenvalues and eigenvectors
 % of the band structure
@@ -26,8 +26,10 @@ TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) - mu*eye(nOr
 % fix for the lattice vectors (no 3rd component allowed)
 latticeVector=latticeVector(:,1:2);
 
-% read in k values
-kin=load(klistfile);
+% read in k values if klist is a string, else just use the klist as data
+if isa('klist','char')
+	kin=load(klist);
+end
 szk=size(kin);
 % initialize the result variables
 kSpaceEigenValuesNormal = zeros(szk(1), nOrbitals);
