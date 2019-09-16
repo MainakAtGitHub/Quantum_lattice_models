@@ -7,7 +7,11 @@ end;
 % impurity or sets of impurities given in the input file Vimp
 nBands = N^2*nOrbitals;
 Himp = zeros(nBands);
-impCell = [ceil(N/2) ceil(N/2)];
+% rectangular by default
+if numel(N)==1
+     N=[N N];
+end
+impCell = [ceil(N(1)/2) ceil(N(2)/2)];
 % allow for general impurity potentials
 if ~ischar(Vimp)
     [iRange, jRange] = find_lattice_translation_index(N, nOrbitals, impCell, impCell);

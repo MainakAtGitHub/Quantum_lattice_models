@@ -29,6 +29,8 @@ latticeVector=latticeVector(:,1:2);
 % read in k values if klist is a string, else just use the klist as data
 if isa('klist','char')
 	kin=load(klist);
+else
+    kin=klist;
 end
 szk=size(kin);
 % initialize the result variables

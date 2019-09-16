@@ -1,4 +1,4 @@
-function f=generate_initialguess(N,Gamma_file,n0)
+function f=generate_initialguess(N,Gamma_file,n0_orb,mu)
 % generate an initialguess for a system of size N times N
 
 % load the pairing interaction to set the superconducting order parameters
@@ -17,7 +17,7 @@ nOrbitals=size(Gamma,1);
 if nargin<3
     % no. of valence electrons per unit cell and orbital, default value for
     % FeSC, "half filling" would be at n0=1=0.5+0.5 (per spin)
-    n0 = 1.2;
+    n0_orb = 1.2;
 end
 
 nBands = N^2*nOrbitals;
@@ -32,9 +32,11 @@ if exist('nup1','var')
     SCInteractionMatrix=(abs(real(SCInteractionMatrix))>1e-8).*real(SCInteractionMatrix)+(abs(imag(SCInteractionMatrix))>1e-8).*imag(SCInteractionMatrix);
 else
     % otherwise, just put constant density in each orbital
-    nUp = n0/2*ones(nBands,1);
-    nDown =n0/2*ones(nBands,1);
-    mu=0;
+    nUp = n0_orb/2*ones(nBands,1);
+    nDown =n0_orb/2*ones(nBands,1);
+    if nargin < 3
+        mu=0;
+    end
     % put in a small gap of 0.05 according to the structure in the pairing
     SCInteractionMatrix=0.05*SCInteractionMatrix;
 end
