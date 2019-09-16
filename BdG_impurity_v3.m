@@ -390,7 +390,7 @@ for i = 1:maxLoop
    %     nDiff(2) = abs((1/N^2)*sum(nUpCaldown + nDownCaldown) - n0)/n0;
    %     clear tmp;
    % end;
-    if ((sum(nDiff) < numel(nDiff)*nTol) && (sum(deltaDiff) < numel(deltaDiff)*deltaTol)) || (norm(delta(:))/N^2 < deltaTol)
+    if ((sum(nDiff) < numel(nDiff)*nTol) && ((sum(deltaDiff) < numel(deltaDiff)*deltaTol)|| (norm(delta(:))/N^2 < deltaTol)))
        break % go out of loop if self-consistency is achieved
     end
     % homogenize calculation to get faster convergence without impurity
