@@ -17,7 +17,10 @@ else
     while ~(strcmp('substitutions:',s))
         [s]= fscanf(fid, '%s', 1)
     end;
-    [s]= fscanf(fid, '%s', 25)
+    % new format (modify here)
+    for i2=1:(5*5)
+        s= fscanf(fid, '%s', 1)
+    end
     % read number of matrices and number of orbitals, ignoring the first
     % lines
 [number]= fscanf(fid, ' %d ', 1)
@@ -35,8 +38,8 @@ for n=1:number
     line3=line2(1,:)+1i*line2(2,:);
     matrix=reshape(line3,nOrb,nOrb);
    % lv=[rrp(1)-rrp(4),rrp(2)-rrp(5),rrp(3)-rrp(6)];
-    lv=rrp(1:6)';
-  
+    lv=[rrp(1:6)'];
+    if ~isnan(kz)
     if (lv(3)==0) && (lv(6)==0) 
         number1=number1+1;
         %latticeVector(number1,:)=[rrp(1)-rrp(4),rrp(2)-rrp(5),rrp(3)-rrp(6)];
@@ -50,6 +53,14 @@ for n=1:number
        ImpVector(number1,:)=lv;
        Impparameters(:,:,number1)=matrix'*exp(1i*(rrp(3)-rrp(6))*kz*pi);
     end;
+    else
+         if (lv(3)==0) && (lv(6)==0) 
+        number1=number1+1;
+        %latticeVector(number1,:)=[rrp(1)-rrp(4),rrp(2)-rrp(5),rrp(3)-rrp(6)];
+                ImpVector(number1,:)=lv;
+                % do a transpose due to convention differences!
+        Impparameters(:,:,number1)=matrix;
+         end
     end;
 end;
     % only consider real part?

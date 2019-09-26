@@ -4,10 +4,12 @@ if nargin < 2
     kz=NaN
 end;
 % read string in first line
-oldformat=false;
-if oldformat
+oldformat=2;
+if oldformat==1
     [s]= fscanf(fid, '%s\t', 13)
     [number]= fscanf(fid, ' %d', 1);
+elseif oldformat==2
+    [number]= fscanf(fid, '%d', 1);
 else
     % read number of matrices and number of orbitals
    % fix for vca input: activate next two lines
@@ -17,7 +19,7 @@ else
 [number]= fscanf(fid, ' %d', 1);
 end;
 [nOrb]= fscanf(fid, '%d', 1);
-if oldformat
+if oldformat==0
 [s]= fscanf(fid, '%s', 1)
 [s]= fscanf(fid, '%s', 1)
 [s]= fscanf(fid, '%s', 1)
