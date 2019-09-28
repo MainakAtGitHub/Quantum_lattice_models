@@ -41,7 +41,7 @@ delta = deltaCenter;
 
 
 % read in k values if klist is a string, else just use the klist as data
-if isa('klist','char') || isa('klist','string') 
+if isa(klist,'char') || isa(klist,'string') 
 	kin=load(klist);
 else
     kin=klist;

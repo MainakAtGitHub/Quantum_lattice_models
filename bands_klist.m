@@ -27,7 +27,7 @@ TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) - mu*eye(nOr
 latticeVector=latticeVector(:,1:2);
 
 % read in k values if klist is a string, else just use the klist as data
-if isa('klist','char') || isa('klist','string')
+if isa(klist,'char') || isa(klist,'string')
 	kin=load(klist);
 else
     kin=klist;
