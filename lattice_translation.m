@@ -16,7 +16,9 @@ maxHop = max(abs(latticeVectors(:,1:2)),[],1);
 minSystemSize = 2*maxHop + 1;
 % no special treatment for hoppings that extend differently in x and y directions
 % just make the system big enougth in both directions
-if sum(N < minSystemSize) >0
+if sum(N < minSystemSize) >0  
+    % that is if either xsize is less than minsyssize or ysize, sum is (-Mainak)
+    % working as "or" here (-Mainak)
     error(['System size must be greater than or equal',num2str(minSystemSize)]);
 end
 % to be done 1)flag for boundary conditions

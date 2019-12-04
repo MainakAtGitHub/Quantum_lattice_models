@@ -1,4 +1,4 @@
-function r=BdG_impurity_v3(inputfile,mode)
+function r=BdG_impurity_v3(inputfile,mode,saveEnTot)
 
 % Modified impurity BdG code to include
 % 1. Convergence check parameter as 
@@ -8,7 +8,21 @@ function r=BdG_impurity_v3(inputfile,mode)
 %       First find beta for converging solution. Now choose a range close
 %       to this beta, say [beta1 beta2] and for each iteration take new
 %       beta to be beta = rand
-global fullgamma cutek dress
+global fullgamma cutek dress saveEigVec BdGfileName
+
+if isempty(saveEigVec)
+    saveEigVec = false;
+end
+
+% Mainak
+normal_metal = false;
+% Mainak
+
+% MAINAK
+if nargin < 3
+    saveEnTot = false;
+end
+% MAINAK
 if nargin < 2
     mode=0;
 else
@@ -201,9 +215,37 @@ end
 % same for down electrons (set to half filling as well)
 if ~(exist('nDown','var'))
     filldown=0.5*n0/nOrbitals;
-    nDown = filldown*ones(nBands,1);
+    nDown = filldown*ones(nBands,1);    
 end
 
+% Mainak
+if ~(exist('uS','var'))
+    uS = zeros(size(nUp));
+end
+if ~(exist('vS','var'))
+    vS = zeros(size(nDown));
+end
+% Mainak
+
+
+% % Mainak
+% if spinpolarized
+%     n_randdd = 0.01*rand(length(nUp),1);
+%     nUp = nUp+n_randdd;
+% end
+% % Mainak
+% 
+% % Mainak
+% if spinpolarized
+%     nDown = nDown-n_randdd;
+% end
+% % Mainak
+
+
+%%%%%%%%%%%%%%%% Mainak
+%         nUpdown = nDown;
+%         nDowndown = nUp;
+%%%%%%%%%%%%%%%% Mainak
 if spinpolarized
     if ~(exist('nUpdown','var'))
         nUpdown = nDown;
@@ -235,6 +277,9 @@ if ~(exist('muAcc','var'))
 end
 if ~(exist('nAcc','var'))
  nAcc=[];
+end
+if ~(exist('nUpAcc','var'))
+ nUpAcc=[];
 end
 % by default mix delta
 if ~(exist('mixdelta','var'))
@@ -316,12 +361,13 @@ for i = 1:maxLoop
     if ~super
         % setup of the kinetic energy (including chemical potential)
         KE = H - mu*eye(nBands);
+        
         if ~spinpolarized
             if ~magnetic
-                [ nUpCal, nDownCal, deltaCal, En ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix);
+                [ nUpCal, nDownCal, deltaCal, En, TotKE ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix);
             else
                 KEdown = conj(Hdown - mu*eye(nBands));
-                [ nUpCal, nDownCal, deltaCal, En ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
+                [ nUpCal, nDownCal, deltaCal, En, TotKE ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
             end
         else
             mudown=mu;
@@ -331,15 +377,30 @@ for i = 1:maxLoop
                 mudown=mu-field;
             end
             if ~magnetic
+                %%%%%%%%%%%%% Mainak
+                if correlated
+%                     U = 2.5;
+                    KE = KE + U*diag(nDown);
+                end
+                %%%%%%%%%%%%% Mainak
+
                 KEdown = H - mudown*eye(nBands);
-                [ nUpCal, nDownCal, deltaCal, En ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
+                %%%%%%%%%%%%% Mainak
+                if correlated
+%                     U = 2.5;
+                    KEdown = KEdown + U*diag(nUp);
+                end
+                %%%%%%%%%%%%% Mainak
+
+                [ nUpCal, nDownCal, deltaCal, En, TotKE ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
                 % [ nUpCaldown, nDownCaldown, deltaCaldown ] = BdG_step( KEdown, conj(-delta'), kT, nBands, SCInteractionMatrix,-KE);
             else
                 KEdown = Hdown - mudown*eye(nBands);
-                [ nUpCal, nDownCal, deltaCal, En ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
+                [ nUpCal, nDownCal, deltaCal, En, TotKE ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
                 % [ nUpCaldown, nDownCaldown, deltaCaldown ] = BdG_step( KEdown, conj(-delta'), kT, nBands, SCInteractionMatrix,-KE);
             end
         end
+
     else
         if ~spinpolarized
             if ~magnetic
@@ -382,6 +443,11 @@ for i = 1:maxLoop
         return;
     end
     deltaDiff = norm(deltaCal(:) - delta(:))/norm(delta(:));
+    
+    % Mainak
+    nUpDiff = norm(nUpCal(:) - nUp(:))/norm(nUp(:));
+    % Mainak
+    
     nDiff = abs((1/N^2)*sum(nUpCal + nDownCal) - n0)/n0;
   %  if spinpolarized
    %     % to be checked
@@ -390,9 +456,37 @@ for i = 1:maxLoop
    %     nDiff(2) = abs((1/N^2)*sum(nUpCaldown + nDownCaldown) - n0)/n0;
    %     clear tmp;
    % end;
-    if ((sum(nDiff) < numel(nDiff)*nTol) && ((sum(deltaDiff) < numel(deltaDiff)*deltaTol)|| (norm(delta(:))/N^2 < deltaTol)))
-       break % go out of loop if self-consistency is achieved
-    end
+   
+   % Mainak
+   if saveEnTot
+       %        uS = (abs(eVector(1:nBands,floor(nBands/2)).^2));
+       %        vS = (abs(eVector((nBands + 1):end,floor(nBands/2))).^2);
+       %        uS = (abs(eVector(1:nBands,:)).^2);
+       %        vS = (abs(eVector((nBands + 1):end,:)).^2);
+       E_Hub = U/4*sum((nUp+nDown).^2 - (nUp-nDown).^2);
+       if Gamma(:,:,1) == 0
+           E_Sup =0;
+       else
+           E_Sup = 1/Gamma(:,:,1)*sum(sum(abs(delta).^2));
+       end
+       TotEn = 1/N(1)^2*(TotKE + E_Hub + E_Sup);
+       save([BdGfileName,'eigTotEn'],'uS','vS','TotEn');
+       save([BdGfileName,'eigTotEnNoVec'],'TotEn','-ascii');
+       disp('Total Energy =');
+       disp(TotEn);
+   end
+   % Mainak
+   if ~normal_metal
+       if ((sum(nDiff) < numel(nDiff)*nTol) && ((sum(deltaDiff) < numel(deltaDiff)*deltaTol)|| (norm(delta(:))/N^2 < deltaTol)))
+           break % go out of loop if self-consistency is achieved
+       end
+   else
+       if ((sum(nDiff) < numel(nDiff)*nTol))
+           break % go out of loop if self-consistency is achieved
+       end
+   end
+        
+    % (Mainak) norm(delta(:))/N^2 < deltaTol condition to be revoked for normal metal? 
     % homogenize calculation to get faster convergence without impurity
     if (hom && (Vimp==0))
         delta=homogenize_delta(delta,latticeVectorsSC,nOrbitals,N);
@@ -401,6 +495,13 @@ for i = 1:maxLoop
     beta =  beta1 + (beta2 - beta1).*rand(1); 
     nUp = beta*nUp + (1-beta)*nUpCal;
     nDown = beta*nDown + (1-beta)*nDownCal;
+    % Mainak
+%     uS = beta*uS + (1-beta)*uCal;
+%     uS = uCal;
+%     vS = beta*vS + (1-beta)*vCal;
+%     vS = vCal;
+    % Mainak
+    
   %  if spinpolarized
   %      % to be checked
   %      nUpdown = beta*nUpdown + (1-beta)*nUpCaldown;
@@ -417,6 +518,9 @@ for i = 1:maxLoop
        % end
     end
     nAvg = (1/N^2)*(sum(nUp + nDown));
+    % Mainak
+    nUpAvg = (1/N^2)*(sum(nUp));
+    % Mainak
     %BM convention
     %    nAvg = (1/N^2)*(sum(nUpCal + nDownCal));
 
@@ -429,7 +533,12 @@ for i = 1:maxLoop
         mu=mu - alpha*(mean(nAvg) - n0);
         %mudown=mudown - alpha*(nAvg(2) - n0)
     %end;
-    nAcc = [nAcc; mean(nAvg)];   
+    nAcc = [nAcc; mean(nAvg)];
+    
+    % Mainak
+    nUpAcc = [nUpAcc; mean(nUpAvg)];
+    % Mainak
+    
     % fix phase of delta (mostly not necessary, but always gives the same
     % result, largest gap set to be positive
    % [~, index]=max(abs(delta(:)));
@@ -452,15 +561,15 @@ for i = 1:maxLoop
     disp([num2str(i),' ndiff= ',num2str(nDiff), ' deltaDiff= ',num2str( deltaDiff), ' deltaMaxNN= ',num2str(deltaMaxNN)]);
     if ~spinpolarized
         if size(delta,1)>11000
-            save(BdGfileName,'nAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu', 'nUp','nDown','-v7.3');
+            save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu', 'nUp','nDown','-v7.3');
         else
-            save(BdGfileName,'nAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu', 'nUp','nDown');
+            save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu', 'nUp','nDown');
         end
     else
         if size(delta,1)>11000
-            save(BdGfileName,'nAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown','-v7.3');
+            save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown','-v7.3');
         else
-            save(BdGfileName,'nAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown');
+            save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown');
         end
     end
 end

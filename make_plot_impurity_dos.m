@@ -86,7 +86,7 @@ if homogeneous
     nDosSites=1
 end;
 orb={'orbital1','orbital2','orbital3','orbital4','orbital5','total'};
-orb={'d_{z^2}','d_{x^2-y^2}','d_{yz}','d_{xz}','d_{xy}','total'}; % labels for Tom's FeSe model
+%orb={'d_{z^2}','d_{x^2-y^2}','d_{yz}','d_{xz}','d_{xy}','total'}; % labels for Tom's FeSe model
 % fix for non existing variable
 if ~exist('efforb','var')
     efforb=1;
@@ -275,7 +275,7 @@ if ~isempty(omega0)
 uistack(l1,'bottom')
 uistack(l2,'bottom')
 end
-fndpeaks=false;
+fndpeaks=true;
 if isunix
     if isempty(plrng)
         print_pdf([inputfile_orig,'_averaged.pdf']);

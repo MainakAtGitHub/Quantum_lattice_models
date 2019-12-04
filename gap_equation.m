@@ -63,3 +63,10 @@
     end
     nUpCal = (abs(eVector(1:nBands,:)).^2)*fermi;
     nDownCal = (abs(eVector((nBands + 1):end,:)).^2)*(1 - fermi);
+    if nargout > 4 
+    TotKE = sum(1/2*diag((eVector((nBands + 1):end,:))'*KE*(eVector((nBands + 1):end,:)) - (eVector(1:nBands,:))'*KE*(eVector(1:nBands,:))).*tanh(En/kT));
+    end
+    % Mainak
+%     uCal = (abs(eVector(1:nBands,floor(nBands/2)).^2));%*ones(size(fermi));
+%     vCal = (abs(eVector((nBands + 1):end,floor(nBands/2))).^2);%*ones(size(1-fermi));
+    % Mainak

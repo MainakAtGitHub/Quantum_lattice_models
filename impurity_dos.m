@@ -304,6 +304,18 @@ if division>0
 end;
 % use external script to set up impurity Hamiltonian
 HImpurity=get_Himp(Vimp,N,nOrbitals,sublattice,randompot,BdGfileName);
+
+%(Mainak)
+if correlated
+    HmagUp = U*diag(nDown);
+    HmagDown = U*diag(nUp);
+else
+    HmagUp = 0;
+    HmagDown = 0;
+end
+%(Mainak
+
+
 % only one for loop
 for index=startindex:endindex
     iKy= mod(index-1,M)+1;
@@ -321,6 +333,7 @@ for index=startindex:endindex
     if division==0
         calculate=true;
     end;
+    
     if calculate
         disp([iKx iKy]);
         k = [kx(iKx) ky(iKy)];
@@ -333,8 +346,8 @@ for index=startindex:endindex
             kSpaceHoppingc = kSpaceHoppingc + HSuper(:,:,iUnitCell)*exp(-1i*(iLatticeVector*k'));
             kSpaceGap = kSpaceGap + deltaSuper(:,:,iUnitCell)*exp(1i*(iLatticeVector*k'));
         end
-        KESuper = kSpaceHopping + HImpurity;
-        KESuperc = kSpaceHoppingc + HImpurity;
+        KESuper = kSpaceHopping + HImpurity + HmagUp;
+        KESuperc = kSpaceHoppingc + HImpurity + HmagDown;
         kSpaceHamiltonian = [KESuper -kSpaceGap; -kSpaceGap' -conj(KESuperc)];
         % symmetrize here!
 	kSpaceHamiltonian=0.5*(kSpaceHamiltonian+kSpaceHamiltonian');

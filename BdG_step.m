@@ -1,4 +1,4 @@
-function [ nUpCal, nDownCal, deltaCal, En] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,mKE)
+function [ nUpCal, nDownCal, deltaCal, En, TotKE] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,mKE)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
     if ~exist('mKE','var')
@@ -14,5 +14,12 @@ function [ nUpCal, nDownCal, deltaCal, En] = BdG_step( KE,delta, kT,nBands, SCIn
     %[eVector, eValue] = eig(BdGMatrix,'vector');
     global fullgamma cutek dress
     gap_equation;
+    global saveEigVec;
+    if saveEigVec
+        global BdGfileName
+        uS = ((eVector(1:nBands,:)));
+        vS = ((eVector((nBands + 1):end,:)));
+        save([BdGfileName,'EigVecs'], 'uS','vS');
+    end
 end
 
