@@ -47,7 +47,7 @@ den = nUpAllOrb+nDownAllOrb;
 
 figure;
 % surf(reshape(mag,[N,N])');
-imagesc(reshape(mag,[N,N])');
+imagesc(reshape(mag,[N,N]));
 title('Magnetization')
 axis square;
 colorbar;
@@ -56,17 +56,17 @@ saveas(gcf, 'Magnetization.jpg');
 
 figure;
 % surf(stag_mag);
-imagesc(stag_mag);
+imagesc(transpose(stag_mag));
 % imagesc(reshape(stag_mag,[N,N])');
 title('Staggered Magnetization')
 axis square;
 colorbar;
 % saveas(gcf, 'Staggered Magnetization');
-saveas(gcf, 'Staggered Magnetization.jpg');
+saveas(gcf, 'Staggered_Magnetization.jpg');
 
 figure;
 % surf(reshape(den,[N,N])');
-imagesc(reshape(den,[N,N])');
+imagesc(reshape(den,[N,N]));
 title('Density')
 axis square;
 colorbar;

@@ -83,7 +83,7 @@ for N1=1:N
 end
 delta_map_single=sqrt(delta_map_single);
 figure
-imagesc(delta_map_single);
+imagesc(delta_map_single');
 axis square;
 colorbar
 [filepath,name,ext]=fileparts(BdGfileName);
@@ -95,6 +95,6 @@ impCell = [ceil(N/2) ceil(N/2)];
 for s=1:size(imp_vec,1)
     imp_vec_shift(s,:)=periodic_latticevectors(impCell+imp_vec(s,:),N);
 end
-plot(imp_vec_shift(:,2),imp_vec_shift(:,1),'xr');
-end;
+plot(imp_vec_shift(:,1),imp_vec_shift(:,2),'xr');
+end
 print_pdf([filepath,filesep,name,'_gapmap.pdf']);

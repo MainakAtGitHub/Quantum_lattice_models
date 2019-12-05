@@ -56,6 +56,10 @@ end;
 if ~(exist('randompot','var'))
     randompot=0;
 end;
+if ~(exist('correlated','var'))
+    correlated=false;
+end;
+
 [dirprefix,~,~] = fileparts(inputfile);
 if ~isempty(dirprefix)
     dirprefix=[dirprefix,filesep]

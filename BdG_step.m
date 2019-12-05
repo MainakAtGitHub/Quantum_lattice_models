@@ -13,6 +13,7 @@ function [ nUpCal, nDownCal, deltaCal, En, TotKE] = BdG_step( KE,delta, kT,nBand
     % does not work under matlab v8.1 or smaller
     %[eVector, eValue] = eig(BdGMatrix,'vector');
     global fullgamma cutek dress
+    nargout_tmp=nargout;
     gap_equation;
     global saveEigVec;
     if saveEigVec

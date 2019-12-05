@@ -63,7 +63,8 @@
     end
     nUpCal = (abs(eVector(1:nBands,:)).^2)*fermi;
     nDownCal = (abs(eVector((nBands + 1):end,:)).^2)*(1 - fermi);
-    if nargout > 4 
+    % problem in matlab R2018b and later
+    if nargout_tmp > 4 
     TotKE = sum(1/2*diag((eVector((nBands + 1):end,:))'*KE*(eVector((nBands + 1):end,:)) - (eVector(1:nBands,:))'*KE*(eVector(1:nBands,:))).*tanh(En/kT));
     end
     % Mainak

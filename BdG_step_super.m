@@ -50,6 +50,7 @@ for index=startindex:endindex
     % save some memory by giving back the eigenvalues in a vector
     % does not work under matlab v8.1 or smaller
     %[eVector, eValue] = eig(BdGMatrix,'vector');
+    nargout_tmp=nargout;
     gap_equation;
     deltaCal_super=deltaCal_super+BZ.weight(index)*deltaCal;
     nUpCal_super=nUpCal_super+BZ.weight(index)*nUpCal;
