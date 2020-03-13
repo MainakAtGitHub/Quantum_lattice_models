@@ -133,7 +133,7 @@ if ~isempty(k)
     	inputfile=inputfile(k(numel(k))+1:length(inputfile));
 end
 
-if plotall && (efforb>0)
+if plotall && (efforb>0) && nDosSites<10
     % plot all results orbital resolved, makes only sense for more than one
     % orbital
     for n=1:nDosSites
@@ -293,6 +293,7 @@ if isunix
     end;
     energyrange=find((2*plotrange(1)<energy)+(2*plotrange(2)>energy)-1==1);
     % identify some peaks and show the positions in the plot
+    try
     [imppks,implocs]=findpeaks(sum(orbitalLDOS(efforb+(1:efforb),energyrange),1),'MINPEAKDISTANCE',peakdistance,'SORTSTR','descend','NPEAKS',40);
     [NNpks,NNlocs]=findpeaks(sum(orbitalLDOS(2*efforb+(1:efforb),energyrange),1),'MINPEAKDISTANCE',peakdistance,'SORTSTR','descend','NPEAKS',40);
     [NNNpks,NNNlocs]=findpeaks(sum(orbitalLDOS(3*efforb+(1:efforb),energyrange),1),'MINPEAKDISTANCE',peakdistance,'SORTSTR','descend','NPEAKS',40);
@@ -305,6 +306,9 @@ if isunix
     plot(energyw(farlocs),farpks,'ko','markerfacecolor',[0 1 0])
     xlim(2*plotrange);
     f={[energyw(implocs);imppks],[energyw(NNlocs);NNpks],[energyw(NNNlocs);NNNpks],[energyw(farlocs);farpks]};
+    catch
+        disp('problem with findpeaks, probably no Signal Processing Toolbox available');
+    end
     % give back the peak positions of the 5 largest peaks
     end;
 end;

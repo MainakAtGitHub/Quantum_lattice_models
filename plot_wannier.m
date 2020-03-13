@@ -1,4 +1,4 @@
-function figure1=plot_wannier(wannierfile,isovalue,z0)
+function [figure1,psi2]=plot_wannier(wannierfile,isovalue,z0)
 load(wannierfile,'-mat');
 wannierValues=permute(wannierValues,[2,1,3,4]);
 conv=true;
@@ -61,6 +61,8 @@ end
 %set(gca,'ydir','normal')
  %surf(x(:,:,z0),y(:,:,z0),wannierValues(:,:,z0,band),'LineStyle','none');
  imagesc(x(:,1,z0),y(1,:,z0),wannierValues(:,:,z0,band));
+ % calculate "normalization on plane"
+ psi2=sum(sum(wannierValues(:,:,z0,band).*conj(wannierValues(:,:,z0,band))));
  mx=max(max(abs(wannierValues(:,:,z0,band))))
  caxis([-mx,mx]);
 colorbar;
@@ -82,7 +84,7 @@ annotation(figure2,'textbox',...
 xline=[shift(1),shift(1)+RDiscrete(1),shift(1)+RDiscrete(1),shift(1),shift(1)]-RDiscrete(1)/2;
 yline=[shift(2),shift(2),shift(2)+RDiscrete(2),shift(2)+RDiscrete(2),shift(2)]-RDiscrete(2)/2;
 hold on
-plot3(xGrid(round(xline)),yGrid(round(yline)),ones(5,1)*2*mx,'k','LineStyle','--','LineWidth',2);
+%plot3(xGrid(round(xline)),yGrid(round(yline)),ones(5,1)*2*mx,'k','LineStyle','--','LineWidth',2);
 if wsize>1
 % mark Li positions
 NNNx=[0,0,0,1,1,1]*RDiscrete(1);

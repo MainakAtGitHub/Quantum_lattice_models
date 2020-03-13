@@ -1,4 +1,4 @@
-function h=plot_delta_map(inputfile)
+function [max_gap,min_gap]=plot_delta_map(inputfile)
 
 % Modified homogeneous_dos.m
 % takes \Delta_ij as input and constructs \Delta_i0.
@@ -84,6 +84,9 @@ end
 delta_map_single=sqrt(delta_map_single);
 figure
 imagesc(delta_map_single');
+% give back maximum and minimum for purpose of plotting phase diagrams
+max_gap=max(delta_map_single(:));
+min_gap=min(delta_map_single(:));
 axis square;
 colorbar
 [filepath,name,ext]=fileparts(BdGfileName);

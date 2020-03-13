@@ -59,7 +59,10 @@ end;
 if ~(exist('correlated','var'))
     correlated=false;
 end;
-
+% spin polarized calculation (including a Zeeman magnetic field)?
+if ~exist('spinpolarized','var')
+    spinpolarized=false;
+end
 [dirprefix,~,~] = fileparts(inputfile);
 if ~isempty(dirprefix)
     dirprefix=[dirprefix,filesep]
@@ -304,13 +307,36 @@ dirstring=[dirprefix,'data_',LDOSfileName0];
 if division>0
     if ~(exist(dirstring,'dir'))
         mkdir(dirstring)
-    end;
-end;
+    end
+end
+
 % use external script to set up impurity Hamiltonian
 HImpurity=get_Himp(Vimp,N,nOrbitals,sublattice,randompot,BdGfileName);
 
+if magnetic
+    % do a magnetic simulation with magnetic impurity
+    % some default behavior: If Vimpdown not defined, use a potential
+    % scatterer
+    if ~exist('Vimpdown','var')
+        Vimpdown=Vimp
+    end
+    % set the impurity Hamiltonian for down spins
+    HImpuritydown=get_Himp(Vimpdown,N,nOrbitals,sublattice);
+    % if spin-polarized, i.e. with Zeeman term, add a constant to the
+    % impurity terms
+    % put a magnetic field here
+    if spinpolarized
+    if exist('field','var')
+        HImpurity=HImpurity+eye(size(HImpurity))*field;
+        HImpuritydown=HImpuritydown-eye(size(HImpurity))*field;
+    end
+    end
+end
+
+
 %(Mainak)
 if correlated
+    spinpolarized=true;
     HmagUp = U*diag(nDown);
     HmagDown = U*diag(nUp);
 else
@@ -351,7 +377,11 @@ for index=startindex:endindex
             kSpaceGap = kSpaceGap + deltaSuper(:,:,iUnitCell)*exp(1i*(iLatticeVector*k'));
         end
         KESuper = kSpaceHopping + HImpurity + HmagUp;
-        KESuperc = kSpaceHoppingc + HImpurity + HmagDown;
+        if magnetic
+            KESuperc = kSpaceHoppingc + HImpuritydown + HmagDown;
+        else
+            KESuperc = kSpaceHoppingc + HImpurity + HmagDown;
+        end
         kSpaceHamiltonian = [KESuper -kSpaceGap; -kSpaceGap' -conj(KESuperc)];
         % symmetrize here!
 	kSpaceHamiltonian=0.5*(kSpaceHamiltonian+kSpaceHamiltonian');
