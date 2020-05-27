@@ -1,11 +1,22 @@
-function Himp=get_Himp(Vimp,N,nOrbitals,sublattice,randompot,BdGfileName)
+function Himp=get_Himp(Vimp,N,nOrbitals,sublattice,randompot,BdGfileName,dislocation_length)
+if nargin<7
+    dislocation_length=false;
+end
 if nargin <5
     randompot=0;
 end;
 
 % get_Himp(Vimp,N,nOrbitals,sublattice) gives back the Hamiltonian for the
 % impurity or sets of impurities given in the input file Vimp
-nBands = N^2*nOrbitals;
+
+% Mainak%%% temporarily changed due to disloc
+if true %dislocation_length>0
+    nBands = (N^2-dislocation_length)*nOrbitals;
+else
+    % Mainak
+    
+    nBands = N^2*nOrbitals;
+end
 Himp = zeros(nBands);
 % rectangular by default
 if numel(N)==1

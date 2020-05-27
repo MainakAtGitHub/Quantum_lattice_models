@@ -1,10 +1,16 @@
-function f=generate_initialguess(N,Gamma_file,n0_orb,mu,random_n,neel_n)
+function f=generate_initialguess(N,Gamma_file,n0_orb,mu,random_n,neel_n,stripe_n,dislocation_length)
 % generate an initialguess for a system of size N times N
 % (MAINAK) 
 % random_n can be false or true, neel_n can be small number like
 % 0.01, 0.02 etc which says how strongly neel_n initial deviation from
 % half-filled nUp and nDown we want
 % (MAINAK)
+if nargin<8
+    dislocation_length=false;
+end
+if nargin < 7
+    stripe_n=false;
+end
 
 if nargin < 6
     neel_n=false;
@@ -48,8 +54,14 @@ else
     nDown =n0_orb/2*ones(nBands,1);
     
     % Mainak
-    if random_n
-        n_randdd = 0.01*n0_orb*rand(length(nUp),1);
+    if random_n > 0
+        nUp = n0_orb/(2*nOrbitals)*ones(N^2*nOrbitals,1);
+        nDown = n0_orb/(2*nOrbitals)*ones(N^2*nOrbitals,1);
+        
+        what_rnd_guess_frac = random_n;
+        
+        n_randdd = what_rnd_guess_frac*(abs(nOrbitals-abs(nOrbitals-n0_orb)))/(2*nOrbitals)*2*(rand(length(nUp),1)-0.5);
+%       n_randdd = what_rnd_guess_frac*(abs(nOrbitals-abs(nOrbitals-n0_orb)))/(2*nOrbitals)*ones(length(nUp),1);        
         nUp = nUp+n_randdd;
         nDown = nDown-n_randdd;
     end
@@ -71,22 +83,70 @@ else
 %     end
 %     % Mainak
     % Mainak
-    if neel_n > 0
-        what_frac = neel_n;
-        sqr_nUp=zeros(N*nOrbitals);
-        sqr_nDown=zeros(N*nOrbitals);
-        for ii=1:N
-            for jj=1:N
-                sqr_nUp(ii,(jj-1)*nOrbitals+1:jj*nOrbitals)=(-1)^(ii+jj);
-                sqr_nDown(ii,(jj-1)*nOrbitals+1:jj*nOrbitals)=(-1)^(ii+jj+1);
-            end
-        end
-        sqr_nUp=sqr_nUp';
-        sqr_nDown=sqr_nDown';
-        nUp=nUp+what_frac*n0_orb*sqr_nUp(:);
-        nDown=nDown+what_frac*n0_orb*sqr_nDown(:);
-    end
+%     if neel_n > 0
+%         what_frac = neel_n;
+%         sqr_nUp=zeros(N*nOrbitals);
+%         sqr_nDown=zeros(N*nOrbitals);
+%         for ii=1:N
+%             for jj=1:N
+%                 sqr_nUp(ii,(jj-1)*nOrbitals+1:jj*nOrbitals)=(-1)^(ii+jj);
+%                 sqr_nDown(ii,(jj-1)*nOrbitals+1:jj*nOrbitals)=(-1)^(ii+jj+1);
+%             end
+%         end
+%         sqr_nUp=sqr_nUp';
+%         sqr_nDown=sqr_nDown';
+%         nUp=nUp+what_frac*n0_orb*sqr_nUp(:);
+%         nDown=nDown+what_frac*n0_orb*sqr_nDown(:);
+%     end
     % Mainak
+    
+    % Mainak
+    if neel_n > 0
+        nUp = n0_orb/(2*nOrbitals)*ones(N^2*nOrbitals,1);
+        nDown = n0_orb/(2*nOrbitals)*ones(N^2*nOrbitals,1);
+        what_frac = neel_n;
+        for i_nOrb = 1:nOrbitals
+            sqr_nUp(:,:,i_nOrb)=zeros(N);
+            sqr_nDown(:,:,i_nOrb)=zeros(N);
+            for ii=1:N
+                for jj=1:N
+                    sqr_nUp(ii,jj,i_nOrb)=(-1)^(ii+jj);
+                    sqr_nDown(ii,jj,i_nOrb)=(-1)^(ii+jj+1);
+                end
+            end
+            sqr_nUp(:,:,i_nOrb)=sqr_nUp(:,:,i_nOrb)';
+            sqr_nDown(:,:,i_nOrb)=sqr_nDown(:,:,i_nOrb)';
+            temp_sqr_up=sqr_nUp(:,:,i_nOrb);
+            temp_sqr_down=sqr_nDown(:,:,i_nOrb);
+            nUp(i_nOrb:nOrbitals:length(nUp))=nUp(i_nOrb:nOrbitals:length(nUp))+what_frac*(abs(nOrbitals-abs(nOrbitals-n0_orb)))/(2*nOrbitals)*temp_sqr_up(:);
+            nDown(i_nOrb:nOrbitals:length(nDown))=nDown(i_nOrb:nOrbitals:length(nUp))+what_frac*(abs(nOrbitals-abs(nOrbitals-n0_orb)))/(2*nOrbitals)*temp_sqr_down(:);
+        end
+    end
+    % Mainak    
+    
+    % Mainak
+    if stripe_n > 0
+        nUp = n0_orb/(2*nOrbitals)*ones(N^2*nOrbitals,1);
+        nDown = n0_orb/(2*nOrbitals)*ones(N^2*nOrbitals,1);
+        what_frac = stripe_n;
+        for i_nOrb = 1:nOrbitals
+            sqr_nUp(:,:,i_nOrb)=zeros(N);
+            sqr_nDown(:,:,i_nOrb)=zeros(N);
+            for ii=1:N
+                for jj=1:N
+                    sqr_nUp(ii,jj,i_nOrb)=(-1)^(ii);
+                    sqr_nDown(ii,jj,i_nOrb)=(-1)^(ii+1);
+                end
+            end
+            sqr_nUp(:,:,i_nOrb)=sqr_nUp(:,:,i_nOrb)';
+            sqr_nDown(:,:,i_nOrb)=sqr_nDown(:,:,i_nOrb)';
+            temp_sqr_up=sqr_nUp(:,:,i_nOrb);
+            temp_sqr_down=sqr_nDown(:,:,i_nOrb);
+            nUp(i_nOrb:nOrbitals:length(nUp))=nUp(i_nOrb:nOrbitals:length(nUp))+what_frac*(abs(nOrbitals-abs(nOrbitals-n0_orb)))/(2*nOrbitals)*temp_sqr_up(:);
+            nDown(i_nOrb:nOrbitals:length(nDown))=nDown(i_nOrb:nOrbitals:length(nUp))+what_frac*(abs(nOrbitals-abs(nOrbitals-n0_orb)))/(2*nOrbitals)*temp_sqr_down(:);
+        end
+    end
+    % Mainak        
 
     if nargin < 4
         mu=0;
@@ -101,14 +161,14 @@ clear SCInteractionMatrix;
 % save the initial guess
 if size(delta,1)>11000
     % use new version for large system sizes (file limitation)
-    save([Gamma_file,'guess',num2str(N)],'delta','mu','nUp','nDown','-v7.3');
+    save([Gamma_file,'guess',num2str(N),'_rand_strength_',num2str(random_n),'_neel_strengh_',num2str(neel_n),'_stripe_strengh_',num2str(stripe_n)],'delta','mu','nUp','nDown','-v7.3');
     % also generate a random guess for checking that the convergence works
     % independent of initial guess
     delta=delta.*(rand(size(delta))*2-1);
-    save([Gamma_file,'guess',num2str(N),'rand'],'delta','mu','nUp','nDown','-v7.3');
+%     save([Gamma_file,'guess',num2str(N),'rand'],'delta','mu','nUp','nDown','-v7.3');
 else
     % use default format otherwise
-    save([Gamma_file,'guess',num2str(N)],'delta','mu','nUp','nDown');
+    save([Gamma_file,'guess',num2str(N),'_rand_strength_',num2str(random_n),'_neel_strengh_',num2str(neel_n),'_stripe_strengh_',num2str(stripe_n)],'delta','mu','nUp','nDown');
     delta=delta.*(rand(size(delta))*2-1);
-    save([Gamma_file,'guess',num2str(N),'rand'],'delta','mu','nUp','nDown');
+%     save([Gamma_file,'guess',num2str(N),'rand'],'delta','mu','nUp','nDown');
 end

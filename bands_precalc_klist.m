@@ -7,7 +7,7 @@ function [kSpaceEigenValuesNormal,kSpaceEigenVectorsNormal]=bands_precalc_klist(
 [kSpaceHamiltonian]=Hk_klist(inputfile,klist);
 
 % by default set the chemical potential to zero
- mu=0;
+ mu=1.062;
     % load the input file to set the variables, gave up the old .mat file
     % format
      read_input_file=inputfile;
@@ -50,3 +50,4 @@ for iKx = 1:szk(1)
             kSpaceEigenValuesNormal(iKx, :) = eigValueKNormal;
             kSpaceEigenVectorsNormal(iKx, :,:) =  eigVectorKNormal;
 end
+kSpaceEigenValuesNormal=kSpaceEigenValuesNormal-mu;

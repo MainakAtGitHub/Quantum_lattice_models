@@ -74,6 +74,57 @@ for N1=1:N
         end
     end
 end
+
+% Mainak (adding horizontal and vertical separate maps)##############
+deltamapH = zeros(N, N, nOrbitals,nOrbitals);
+% read out delta and store it into map of matrices
+% to do generalize to non-rectangular systems
+for N1=1:N
+    for N2=1:N
+        jCell = [N1 N2];
+        for i = [1,5]
+            iCell = jCell + latticeVectorsSC(i,:);
+            cellvector=periodic_latticevectors(iCell,N);
+            [iRange, jRange] = find_lattice_translation_index(N, nOrbitals, cellvector, jCell);
+            position=jCell+latticeVectorsSC(i,:)/2;
+            % now add the contribution to the 4 neighbored lattice points
+            pos(1,:)=periodic_latticevectors(floor(position),N);
+            pos(2,:)=periodic_latticevectors(ceil(position),N);
+            pos(3,:)=periodic_latticevectors([ceil(position(1)),floor(position(2))],N);
+            pos(4,:)=periodic_latticevectors([floor(position(1)),ceil(position(2))],N);
+            for ps=1:4
+                deltamapH(pos(ps,1),pos(ps,2),:,:) =deltamapH(pos(ps,1),pos(ps,2),:,:)+shiftdim(delta(iRange, jRange),-2);
+            end
+        end
+    end
+end
+% Mainak ####################################################
+
+% Mainak (adding horizontal and vertical separate maps)##############
+deltamapV = zeros(N, N, nOrbitals,nOrbitals);
+% read out delta and store it into map of matrices
+% to do generalize to non-rectangular systems
+for N1=1:N
+    for N2=1:N
+        jCell = [N1 N2];
+        for i = [2,4]
+            iCell = jCell + latticeVectorsSC(i,:);
+            cellvector=periodic_latticevectors(iCell,N);
+            [iRange, jRange] = find_lattice_translation_index(N, nOrbitals, cellvector, jCell);
+            position=jCell+latticeVectorsSC(i,:)/2;
+            % now add the contribution to the 4 neighbored lattice points
+            pos(1,:)=periodic_latticevectors(floor(position),N);
+            pos(2,:)=periodic_latticevectors(ceil(position),N);
+            pos(3,:)=periodic_latticevectors([ceil(position(1)),floor(position(2))],N);
+            pos(4,:)=periodic_latticevectors([floor(position(1)),ceil(position(2))],N);
+            for ps=1:4
+                deltamapV(pos(ps,1),pos(ps,2),:,:) =deltamapV(pos(ps,1),pos(ps,2),:,:)+shiftdim(delta(iRange, jRange),-2);
+            end
+        end
+    end
+end
+% Mainak ####################################################
+
 delta_map_single=zeros(N, N);
 % do some plotting of the maps
 for N1=1:N
@@ -101,3 +152,57 @@ end
 plot(imp_vec_shift(:,1),imp_vec_shift(:,2),'xr');
 end
 print_pdf([filepath,filesep,name,'_gapmap.pdf']);
+
+% Mainak (plotting hor gaps)#######################
+delta_map_singleH=zeros(N, N);
+% do some plotting of the maps
+for N1=1:N
+    for N2=1:N
+        delta_map_singleH(N1,N2)=sum(sum(squeeze(deltamapH(N1,N2,:,:))));
+    end
+end
+%%%delta_map_singleH=sqrt(delta_map_singleH);
+figure
+imagesc(delta_map_singleH');
+axis square;
+colorbar
+[filepath,name,ext]=fileparts(BdGfileName);
+% also load the impurity positions and plot
+if ~isnumeric(Vimp)
+load(Vimp);
+hold on
+impCell = [ceil(N/2) ceil(N/2)];
+for s=1:size(imp_vec,1)
+    imp_vec_shift(s,:)=periodic_latticevectors(impCell+imp_vec(s,:),N);
+end
+plot(imp_vec_shift(:,1),imp_vec_shift(:,2),'xr');
+end
+print_pdf([filepath,filesep,name,'_gapmap_hor.pdf']);
+% Mainak###################################################
+
+% Mainak (plotting ver gaps)#######################
+delta_map_singleV=zeros(N, N);
+% do some plotting of the maps
+for N1=1:N
+    for N2=1:N
+        delta_map_singleV(N1,N2)=sum(sum(squeeze(deltamapV(N1,N2,:,:))));
+    end
+end
+%%%delta_map_singleV=sqrt(delta_map_singleV);
+figure
+imagesc(delta_map_singleV');
+axis square;
+colorbar
+[filepath,name,ext]=fileparts(BdGfileName);
+% also load the impurity positions and plot
+if ~isnumeric(Vimp)
+load(Vimp);
+hold on
+impCell = [ceil(N/2) ceil(N/2)];
+for s=1:size(imp_vec,1)
+    imp_vec_shift(s,:)=periodic_latticevectors(impCell+imp_vec(s,:),N);
+end
+plot(imp_vec_shift(:,1),imp_vec_shift(:,2),'xr');
+end
+print_pdf([filepath,filesep,name,'_gapmap_ver.pdf']);
+% Mainak###################################################
