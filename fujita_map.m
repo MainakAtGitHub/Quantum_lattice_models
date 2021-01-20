@@ -20,4 +20,5 @@ x=0:maxabsekkn/255:maxabsekkn;
 r=interp1(input1*maxabsekkn,colormatrix(:,1),x);
 g=interp1(input1*maxabsekkn,colormatrix(:,2),x);
 b=interp1(input1*maxabsekkn,colormatrix(:,3),x);
-set(figure1,'Colormap', [r',g',b']);
+p=[r',g',b'];
+set(figure1,'Colormap', p);

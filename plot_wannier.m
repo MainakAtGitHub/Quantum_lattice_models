@@ -64,9 +64,12 @@ end
  % calculate "normalization on plane"
  psi2=sum(sum(wannierValues(:,:,z0,band).*conj(wannierValues(:,:,z0,band))));
  mx=max(max(abs(wannierValues(:,:,z0,band))))
+ % some manual setting
+ mx=0.012
  caxis([-mx,mx]);
+ ca=caxis;
 colorbar;
-blue_red_map(figure2);
+mp=blue_red_map(figure2);
 axis equal
 view([0 90]);
 % bug in matlab (does not show 2D objects with view([0 90]);
@@ -94,7 +97,11 @@ NNNy=[-1,-1,-1,0,0,0]*RDiscrete(2);
 NNNx=[0,1,-1,0,1,-1]*RDiscrete(1);
 scatter3(xGrid(round(NNNx+shift(1)+RDiscrete(1)/4)),yGrid(round(NNNy+shift(2)+RDiscrete(1)/4)),ones(numel(NNNx),1)*mx*1,'square','MarkerEdgeColor','k')
 end;
+flnm=['/tmp/Wannier_band_',num2str(band),'_z_',num2str(z0)];
+ print('-djpeg', [flnm,'.jpg'],'-r200');
+ 
+ % also do a one pixel export
+   rgbImage = ind2rgb(fix((wannierValues(:,:,z0,band)-ca(1))/(ca(2)-ca(1))*256), mp);
+imwrite(rgbImage,[flnm,'_map_only.png']);
 
- print('-djpeg', ['/tmp/Wannier_band_',num2str(band),'_z_',num2str(z0),'.jpg'],'-r200');
-
-end;
+end

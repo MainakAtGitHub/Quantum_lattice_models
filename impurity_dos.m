@@ -58,10 +58,21 @@ if ~(exist('randompot','var'))
 end;
 if ~(exist('correlated','var'))
     correlated=false;
-end;
+end
+if ~(exist('magnetic','var'))
+    magnetic=false;
+end
 % spin polarized calculation (including a Zeeman magnetic field)?
 if ~exist('spinpolarized','var')
     spinpolarized=false;
+end
+if spinpolarized
+    magnetic=true;
+end
+if magnetic
+    if version==0
+        version=1;
+    end
 end
 [dirprefix,~,~] = fileparts(inputfile);
 if ~isempty(dirprefix)
@@ -404,6 +415,9 @@ for index=startindex:endindex
                 % only use this part for the calculation of the Greens
                 % function
                 uK = eigVectorK(siteIndices,:);
+                if magnetic
+                    vK= eigVectorK(nBands + siteIndices,:);
+                end
             else
             uK = eigVectorK(siteIndices,(nBands + 1):end);
             vK = eigVectorK(nBands + siteIndices,(nBands + 1):end);
@@ -415,6 +429,9 @@ for index=startindex:endindex
                 Ek = repmat(Ek_vector, 1, nEnergyPoints) ;
                 if version >0
                     greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita ));
+                    if magnetic
+                        greensKSpace(iKx, iKy, :, :) = greensKSpace(iKx, iKy, :, :)+((abs(vK)).^2)*(1./(E + Ek + 1i*ita ));
+                    end
                 else
                     greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita )) + ...
                     ((abs(vK)).^2)*(1./(E + Ek + 1i*ita ));
@@ -424,6 +441,9 @@ for index=startindex:endindex
                 % put k_vector in filename to avoid double calculation ?
                 if version >0
                     save(ekukvk_file,'uK','Ek_vector');
+                    if magnetic
+                        save(ekukvk_file,'uK','vK','Ek_vector');
+                    end
                 else
                     save(ekukvk_file,'uK','vK','Ek_vector');
                 end           
@@ -431,6 +451,9 @@ for index=startindex:endindex
         else
             if version >0
                 uK = eigVectorK(1:nBands,:);
+                if magnetic
+                    vK = eigVectorK((nBands+1):end,:);
+                end
             else
                 uK = eigVectorK(1:nBands,(nBands+1):end);
                 vK = eigVectorK((nBands+1):end,(nBands+1):end);
@@ -439,13 +462,20 @@ for index=startindex:endindex
             if division==0
                 EnRep = repmat(Ek_vector',nBands,1);
                 if version >0
-                    latticeGreensK(iKx, iKy, :, :) = (uK./(E - EnRep + 1i*ita))*(uK');
+                    if magnetic
+                        latticeGreensK(iKx, iKy, :, :) = (uK./(E - EnRep + 1i*ita))*(uK') +(vK./(E + EnRep + 1i*ita))*(vK');
+                    else
+                        latticeGreensK(iKx, iKy, :, :) = (uK./(E - EnRep + 1i*ita))*(uK');
+                    end
                 else
                     latticeGreensK(iKx, iKy, :, :) = (uK./(E - EnRep + 1i*ita))*(uK') + (vK./(E + EnRep + 1i*ita))*(vK');
                 end
             else
                 if version >0
                 save(ekukvk_fileGF,'uK','Ek_vector','-v7.3');
+                if magnetic
+                    save(ekukvk_fileGF,'uK','vK','Ek_vector','-v7.3');
+                end
                 else
                 save(ekukvk_fileGF,'uK','vK','Ek_vector','-v7.3');
                 end
@@ -539,7 +569,11 @@ if part>division
                 if ~calcGreens
                     Ek = repmat(Ek_vector, 1, nEnergyPoints) ;
                     if version>0
-                     greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita ));
+                     if magnetic
+                         greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita ))+((abs(vK)).^2)*(1./(E + Ek + 1i*ita ));
+                     else
+                         greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita ));
+                     end
                     else
                     greensKSpace(iKx, iKy, :, :) = ((abs(uK)).^2)*(1./(E - Ek + 1i*ita )) + ...
                         ((abs(vK)).^2)*(1./(E + Ek + 1i*ita ));
@@ -547,7 +581,11 @@ if part>division
                 else
                     EnRep = repmat(Ek_vector',nBands,1);
                     if version>0
-                    latticeGreensK(iKx, iKy, :, :) = (uK./(E(en) - EnRep + 1i*ita))*(uK');
+                    if magnetic
+                        latticeGreensK(iKx, iKy, :, :) =(uK./(E(en) - EnRep + 1i*ita))*(uK') + (vK./(E(en) + EnRep + 1i*ita))*(vK');
+                    else
+                        latticeGreensK(iKx, iKy, :, :) = (uK./(E(en) - EnRep + 1i*ita))*(uK');
+                    end
                     else
                     latticeGreensK(iKx, iKy, :, :) = (uK./(E(en) - EnRep + 1i*ita))*(uK') + (vK./(E(en) + EnRep + 1i*ita))*(vK');
                     end;
@@ -555,6 +593,9 @@ if part>division
             else
                 if version >0
                 ukall(iKx,iKy,:,:)=uK;
+                if magnetic
+                    vkall(iKx,iKy,:,:)=vK;
+                end
                 else
                  ukall(iKx,iKy,:,:)=uK;
                 vkall(iKx,iKy,:,:)=vK;
@@ -612,9 +653,17 @@ if part>division
                             E=Ekall(:,:,iband);
                             a=ukall(:,:,:,iband).*conj(ukall(:,:,:,iband));
                             greensRealSpace(:, :) = greensRealSpace(:, :) + f(E,a,kx,ky,energy);
+                            if magnetic
+                                a=vkall(:,:,:,iband).*conj(vkall(:,:,:,iband));
+                                greensRealSpace(:, :) = greensRealSpace(:, :) + f(E,a,kx,ky,-energy);
+                            end
                             E=Ekall(:,:,iband+nBands);
                             a=ukall(:,:,:,iband+nBands).*conj(ukall(:,:,:,iband+nBands));
-                            greensRealSpace(:, :) = greensRealSpace(:, :) + f(E,a,kx,ky,energy);                           
+                            greensRealSpace(:, :) = greensRealSpace(:, :) + f(E,a,kx,ky,energy);
+                            if magnetic
+                                a=vkall(:,:,:,iband+nBands).*conj(vkall(:,:,:,iband+nBands));
+                                greensRealSpace(:, :) = greensRealSpace(:, :) + f(E,a,kx,ky,-energy);
+                            end
                         else
                         E=Ekall(:,:,iband);
                         a=ukall(:,:,:,iband).*conj(ukall(:,:,:,iband));

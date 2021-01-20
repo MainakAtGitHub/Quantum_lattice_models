@@ -1,5 +1,9 @@
-function [ wannierValues xGrid yGrid zGrid] = process_wannier( filename, nOrb,im)
-dim=input('dimension of map 2/3: ');
+function [ wannierValues xGrid yGrid zGrid] = process_wannier( filename, nOrb,im,geometry)
+if nargin <4
+    dim=input('dimension of map 2/3: ');
+else
+    dim=geometry(1);
+end;
 if dim==2
 % only two dimensional map
 readstring=['%g %g '];
@@ -45,6 +49,7 @@ fclose(fid);
 %   Detailed explanation goes here
 szwf=size(WF);
 num=0;
+if nargin < 4
 while ~(num==szwf(2))
     disp(['total points ',num2str(szwf(2))]);
     xpoints=input('points in x-direction: ');
@@ -52,6 +57,13 @@ while ~(num==szwf(2))
     zpoints=input('points in z-direction: ');
     num=xpoints*ypoints*zpoints;
 end
+else
+    xpoints=geometry(2);
+    ypoints=geometry(3);
+    zpoints=geometry(4);
+end
+ 
+if nargin < 4
 shift = [51 51 51];
 a=input('shift in x-direction: ');
 if ~isempty(a)
@@ -79,6 +91,10 @@ a=input('cell size in z-direction: ');
 if ~isempty(a)
     RDiscrete(3)=a;
 end;
+else
+    shift=geometry(5:7);
+    RDiscrete=geometry(8:10);
+end
 for n=1:nOrb
    % wannierValues(:,n)=WF(3+(n-1)*2+1,:)+1i*WF(3+n*2,:);
    % ignore the complex part
