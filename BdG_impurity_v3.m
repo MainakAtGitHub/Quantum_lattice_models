@@ -80,6 +80,17 @@ else
 end
 
 
+% Mainak
+
+if ~exist('bilayer_int','var')
+    bilayer_int=false;
+end
+if ~exist('int_soc','var')
+    int_soc=false;
+end
+
+% Mainak
+
 
 % input files: tight-binding model
 load(TB_file)
@@ -91,7 +102,11 @@ load(Gamma_file,'-mat')
 %if ~(exist('input_fileName','var'))
 %    input_fileName=BdGfileName;
 %end;
-
+%%%%%Mainak
+if exist('ref_grid_hopping_file','var')
+    t_r_ref=load(ref_grid_hopping_file);
+end
+%%%%%Mainak
 %%%% Mainak
 % if nargin>5
 
@@ -107,6 +122,7 @@ end
 % fix for existing function mu
 mu=0;
 load(BdGfileName,'-mat');
+[filepath,name,ext]=fileparts(BdGfileName);
 if ~exist('sublattice','var')
     % sublattice= {-1,0,1} to define whether there are two sites per
     % elementary cell and which site is first
@@ -141,6 +157,11 @@ end
 if ~exist('spinpolarized','var')
     spinpolarized=false;
 end
+
+if ~exist('spinfullnormal','var')
+    spinfullnormal=false;
+end
+
 % BdG matrix blocks (to be done: make it work for non-square system sizes)
 %%%%% Mainak temporary changing size due to dislocation
 if true %dislocation_length>0
@@ -154,7 +175,24 @@ if ~super
     % kinetic energy
     % Mainak
     if true %dislocation_length>0
-          H0 = hoppings(r,N,true);
+        if ~exist('eff_pot','var')
+            eff_pot=1.5;
+        end
+        if ~exist('further_N_cut_off','var')
+            further_N_cut_off=1.45;
+        end
+        if ~exist('NN_cut_off','var')
+            NN_cut_off=1.3;
+        end
+        if exist('ref_grid_hopping_file','var') 
+%             if nOrbitals==2
+                [H0,H_soc1,H_soc2] = hoppings(r,N,true,t_r_ref,eff_pot,further_N_cut_off,NN_cut_off,filepath,nOrbitals,bilayer_int,int_soc);
+%             else
+%                 [H0,H_soc1,H_soc2] = hoppings(r,N,true,t_r_ref,eff_pot,further_N_cut_off,NN_cut_off,filepath,nOrbitals,false);
+%             end
+        else 
+            [H0,H_soc1,H_soc2] = hoppings(r,N,true,[],eff_pot,further_N_cut_off,NN_cut_off);
+        end
 %         H0 = plot_line_disloc_hor((N-1)/2,dislocation_length);
     else
         % Mainak
@@ -318,6 +356,18 @@ if spinpolarized
         nDowndown = nUp;
     end;
 end
+%%%%%%%%Mainak
+if spinfullnormal
+    if ~(exist('nAnoUpDown','var'))
+        nAnoUpDown=zeros(size(nUp));
+%         nAnoUpDown=0.01*(rand(size(nUp))+1i*rand(size(nUp)))/sqrt(2);
+    end
+    if ~(exist('nAnoDownUp','var'))
+        nAnoDownUp=conj(nAnoUpDown);
+    end
+
+end
+%%%%%Mainak
 % setup of some "growing" variables
 
 % not needed for long time, remove
@@ -436,8 +486,10 @@ for i = 1:maxLoop
             mudown=mu;
             % put a magnetic field here
             if exist('field','var')
-                mu=mu+field;
-                mudown=mu-field;
+%               mu=mu+field;
+                mudown=mu-field(end);
+                KE=KE-field(end)*eye(nBands);
+%               mu=mu+field;
             end
             if ~magnetic
                 %%%%%%%%%%%%% Mainak
@@ -462,8 +514,31 @@ for i = 1:maxLoop
                     KEdown = KEdown + diag(IntDown1);                    
                 end
                 %%%%%%%%%%%%% Mainak
+                if spinfullnormal
+                    H_off_up = -U*diag(nAnoUpDown);
+                    H_off_down = -U*diag(nAnoDownUp); %%%??????????????COULD BE SETA AS conj(H_off_up)?
+                    if exist('field','var')
+                        if numel(field)>1                          
+                            H_off_up=H_off_up-field(1)*eye(nBands);
+                            H_off_down=H_off_down-field(1)*eye(nBands);
 
-                [ nUpCal, nDownCal, deltaCal, En, TotKE ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
+                            H_off_up=H_off_up-(-1i)*field(2)*eye(nBands);
+                            H_off_down=H_off_down-(1i)*field(2)*eye(nBands);
+                        end
+                    end 
+                    
+                    if int_soc
+                        H_off_up=H_off_up+H_soc1+(-1i)*H_soc2;
+                        H_off_down=H_off_down+H_soc1+(1i)*H_soc2;
+                    end
+                end
+
+                if ~spinfullnormal
+                    [ nUpCal, nDownCal, deltaCal, En, TotKE ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
+                else
+                    [ nUpCal, nDownCal, deltaCal, En, TotKE, nAnoUpDownCal, nAnoDownUpCal] = BdG_step1( KE,delta, kT,nBands, SCInteractionMatrix,KEdown,H_off_up,H_off_down);
+                end
+            
                 % [ nUpCaldown, nDownCaldown, deltaCaldown ] = BdG_step( KEdown, conj(-delta'), kT, nBands, SCInteractionMatrix,-KE);
             else
                 KEdown = Hdown - mudown*eye(nBands);
@@ -510,7 +585,7 @@ for i = 1:maxLoop
     %clear eVector
     % convergence criterium: norm (as defined for vector)
     if mode==1
-        dlmwrite([inputfile,'_fill'],(1/N^2)*sum(nUpCal + nDownCal),'precision',10);
+        dlmwrite([inputfile,'_fill'],(1/(numel(nUp)/nOrbitals))*sum(nUpCal + nDownCal),'precision',10);
         return;
     end
     deltaDiff = norm(deltaCal(:) - delta(:))/norm(delta(:));
@@ -519,7 +594,7 @@ for i = 1:maxLoop
     nUpDiff = norm(nUpCal(:) - nUp(:))/norm(nUp(:));
     % Mainak
     
-    nDiff = abs((1/N^2)*sum(nUpCal + nDownCal) - n0)/n0;
+    nDiff = abs((1/(numel(nUp)/nOrbitals))*sum(nUpCal + nDownCal) - n0)/n0;
   %  if spinpolarized
    %     % to be checked
    %     tmp=-conj(deltaCaldown');
@@ -534,14 +609,39 @@ for i = 1:maxLoop
        %        vS = (abs(eVector((nBands + 1):end,floor(nBands/2))).^2);
        %        uS = (abs(eVector(1:nBands,:)).^2);
        %        vS = (abs(eVector((nBands + 1):end,:)).^2);
-       E_Hub = U/4*sum((nUp+nDown).^2 - (nUp-nDown).^2);
+%        if ~spinfullnormal
+       E_Hub = U/4*sum((nUp+nDown).^2 - (nUp-nDown).^2);%-(mag_x.^2)-mag_y.^2+%sum_x.^2+sum_y.^2;
+%        else
+%            E_Hub = U/4*sum((nUp+nDown).^2 - (nUp-nDown).^2 ...
+%            - (nAnoUpDown+nAnoDownUp).^2 - (1i*(nAnoUpDown-nAnoDownUp)).^2);
+%        end
+       if spinfullnormal
+           E_Hub_Ano = -U/4*sum((nAnoUpDown+nAnoDownUp).^2 + (1i*(nAnoUpDown-nAnoDownUp)).^2);
+%            if exist('field','var')
+%                if numel(field)>1
+%                    E_field_x = sum(-field(1)*(nAnoUpDown+nAnoDownUp));
+%                    E_field_y = sum(-field(2)*(1i)*(nAnoUpDown-nAnoDownUp));
+%                end
+%            end
+       end
+
        E_Hub_12 = sum(IntUp1.*nUp) + sum(IntDown1.*nDown);          
        if Gamma(:,:,1) == 0
            E_Sup =0;
        else
            E_Sup = -1/Gamma(:,:,1)*sum(sum(abs(delta).^2));
        end
-       TotEn = 1/N(1)^2*(TotKE - E_Hub - E_Hub_12 + E_Sup);
+       if spinfullnormal
+%        TotEn = 1/numel(nUp)*(TotKE + E_Hub + E_Hub_12 + E_Sup + E_Hub_Ano);
+         TotEn = 1/numel(nUp)*(TotKE - E_Hub + E_Hub_12 + E_Sup - E_Hub_Ano) + mu*n0;
+%            if exist('field','var')
+%                if numel(field)>1
+%                  TotEn = TotEn + 1/numel(nUp)*(E_field_x + E_field_y);  
+%                end
+%            end
+       else 
+       TotEn = 1/numel(nUp)*(TotKE + E_Hub + E_Hub_12 + E_Sup);
+       end
 %      save([BdGfileName,'eigTotEn'],'uS','vS','TotEn');
        save([BdGfileName,'eigTotEnNoVec'],'TotEn','-ascii');
        disp('Total Energy =');
@@ -549,7 +649,7 @@ for i = 1:maxLoop
    end
    % Mainak
    if ~normal_metal
-       if ((sum(nDiff) < numel(nDiff)*nTol) && ((sum(deltaDiff) < numel(deltaDiff)*deltaTol)|| (norm(delta(:))/N^2 < deltaTol)))
+       if ((sum(nDiff) < numel(nDiff)*nTol) && ((sum(deltaDiff) < numel(deltaDiff)*deltaTol)|| (norm(delta(:))/(numel(nUp)/nOrbitals) < deltaTol)))
            break % go out of loop if self-consistency is achieved
        end
    else
@@ -567,6 +667,10 @@ for i = 1:maxLoop
     beta =  beta1 + (beta2 - beta1).*rand(1); 
     nUp = beta*nUp + (1-beta)*nUpCal;
     nDown = beta*nDown + (1-beta)*nDownCal;
+    if spinfullnormal
+        nAnoUpDown=beta*nAnoUpDown + (1-beta)*nAnoUpDownCal;
+        nAnoDownUp=beta*nAnoDownUp + (1-beta)*nAnoDownUpCal;
+    end
     % Mainak
 %     uS = beta*uS + (1-beta)*uCal;
 %     uS = uCal;
@@ -589,9 +693,11 @@ for i = 1:maxLoop
         %    delta = beta*delta + 0.5*(1-beta)*(deltaCal-deltaCaldown');
        % end
     end
-    nAvg = (1/N^2)*(sum(nUp + nDown));
+%     nAvg = (1/N^2)*(sum(nUp + nDown));
+    nAvg = (1/(numel(nUp)/nOrbitals))*(sum(nUp + nDown));
     % Mainak
-    nUpAvg = (1/N^2)*(sum(nUp));
+%     nUpAvg = (1/N^2)*(sum(nUp));
+    nUpAvg = (1/(numel(nUp)/nOrbitals))*(sum(nUp));
     % Mainak
     %BM convention
     %    nAvg = (1/N^2)*(sum(nUpCal + nDownCal));
@@ -639,9 +745,17 @@ for i = 1:maxLoop
         end
     else
         if size(delta,1)>11000
-            save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown','-v7.3');
+            if spinfullnormal
+              save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown','nAnoUpDown','nAnoDownUp','-v7.3');
+            else 
+              save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown','-v7.3');                
+            end
         else
-            save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown');
+            if spinfullnormal
+              save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown','nAnoUpDown','nAnoDownUp');
+            else
+              save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown');
+            end
         end
     end
 end

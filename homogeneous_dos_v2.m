@@ -42,28 +42,82 @@ if ~singular_quad
 else
     sqstring='';
 end;
-load(TB_file,'-mat');
-nOrbitals = size(TBparameters,1);
+%%%%Mainak
+if ~exist('pos_file','var')
+    load(TB_file,'-mat');
+    nOrbitals = size(TBparameters,1);
+else
+    if exist('further_N_cut_off','var')
+        %%%%%%%Mainak
+        if further_N_cut_off > 2
+            latticeVector=[1,0,0;...
+                -1,0,0;...
+                0,1,0;...
+                0,-1,0;...
+                1,1,0;...
+                1,-1,0;...
+                -1,1,0;...
+                -1,-1,0;...
+                -2,0,0;...
+                2,0,0;...
+                0,-2,0;...
+                0,2,0;...
+                0,0,0];   %FOR NN and NNN and NNNN
+        elseif and(further_N_cut_off > sqrt(2),further_N_cut_off < 2)
+            latticeVector=[1,0,0;...
+                -1,0,0;...
+                0,1,0;...
+                0,-1,0;...
+                1,1,0;...
+                1,-1,0;...
+                -1,1,0;...
+                -1,-1,0;...
+                0,0,0];   %FOR NN and NNN
+        else
+            latticeVector=[1,0,0;-1,0,0;0,1,0;0,-1,0;0,0,0];
+        end
+    else
+        latticeVector=[1,0,0;-1,0,0;0,1,0;0,-1,0;0,0,0];
+    end
+    t_r_ref=load(ref_grid_hopping_file);
+    TBparameters=zeros(1,1,size(latticeVector,1));
+    for itr_TB = 1:size(latticeVector,1)
+        if exist('ref_grid_hopping_file','var')
+            TBparameters(:,:,itr_TB)=griddata(t_r_ref(:,1),t_r_ref(:,2),10^-3*t_r_ref(:,3),latticeVector(itr_TB,1),latticeVector(itr_TB,2),'natural');
+        else
+            %%%% TB parameters for the toy hopping, gaussian in distance (below)
+            TBparameters(:,:,itr_TB)=-1/exp(-1)*exp(-((latticeVector(itr_TB,1))^2+(latticeVector(itr_TB,2))^2));
+        end
+        if itr_TB == size(latticeVector,1)
+            TBparameters(:,:,itr_TB)=0;
+        end
+    end
+    nOrbitals = size(TBparameters,1);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%Mainak
 if calcSC
     load(Gamma_file,'-mat');
     load(BdGfileName,'-mat');
-N = sqrt(size(delta,1)/nOrbitals);
-if exist('latticeVectorsSC','var')
-    nUnitCellsDelta = size(latticeVectorsSC,1);
+    N = sqrt(size(delta,1)/nOrbitals);
+    if exist('latticeVectorsSC','var')
+        nUnitCellsDelta = size(latticeVectorsSC,1);
+    else
+        latticeVectorsSC=Gammafull.latt;
+        nUnitCellsDelta = size(Gammafull.latt,1);
+    end
+    deltaCenter = zeros(nOrbitals, nOrbitals, nUnitCellsDelta);
+    jCell = [ceil(N/2) ceil(N/2)];
+    for i = 1:nUnitCellsDelta
+        iCell = jCell + latticeVectorsSC(i,:);
+        [iRange, jRange] = find_lattice_translation_index(N, nOrbitals, iCell, jCell);
+        deltaCenter(:,:,i) = delta(iRange, jRange);
+    end
+    delta = deltaCenter;
 else
-    latticeVectorsSC=Gammafull.latt;
-    nUnitCellsDelta = size(Gammafull.latt,1);
-end
-deltaCenter = zeros(nOrbitals, nOrbitals, nUnitCellsDelta);
-jCell = [ceil(N/2) ceil(N/2)];
-for i = 1:nUnitCellsDelta
-    iCell = jCell + latticeVectorsSC(i,:);
-    [iRange, jRange] = find_lattice_translation_index(N, nOrbitals, iCell, jCell);
-    deltaCenter(:,:,i) = delta(iRange, jRange);
-end
-delta = deltaCenter;
-else
-    mu=0;
+    load(BdGfileName,'mu','-mat');
+%   mu=0;
 end;
 
 
@@ -178,7 +232,7 @@ else
 bandDOSNormal = greensDiagonalNormal;
 
 end;
-totalDOSNormal = sum(bandDOSNormal);
+totalDOSNormal = sum(bandDOSNormal,1);
 
 if calcSC
 % SC state dos
@@ -237,7 +291,7 @@ else
                 end;
                 bandDOS=greensDiagonal;
 end;
-totalDOS = sum(bandDOS);
+totalDOS = sum(bandDOS,1);
 
 LDOSfileName0 = [casestring,'_Vimp_', num2str(Vimp),  '_N_', num2str(N)];
 else
@@ -261,7 +315,9 @@ figure;
 plot(energy,(5/nOrbitals)*totalDOSNormal,'k'); hold; plot(energy,(5/nOrbitals)*totalDOS, 'r');
 axis('square'); title('Normal Vs SC dos')
 % Create legend
-legend show
+%%Mainak
+% legend show
+%%Mainak
 figure;
 plot(energy, (5/nOrbitals)*totalDOS, 'k');
 hold
@@ -275,7 +331,9 @@ catch
 end;
 axis('square'); title('Orbital resolved SC dos')
 % Create legend
-legend show
+%%Mainak
+% legend show
+%%Mainak
 end;
 end;
 

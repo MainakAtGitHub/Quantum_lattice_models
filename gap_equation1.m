@@ -1,8 +1,8 @@
-   try
+  try
         tic
         [eVector, eValue] = eig(BdGMatrix);
         toc
-        clear BdGMatrix
+%       clear BdGMatrix
         [En, sortIndex] = sort(diag(eValue));
     catch
         disp('error with buildin eig, using eigen3 library now')
@@ -27,7 +27,15 @@
     eVector = eVector(:,sortIndex);
     fermi = 1./(1 + exp(En/kT));
     if ~fullgamma
-        deltaCal = SCInteractionMatrix.*((eVector(1:nBands,:)*(((eVector((nBands + 1):end,:))').*repmat(fermi,1,nBands))));
+       deltaCal = SCInteractionMatrix.*((eVector(1:nBands,:)*(((eVector((nBands + 1):end,:))').*repmat(fermi,1,nBands))));
+        %%%%%%%%%%%%%%%%Mainak
+        nAnoUpDownCal = diag(eVector(1:nBands,:)*(((eVector((nBands + 1):end,:))').*repmat(fermi,1,nBands)));
+        nAnoDownUpCal = conj(nAnoUpDownCal);
+%         nAnoDownUp = (eVector(1:nBands,:))'.*eVector((nBands + 1):end,:).*repmat(fermi,1,nBands);
+%         if sum(abs(nAnoUpDown-conj(nAnoDownUp))) > 1e-5
+%             disp('Nonhermitian hamiltonian!');
+%         end
+        %%%%%%%%%%%%%%%%%%%%Mainak
         % debuging code
         %for n=1:100
         %    dc1(n)=SCInteractionMatrix(1,n).*((eVector(n,:)*(((eVector((nBands + 1),:))').*repmat(fermi,1,1))));
@@ -62,11 +70,11 @@
         toc
     end
     nUpCal = (abs(eVector(1:nBands,:)).^2)*fermi;
-    nDownCal = (abs(eVector((nBands + 1):end,:)).^2)*(1 - fermi);
+    nDownCal = (abs(eVector((nBands + 1):end,:)).^2)*(fermi);
     %anomalousncalc
     % problem in matlab R2018b and later
-    if nargout_tmp > 4 
-    TotKE = sum(1/2*diag((eVector((nBands + 1):end,:))'*KE*(eVector((nBands + 1):end,:)) - (eVector(1:nBands,:))'*KE*(eVector(1:nBands,:))).*tanh(En/kT));
+    if nargout_tmp > 6 
+    TotKE = sum(diag((eVector)'*BdGMatrix*(eVector)).*fermi);%.*tanh(En/kT));
     end
     % Mainak
 %     uCal = (abs(eVector(1:nBands,floor(nBands/2)).^2));%*ones(size(fermi));

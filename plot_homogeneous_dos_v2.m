@@ -1,4 +1,4 @@
-function [fig1,fig2,energy,plotres]=plot_homogeneous_dos_v2(inputfile,smoothenergy,energybar)
+function [fig1,fig2,energy,plotres]=plot_homogeneous_dos_v2(inputfile,smoothenergy,energybar,calcSC)
 
 % Modified homogeneous_dos.m
 % takes \Delta_ij as input and constructs \Delta_i0.

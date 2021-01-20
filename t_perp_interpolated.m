@@ -1,0 +1,40 @@
+% spt2=meshgrid(2.1:0.1:10,)
+sptv1=[0,0,1;
+    1,0,0;
+    -1,0,0;
+    0,1,0;
+    0,-1,0;
+    1,1,-1/2;
+    1,-1,-1/2;
+    -1,1,-1/2;
+    -1,-1,-1/2;
+    2,0,0.5/2;
+    -2,0,0.5/2;
+    0,2,0.5/2;
+    0,-2,0.5/2;
+    3,0,0;
+    -3,0,0;
+    0,3,0;
+    0,-3,0;
+    2,2,0;
+    2,-2,0;
+    -2,2,0;
+    -2,-2,0;
+    -3,-3,0;
+    -3,3,0;
+    3,-3,0;
+    3,3,0];
+[qpt1x,qpt1y]=meshgrid(-4:0.05:4);
+qpt1=[qpt1x(:),qpt1y(:)];
+qv1=0.08*0.15*griddata(sptv1(:,1),sptv1(:,2),sptv1(:,3),qpt1(:,1),qpt1(:,2),'natural');
+figure;
+imagesc(qpt1x(1,:),qpt1y(:,1),reshape(qv1,[161,161]));
+
+set(gcf, 'Position', get(0, 'Screensize'));
+
+% axis equal;
+% scatter(qpt1(:,1),qpt1(:,2),[],qv1,'filled','s');
+axis equal;colorbar;grid on;xlim([-3,3]);ylim([-3,3]);
+ca=caxis;mx_ca=max(abs(ca));caxis([-mx_ca,mx_ca]);blue_red_map(gcf);
+dummygca=gca;dummygca.FontSize=30;
+grid off;
