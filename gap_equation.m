@@ -1,4 +1,4 @@
-   try
+    try
         tic
         [eVector, eValue] = eig(BdGMatrix);
         toc
@@ -62,7 +62,8 @@
         toc
     end
     nUpCal = (abs(eVector(1:nBands,:)).^2)*fermi;
-    nDownCal = (abs(eVector((nBands + 1):end,:)).^2)*(1 - fermi);
+    nDownCal = (abs(eVector((nBands + 1):end,:)).^2)*(1 - fermi); %%%%%%Jan2021: Here no other choice than using (1-fermi).....but for gap_equation2, 
+                                                                  %%%%%%%%%%%%%  there's probably choice depending which part of full matrix is being used
     %anomalousncalc
     % problem in matlab R2018b and later
     if nargout_tmp > 4 

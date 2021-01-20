@@ -91,6 +91,14 @@ end
 
 % Mainak
 
+if ~exist('spin_and_nambu','var')
+        spin_and_nambu=false;
+end
+if ~exist('spin_and_nambu_SOC','var')
+        spin_and_nambu_SOC=false;
+end
+
+
 
 % input files: tight-binding model
 load(TB_file)
@@ -162,6 +170,10 @@ if ~exist('spinfullnormal','var')
     spinfullnormal=false;
 end
 
+% if ~exist('spin_and_nambu','var')
+%     spin_and_nambu=false;
+% end
+
 % BdG matrix blocks (to be done: make it work for non-square system sizes)
 %%%%% Mainak temporary changing size due to dislocation
 if true %dislocation_length>0
@@ -174,7 +186,7 @@ end
 if ~super
     % kinetic energy
     % Mainak
-    if true %dislocation_length>0
+    if dislocation_length>0 %true %
         if ~exist('eff_pot','var')
             eff_pot=1.5;
         end
@@ -210,7 +222,9 @@ if exist('Gamma','var')
         SCInteractionMatrix = zeros(size(H0));
     else
         % Mainak
-        SCInteractionMatrix = lattice_translation(N, Gamma, latticeVectorsSC);
+        SCInteractionMatrix = lattice_translation(N, Gamma, latticeVectorsSC); %%%%%%Jan 2021: For superconductivity with dislocation, SCInteractionMatrix 
+        %%%%%%                                                                                 has to be generated as the same way as hopping with NN (or maybe NNN later) 
+        %%%%%%                                                                                 neighbours 
     end
     fullgamma=false;
 else
@@ -357,7 +371,7 @@ if spinpolarized
     end;
 end
 %%%%%%%%Mainak
-if spinfullnormal
+if or(spinfullnormal,spin_and_nambu)
     if ~(exist('nAnoUpDown','var'))
         nAnoUpDown=zeros(size(nUp));
 %         nAnoUpDown=0.01*(rand(size(nUp))+1i*rand(size(nUp)))/sqrt(2);
@@ -367,6 +381,23 @@ if spinfullnormal
     end
 
 end
+
+
+
+if spin_and_nambu  %Jan2021: try settign random delta in a spin singlet/spin triplet way
+%     len_del=size(delta,1);
+%     UpDown_delta=delta(1:len_del/2,len_del/2+1:len_del);
+%     DownUp_delta=(len_del/2+1:len_del,1:len_del/2);
+%     UpUp_delta=(1:len_del/2,1:len_del/2);
+%     DownDown_delta=(len_del/2+1:len_del,len_del/2+1:len_del);
+    if ~(exist('UpDown_delta','var'))
+        UpDown_delta=0.001*rand(numel(nUp));%zeros(numel(nUp));
+        DownUp_delta=-UpDown_delta;%0.001*rand(numel(nUp));%zeros(numel(nUp));
+        UpUp_delta=zeros(numel(nUp));%0.001*rand(numel(nUp));%zeros(numel(nUp));
+        DownDown_delta=zeros(numel(nUp));%0.001*rand(numel(nUp));%zeros(numel(nUp));
+    end
+end
+
 %%%%%Mainak
 % setup of some "growing" variables
 
@@ -468,6 +499,13 @@ end
 IntUp1 = zeros(size(nUp));
 IntDown1 = zeros(size(nDown));
 %Mainak
+%Mainak
+if spin_and_nambu
+    H_off_up=zeros(numel(nUp));
+    H_off_down=zeros(numel(nUp));
+end
+%Mainak
+
 
 for i = 1:maxLoop
     % two cases for supercell calculations here, first the usual one
@@ -514,7 +552,7 @@ for i = 1:maxLoop
                     KEdown = KEdown + diag(IntDown1);                    
                 end
                 %%%%%%%%%%%%% Mainak
-                if spinfullnormal
+                if or(spinfullnormal,spin_and_nambu)
                     H_off_up = -U*diag(nAnoUpDown);
                     H_off_down = -U*diag(nAnoDownUp); %%%??????????????COULD BE SETA AS conj(H_off_up)?
                     if exist('field','var')
@@ -532,12 +570,22 @@ for i = 1:maxLoop
                         H_off_down=H_off_down+H_soc1+(1i)*H_soc2;
                     end
                 end
-
-                if ~spinfullnormal
-                    [ nUpCal, nDownCal, deltaCal, En, TotKE ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
-                else
+                
+                if spinfullnormal
                     [ nUpCal, nDownCal, deltaCal, En, TotKE, nAnoUpDownCal, nAnoDownUpCal] = BdG_step1( KE,delta, kT,nBands, SCInteractionMatrix,KEdown,H_off_up,H_off_down);
+                elseif spin_and_nambu
+                    delta = [UpUp_delta,UpDown_delta;DownUp_delta,DownDown_delta];
+                    [ nUpCal, nDownCal, UpDown_deltaCal,DownUp_deltaCal,UpUp_deltaCal,DownDown_deltaCal, En, TotKE, nAnoUpDownCal, nAnoDownUpCal] = BdG_step2( KE,UpDown_delta,DownUp_delta,UpUp_delta,DownDown_delta, kT,nBands, SCInteractionMatrix,KEdown,H_off_up,H_off_down);                    
+                    deltaCal = [UpUp_deltaCal,UpDown_deltaCal;DownUp_deltaCal,DownDown_deltaCal];
+                else
+                    [ nUpCal, nDownCal, deltaCal, En, TotKE ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);                    
                 end
+
+%                 if ~spinfullnormal
+%                     [ nUpCal, nDownCal, deltaCal, En, TotKE ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);
+%                 else
+%                     [ nUpCal, nDownCal, deltaCal, En, TotKE, nAnoUpDownCal, nAnoDownUpCal] = BdG_step1( KE,delta, kT,nBands, SCInteractionMatrix,KEdown,H_off_up,H_off_down);
+%                 end
             
                 % [ nUpCaldown, nDownCaldown, deltaCaldown ] = BdG_step( KEdown, conj(-delta'), kT, nBands, SCInteractionMatrix,-KE);
             else
@@ -546,7 +594,6 @@ for i = 1:maxLoop
                 % [ nUpCaldown, nDownCaldown, deltaCaldown ] = BdG_step( KEdown, conj(-delta'), kT, nBands, SCInteractionMatrix,-KE);
             end
         end
-
     else
         if ~spinpolarized
             if ~magnetic
@@ -588,8 +635,12 @@ for i = 1:maxLoop
         dlmwrite([inputfile,'_fill'],(1/(numel(nUp)/nOrbitals))*sum(nUpCal + nDownCal),'precision',10);
         return;
     end
-    deltaDiff = norm(deltaCal(:) - delta(:))/norm(delta(:));
-    
+    if exist('delta','var')
+        deltaDiff = norm(deltaCal(:) - delta(:))/norm(delta(:));
+    end
+    if exist('UpDown_delta','var')
+       UpDown_deltaDiff = norm(UpDown_deltaCal(:) - UpDown_delta(:))/norm(UpDown_delta(:)); 
+    end
     % Mainak
     nUpDiff = norm(nUpCal(:) - nUp(:))/norm(nUp(:));
     % Mainak
@@ -604,6 +655,9 @@ for i = 1:maxLoop
    % end;
    
    % Mainak
+   
+   %%%%%%%%%%%%Jan2021: treating U' and J in non-rotationally invariant
+   %%%%%%%%%%%%way.....is that problematic?
    if saveEnTot
        %        uS = (abs(eVector(1:nBands,floor(nBands/2)).^2));
        %        vS = (abs(eVector((nBands + 1):end,floor(nBands/2))).^2);
@@ -615,7 +669,7 @@ for i = 1:maxLoop
 %            E_Hub = U/4*sum((nUp+nDown).^2 - (nUp-nDown).^2 ...
 %            - (nAnoUpDown+nAnoDownUp).^2 - (1i*(nAnoUpDown-nAnoDownUp)).^2);
 %        end
-       if spinfullnormal
+       if or(spinfullnormal,spin_and_nambu)
            E_Hub_Ano = -U/4*sum((nAnoUpDown+nAnoDownUp).^2 + (1i*(nAnoUpDown-nAnoDownUp)).^2);
 %            if exist('field','var')
 %                if numel(field)>1
@@ -629,18 +683,26 @@ for i = 1:maxLoop
        if Gamma(:,:,1) == 0
            E_Sup =0;
        else
-           E_Sup = -1/Gamma(:,:,1)*sum(sum(abs(delta).^2));
+           E_Sup = 1/Gamma(1,1,1)*sum(sum(abs(delta*delta')));
+%            E_Sup = -1/Gamma(1,1,1)*sum(sum(abs(delta).^2));%% CHANGING Gamma(:,:,1) TO Gamma(1,1,1) ON 4JAN2020...FOR MULTIBAND TREAT PROPERLY
+           %%%%%%% %%%%%%Jan2021: should it be
+           %%%%%%% 1/Gamma(1,1,1)*sum(sum(delta*delta')) for deltaUpDown
+           %%%%%%% and deltaDownUp and 0 for now for deltaUpUp,
+           %%%%%%% deltaDownDown?
        end
        if spinfullnormal
 %        TotEn = 1/numel(nUp)*(TotKE + E_Hub + E_Hub_12 + E_Sup + E_Hub_Ano);
-         TotEn = 1/numel(nUp)*(TotKE - E_Hub + E_Hub_12 + E_Sup - E_Hub_Ano) + mu*n0;
+         TotEn = 1/numel(nUp)*(TotKE - E_Hub + E_Hub_12 + E_Sup - E_Hub_Ano) + mu*n0; %%%%%%Jan2021: remember significance of + mu*n0, + (or -?) E_Hub_12 ? 
 %            if exist('field','var')
 %                if numel(field)>1
 %                  TotEn = TotEn + 1/numel(nUp)*(E_field_x + E_field_y);  
 %                end
 %            end
+       elseif spin_and_nambu
+           TotEn = 1/numel(nUp)*(TotKE - E_Hub + E_Hub_12 + E_Sup) + mu*n0;
        else 
-       TotEn = 1/numel(nUp)*(TotKE + E_Hub + E_Hub_12 + E_Sup);
+         TotEn = 1/numel(nUp)*(TotKE - E_Hub + E_Hub_12 + E_Sup) + mu*n0;  %Jan2021: Adding mu*n0
+%        TotEn = 1/numel(nUp)*(TotKE + E_Hub + E_Hub_12 + E_Sup);  %%%%%%Jan2021: +(or -?) E_Hub + (or -?) E_Hub_12 +(or -?) E_Sup ?
        end
 %      save([BdGfileName,'eigTotEn'],'uS','vS','TotEn');
        save([BdGfileName,'eigTotEnNoVec'],'TotEn','-ascii');
@@ -671,6 +733,11 @@ for i = 1:maxLoop
         nAnoUpDown=beta*nAnoUpDown + (1-beta)*nAnoUpDownCal;
         nAnoDownUp=beta*nAnoDownUp + (1-beta)*nAnoDownUpCal;
     end
+    
+    if spin_and_nambu
+        nAnoUpDown=beta*nAnoUpDown + (1-beta)*nAnoUpDownCal;
+        nAnoDownUp=beta*nAnoDownUp + (1-beta)*nAnoDownUpCal;
+    end
     % Mainak
 %     uS = beta*uS + (1-beta)*uCal;
 %     uS = uCal;
@@ -689,6 +756,13 @@ for i = 1:maxLoop
     if mixdelta
       %  if ~spinpolarized
             delta = beta*delta + (1-beta)*deltaCal;
+%             deltaCal = [UpUp_deltaCal,UpDown_deltaCal;DownUp_deltaCal,DownDown_deltaCal];
+            if spin_and_nambu
+                UpUp_delta = beta*UpUp_delta + (1-beta)*UpUp_deltaCal;
+                UpDown_delta = beta*UpDown_delta + (1-beta)*UpDown_deltaCal;
+                DownUp_delta = beta*DownUp_delta + (1-beta)*DownUp_deltaCal;
+                DownDown_delta = beta*DownDown_delta + (1-beta)*DownDown_deltaCal;
+            end
        % else
         %    delta = beta*delta + 0.5*(1-beta)*(deltaCal-deltaCaldown');
        % end
@@ -745,13 +819,13 @@ for i = 1:maxLoop
         end
     else
         if size(delta,1)>11000
-            if spinfullnormal
+            if or(spinfullnormal,spin_and_nambu)
               save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown','nAnoUpDown','nAnoDownUp','-v7.3');
             else 
               save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown','-v7.3');                
             end
         else
-            if spinfullnormal
+            if or(spinfullnormal,spin_and_nambu)
               save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown','nAnoUpDown','nAnoDownUp');
             else
               save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown');

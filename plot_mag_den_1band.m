@@ -14,8 +14,8 @@ function [ output_args ] = plot_mag_den_1band( inputfile,orbno )
         [filepath,name,ext]=fileparts(BdGfileName);
         
         if ~exist('nAnoUpDown','var')
-            nAnoUpDown=0;
-            nAnoDownUp=0;
+            nAnoUpDown=zeros(size(nUp));
+            nAnoDownUp=zeros(size(nUp));
         end
         if ~exist('field','var')
             field=[0,0,0];

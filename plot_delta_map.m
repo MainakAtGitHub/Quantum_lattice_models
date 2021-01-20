@@ -1,8 +1,13 @@
-function [max_gap,min_gap]=plot_delta_map(inputfile)
+function [max_gap,min_gap]=plot_delta_map(inputfile,which_del)
 
 % Modified homogeneous_dos.m
 % takes \Delta_ij as input and constructs \Delta_i0.
+% which_del can take values 1,2,3,4 corresponding to DeltaUpUp,
+% DeltaUpDown, DeltaDownUp, DeltaDownDown respectively
 
+if nargin <2 
+    which_del=0;
+end
 if nargin <1
     % load relevant files
     TB_file='TB_hamiltonian_FeSe_2D.mat'
@@ -40,9 +45,26 @@ else
     sqstring='';
 end;
 load(TB_file,'-mat');
+
+if ~exist('nOrbitals','var') % if {~exist('nOrbitals','var')...end} added on Jan2021......because nOrbitals already exists in inputfile as a keyword in newer runs
 nOrbitals = size(TBparameters,1);
-    load(Gamma_file,'-mat');
-    load(BdGfileName,'-mat');
+end
+
+load(Gamma_file,'-mat');
+load(BdGfileName,'-mat');
+
+
+if which_del==1
+    delta=delta(1:size(delta,1)/2, 1:size(delta,1)/2);
+elseif which_del==2
+    delta=delta(1:size(delta,1)/2, (size(delta,1)/2 + 1):(size(delta,1)/2 + size(delta,1)/2));
+elseif which_del==3
+    delta=(delta((size(delta,1)/2 + 1):(size(delta,1)/2 + size(delta,1)/2), 1:size(delta,1)/2));
+elseif which_del==4
+    delta=delta((size(delta,1)/2 + 1):(size(delta,1)/2 + size(delta,1)/2), (size(delta,1)/2 + 1):(size(delta,1)/2 + size(delta,1)/2));
+end
+
+
 N = sqrt(size(delta,1)/nOrbitals);
 if exist('latticeVectorsSC','var')
     nUnitCellsDelta = size(latticeVectorsSC,1);

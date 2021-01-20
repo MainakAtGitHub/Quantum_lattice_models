@@ -3,14 +3,16 @@
         [eVector, eValue] = eig(BdGMatrix);
         toc
 %       clear BdGMatrix
-        [En, sortIndex] = sort(diag(eValue));
+%         [En, sortIndex] = sort(diag(eValue));
+        En=diag(eValue);
     catch
         disp('error with buildin eig, using eigen3 library now')
         clear eVector eValue
         tic
         [eVector, eValue] =    SelfAdjointEigenSolver(BdGMatrix);
         toc
-        [En, sortIndex] = sort(eValue);
+%         [En, sortIndex] = sort(eValue);
+        En=diag(eValue);
     end
 
        % sparse matrix eigenvalue calculation is significantly slower!
@@ -24,13 +26,18 @@
     if ~isempty(dress)
         eVector=eVector.*repmat(dress',nBands*2/numel(dress),nBands*2);
     end;
-    eVector = eVector(:,sortIndex);
+%     eVector = eVector(:,sortIndex);
     fermi = 1./(1 + exp(En/kT));
     if ~fullgamma
-       deltaCal = SCInteractionMatrix.*((eVector(1:nBands,:)*(((eVector((nBands + 1):end,:))').*repmat(fermi,1,nBands))));
+%         SCInteractionMatrix.*((eVector(1:nBands,:)*(((eVector((nBands + 1):end,:))').*repmat(fermi,1,nBands))));
+       UpDown_deltaCal = SCInteractionMatrix.*((eVector(1:nBands,:)*(((eVector((3*nBands + 1):end,:))').*repmat(fermi,1,nBands))));
+       DownUp_deltaCal = SCInteractionMatrix.*((eVector(2*nBands+1:3*nBands,:)*(((eVector((1*nBands + 1):2*nBands,:))').*repmat(fermi,1,nBands))));
+       UpUp_deltaCal = 0*SCInteractionMatrix.*((eVector(1:nBands,:)*(((eVector((2*nBands + 1):3*nBands,:))').*repmat(fermi,1,nBands))));
+       DownDown_deltaCal = 0*SCInteractionMatrix.*((eVector(nBands+1:2*nBands,:)*(((eVector((3*nBands + 1):end,:))').*repmat(fermi,1,nBands))));
         %%%%%%%%%%%%%%%%Mainak
-        nAnoUpDownCal = diag(eVector(1:nBands,:)*(((eVector((nBands + 1):end,:))').*repmat(fermi,1,nBands)));
-        nAnoDownUpCal = conj(nAnoUpDownCal);
+        nAnoUpDownCal = diag(eVector(0*nBands+1:1*nBands,:)*(((eVector((nBands + 1):2*nBands,:))').*repmat(fermi,1,nBands)));
+        nAnoDownUpCal = conj(nAnoUpDownCal);%diag(eVector(3*nBands+1:4*nBands,:)*(((eVector((0*nBands + 1):1*nBands,:))').*repmat(fermi,1,nBands)));
+%         nAnoDownUpCal = conj(nAnoUpDownCal);
 %         nAnoDownUp = (eVector(1:nBands,:))'.*eVector((nBands + 1):end,:).*repmat(fermi,1,nBands);
 %         if sum(abs(nAnoUpDown-conj(nAnoDownUp))) > 1e-5
 %             disp('Nonhermitian hamiltonian!');
@@ -69,8 +76,8 @@
         %deltaCal=delta_full(eVector,fermi,int32(nBands),int32(nOrb),int32(N),SCInteractionMatrix.int(:),int32(SCInteractionMatrix.latt),deltaCal);
         toc
     end
-    nUpCal = (abs(eVector(1:nBands,:)).^2)*fermi;
-    nDownCal = (abs(eVector((nBands + 1):end,:)).^2)*(fermi);
+    nUpCal = (abs(eVector(1:nBands,:)).^2)*fermi;%??????????????????????????
+    nDownCal = (abs(eVector((nBands + 1):2*nBands,:)).^2)*(fermi);%???????????????????
     %anomalousncalc
     % problem in matlab R2018b and later
     if nargout_tmp > 6 
