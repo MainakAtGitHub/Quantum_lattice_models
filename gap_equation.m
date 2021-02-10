@@ -67,7 +67,7 @@
     %anomalousncalc
     % problem in matlab R2018b and later
     if nargout_tmp > 4 
-    TotKE = sum(1/2*diag((eVector((nBands + 1):end,:))'*KE*(eVector((nBands + 1):end,:)) - (eVector(1:nBands,:))'*KE*(eVector(1:nBands,:))).*tanh(En/kT));
+    TotKE = sum(1/2*diag((eVector((nBands + 1):end,:))'*KE*(eVector((nBands + 1):end,:)) + (eVector(1:nBands,:))'*(-KE)*(eVector(1:nBands,:))).*tanh(En/kT));
     end
     % Mainak
 %     uCal = (abs(eVector(1:nBands,floor(nBands/2)).^2));%*ones(size(fermi));

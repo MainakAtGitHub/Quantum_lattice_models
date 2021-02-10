@@ -4,7 +4,9 @@ function f=generate_inputfile(oldFolder, Gamma_file,...
     pos_file, ...
     N, Vimp,kT, U, U_Upr_J_related,Upr, J,...
     nOrbitals,TB_file,nTol,justRun,maxLoop,...
-    ref_grid_hopping_file)
+    ref_grid_hopping_file,...
+    further_N_cut_off,NN_cut_off,eff_pot,fieldx,fieldy,fieldz,bilayer_int,int_soc,spin_and_nambu,spin_and_nambu_SOC,...
+    Gamma1_file,Gamma2_file,Gamma3_file)
 % if any(~exist('random_n','var'),random_n==[],nargin<4)
 %     random_n=false;
 % end
@@ -27,8 +29,8 @@ function f=generate_inputfile(oldFolder, Gamma_file,...
 %     J=0;
 % end
     
-BdGfolder='/home/UFAD/mainak.pal/Desktop/summer_2019_office/andreas/BdG';
-
+% BdGfolder='/home/UFAD/mainak.pal/Desktop/summer_2019_office/andreas/BdG';
+BdGfolder = '/home/UFAD/mainak.pal/Desktop/summer_2019_office/andreas/BdG/Updated_synced_BdG_scripts_21June2020';
 
 % kT = 0.06:0.02:0.1;
 % U = 2:0.1:2.5;
@@ -53,7 +55,10 @@ for itr_N=N
                     '_Upr',num2str(Upr),...
                     '_J',num2str(J),...
                     '_kT',num2str(itr_kT),...
-                    '_n0',num2str(n0_orb*nOrbitals),'.txt'];
+                    '_n0',num2str(n0_orb),...
+                    '_further_N_cut_off',num2str(further_N_cut_off),...
+                    '_NN_cut_off',num2str(NN_cut_off),...
+                    '_eff_pot',num2str(eff_pot),'.txt'];
                 infile_id = fopen(inputfile,'w');
                 
                 BdGfilename=[...
@@ -66,11 +71,20 @@ for itr_N=N
                     '_Upr',num2str(Upr),...
                     '_J',num2str(J),...
                     '_kT',num2str(itr_kT),...
-                    '_n0',num2str(n0_orb*nOrbitals),'.mat'];
+                    '_n0',num2str(n0_orb),...
+                    '_further_N_cut_off',num2str(further_N_cut_off),...
+                    '_NN_cut_off',num2str(NN_cut_off),...
+                    '_eff_pot',num2str(eff_pot),'.mat'];
                 fprintf(infile_id,['BdGfileName=',num2str(BdGfilename),'\n']);
                 [Gamma_filepath,Gamma_filename,Gamma_fileext]=fileparts(Gamma_file);                     
+                [Gamma1_filepath,Gamma1_filename,Gamma1_fileext]=fileparts(Gamma1_file);
+                [Gamma2_filepath,Gamma2_filename,Gamma2_fileext]=fileparts(Gamma2_file);
+                [Gamma3_filepath,Gamma3_filename,Gamma3_fileext]=fileparts(Gamma3_file);
                 fprintf(infile_id,['Gamma_file=',num2str(Gamma_filename),'.mat','\n']);
-                fprintf(infile_id,'M=5\n');
+                fprintf(infile_id,['Gamma1_file=',num2str(Gamma1_filename),'.mat','\n']);
+                fprintf(infile_id,['Gamma2_file=',num2str(Gamma2_filename),'.mat','\n']);
+                fprintf(infile_id,['Gamma3_file=',num2str(Gamma3_filename),'.mat','\n']);                
+                fprintf(infile_id,'M=15\n');
                 fprintf(infile_id,['N=',num2str(itr_N),'\n']);
                 [TB_filepath,TB_filename,TB_fileext]=fileparts(TB_file);
                 fprintf(infile_id,['TB_file=',num2str(TB_filename),'.mat','\n']);
@@ -89,14 +103,17 @@ for itr_N=N
                     '_Upr',num2str(Upr),...
                     '_J',num2str(J),...
                     '_kT',num2str(itr_kT),...
-                    '_n0',num2str(n0_orb*nOrbitals),'\n']);
-                fprintf(infile_id,'deltaTol=1e-06\n'); % may need frequent change
+                    '_n0',num2str(n0_orb),...
+                    '_further_N_cut_off',num2str(further_N_cut_off),...
+                    '_NN_cut_off',num2str(NN_cut_off),...
+                    '_eff_pot',num2str(eff_pot),'\n']);
+                fprintf(infile_id,'deltaTol=1e-08\n'); % may need frequent change
                 fprintf(infile_id,'firstEnergy=-5\n');
                 fprintf(infile_id,'ita=0.005\n');
                 fprintf(infile_id,['kT=',num2str(itr_kT),'\n']);
                 fprintf(infile_id,'lastEnergy=5\n');
                 fprintf(infile_id,['maxLoop=',num2str(maxLoop),'\n']);
-                fprintf(infile_id,['n0=',num2str(n0_orb*nOrbitals),'\n']);
+                fprintf(infile_id,['n0=',num2str(n0_orb),'\n']);
                 fprintf(infile_id,'nEnergyPoints=2500\n');
                 fprintf(infile_id,['nOrbitals=',num2str(nOrbitals),'\n']);
                 fprintf(infile_id,'tetra=false\n');
@@ -118,12 +135,21 @@ for itr_N=N
                     fprintf(infile_id,['pos_file=',...
                         num2str(pos_filename),num2str(pos_fileext),'\n']);
                 end
-                fprintf(infile_id,'normal_metal=true\n');
+                fprintf(infile_id,'normal_metal=false\n');
                 
                 [ref_grid_hopping_filepath,ref_grid_hopping_filename,ref_grid_hopping_fileext]=fileparts(ref_grid_hopping_file);
                 fprintf(infile_id,['ref_grid_hopping_file=',...
                     num2str(ref_grid_hopping_filename),num2str(ref_grid_hopping_fileext),'\n']);
-                
+%                 fprintf(infile_id,'eff_pot=8\n');
+                fprintf(infile_id,['further_N_cut_off=',num2str(further_N_cut_off),'\n']);
+                fprintf(infile_id,['NN_cut_off=',num2str(NN_cut_off),'\n']);
+                fprintf(infile_id,['eff_pot=',num2str(eff_pot),'\n']);
+                fprintf(infile_id,['field=[',num2str(fieldx),',',num2str(fieldy),',',num2str(fieldz),']','\n']);
+                fprintf(infile_id,['spinfullnormal=false','\n']);
+                fprintf(infile_id,['bilayer_int=',num2str(bilayer_int),'\n']);
+                fprintf(infile_id,['int_soc=',num2str(int_soc),'\n']);
+                fprintf(infile_id,['spin_and_nambu=',num2str(spin_and_nambu),'\n']);
+                fprintf(infile_id,['spin_and_nambu_SOC=',num2str(spin_and_nambu_SOC),'\n']);
                 fclose(infile_id);
                 if ~justRun
                     submit_inputfile = [...
@@ -136,7 +162,10 @@ for itr_N=N
                         '_Upr',num2str(Upr),...
                         '_J',num2str(J),...
                         '_kT',num2str(itr_kT),...
-                        '_n0',num2str(n0_orb*nOrbitals),'.sh'];
+                        '_n0',num2str(n0_orb),...
+                        '_further_N_cut_off',num2str(further_N_cut_off),...
+                        '_NN_cut_off',num2str(NN_cut_off),...
+                        '_eff_pot',num2str(eff_pot),'.sh'];
                     submit_infile_id = fopen(submit_inputfile,'w');
                     fprintf(submit_infile_id,'#!/bin/bash\n');
                     fprintf(submit_infile_id,'#SBATCH --job-name=parallel_job      # Job name\n');
@@ -144,11 +173,14 @@ for itr_N=N
                     fprintf(submit_infile_id,'##SBATCH --mail-user=email@ufl.edu    # Where to send mail\n');
                     fprintf(submit_infile_id,'#SBATCH --ntasks=1                   # Run a single task\n');
                     fprintf(submit_infile_id,'#SBATCH --cpus-per-task=4            # Number of CPU cores per task\n');
-                    fprintf(submit_infile_id,'#SBATCH --mem=6gb                    # Job memory request\n');
-                    fprintf(submit_infile_id,'#SBATCH --time=10:00:00              # Time limit hrs:min:sec\n');
-                    fprintf(submit_infile_id,'#SBATCH --output=slurm_%N_%j.out     # Standard output and error log\n');
+                    fprintf(submit_infile_id,'#SBATCH --mem=10gb                    # Job memory request\n');
+                    fprintf(submit_infile_id,'#SBATCH --time=30:00:00              # Time limit hrs:min:sec\n');
+%                   fprintf(submit_infile_id,['#SBATCH --output=slurm_','\%','N_','\%','j.out     # Standard output and error log\n']);
+                    fprintf(submit_infile_id,'#SBATCH --output=slurm_%%N_%%j.out     # Standard output and error log\n');
                     fprintf(submit_infile_id,'##SBATCH --partition=hpg2-dev\n');
-                    fprintf(submit_infile_id,['./run_BdG_impurity_v3.sh /apps/matlab/r2019b ',inputfile]);
+%                   fprintf(submit_infile_id,'##SBATCH --partition=hpg2-dev\n');
+%                     fprintf(submit_infile_id,['./run_BdG_impurity_v3.sh /apps/matlab/mcr/2019b/v97 ',inputfile]);
+                    fprintf(submit_infile_id,['./run_BdG_impurity_v3.sh /apps/matlab/mcr/2020a/v98 ',inputfile]);
                     fclose(submit_infile_id);
                 end
                 
@@ -178,27 +210,44 @@ for itr_N=N
                     dislocation_length=itr_N^2-size(r,1);
                     if dislocation_length>0
                         load(BdGfilename,'-mat');
-                        delta=zeros(size(r,1));
-                        nUp([size(r,1)+1:end])=[];
-                        nDown([size(r,1)+1:end])=[];
-                        save(BdGfilename,'delta','nUp','nDown','mu');
+                        if ~spin_and_nambu
+                            delta(nOrbitals*size(r,1)+1:end,:)=[];
+                            delta(:,nOrbitals*size(r,1)+1:end)=[];                            
+                        else
+                            delta(2*nOrbitals*size(r,1)+1:end,:)=[];
+                            delta(:,2*nOrbitals*size(r,1)+1:end)=[];                            
+                        end
+                        nUp([nOrbitals*size(r,1)+1:end])=[];
+                        nDown([nOrbitals*size(r,1)+1:end])=[];
+                        save(BdGfilename,'delta','nUp','nDown','mu','-append');
+%                       save(BdGfilename,'delta','nUp','nDown','mu','mudown','-append');
                     end
                     if dislocation_length>0
                         load(['Ini_config_',BdGfilename],'-mat');
-                        delta=zeros(size(r,1));
-                        nUp([size(r,1)+1:end])=[];
-                        nDown([size(r,1)+1:end])=[];
-                        save(['Ini_config_',BdGfilename],'delta','nUp','nDown','mu');
+                        if ~spin_and_nambu
+                            delta(nOrbitals*size(r,1)+1:end,:)=[];
+                            delta(:,nOrbitals*size(r,1)+1:end)=[];                            
+                        else
+                            delta(2*nOrbitals*size(r,1)+1:end,:)=[];
+                            delta(:,2*nOrbitals*size(r,1)+1:end)=[];                            
+                        end
+                        nUp([nOrbitals*size(r,1)+1:end])=[];
+                        nDown([nOrbitals*size(r,1)+1:end])=[];
+                        save(['Ini_config_',BdGfilename],'delta','nUp','nDown','mu','-append');                        
+%                       save(['Ini_config_',BdGfilename],'delta','nUp','nDown','mu','mudown','-append');
                     end
                     
 %                 end
                   cd(BdGfolder);
                   inputfileWithPath=[oldFolder,'/',inputfile];
                   if justRun
-                      BdG_impurity_v3(inputfileWithPath,0,false);
+                      BdG_impurity_v3(inputfileWithPath,0,true);
+                      plot_mag_den_1band(inputfileWithPath,1);
+                      if nOrbitals>1
+                          plot_mag_den_1band(inputfileWithPath,2);
+                      end
                   end
                   close all;
-                  plot_mag_den_1band(inputfileWithPath);
             end
         end
     end

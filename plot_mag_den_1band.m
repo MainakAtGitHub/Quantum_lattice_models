@@ -30,12 +30,21 @@ function [ output_args ] = plot_mag_den_1band( inputfile,orbno )
 %         if exist('nAnoUpDown','var')
             hold on;
             scl=1;
-            Max_abs_mag = max(sqrt(sum([(nAnoUpDown(orbno:nOrbitals:end)+nAnoDownUp(orbno:nOrbitals:end)).^2,(1i*(nAnoUpDown(orbno:nOrbitals:end)-nAnoDownUp(orbno:nOrbitals:end))).^2,(nUp(orbno:nOrbitals:end)-nDown(orbno:nOrbitals:end)).^2],2)))
-            Avg_abs_magnetization = sum(sqrt((nUp(orbno:nOrbitals:end)-nDown(orbno:nOrbitals:end)).^2+(nAnoUpDown(orbno:nOrbitals:end)+nAnoDownUp(orbno:nOrbitals:end)).^2+(1i*(nAnoUpDown(orbno:nOrbitals:end)-nAnoDownUp(orbno:nOrbitals:end))).^2))/numel(nAnoUpDown(orbno:nOrbitals:end))
+            Max_abs_mag = max(sqrt(sum([(nAnoUpDown(orbno:nOrbitals:end)+nAnoDownUp(orbno:nOrbitals:end)).*conj((nAnoUpDown(orbno:nOrbitals:end)+nAnoDownUp(orbno:nOrbitals:end))),...
+                (1i*(nAnoUpDown(orbno:nOrbitals:end)-nAnoDownUp(orbno:nOrbitals:end))).*conj((1i*(nAnoUpDown(orbno:nOrbitals:end)-nAnoDownUp(orbno:nOrbitals:end)))),...
+                (nUp(orbno:nOrbitals:end)-nDown(orbno:nOrbitals:end)).*conj((nUp(orbno:nOrbitals:end)-nDown(orbno:nOrbitals:end)))],2)))
+            Avg_abs_magnetization = sum(sqrt((nUp(orbno:nOrbitals:end)-nDown(orbno:nOrbitals:end)).*conj((nUp(orbno:nOrbitals:end)-nDown(orbno:nOrbitals:end)))+...
+            (nAnoUpDown(orbno:nOrbitals:end)+nAnoDownUp(orbno:nOrbitals:end)).*conj((nAnoUpDown(orbno:nOrbitals:end)+nAnoDownUp(orbno:nOrbitals:end)))+...
+                (1i*(nAnoUpDown(orbno:nOrbitals:end)-nAnoDownUp(orbno:nOrbitals:end))).*conj((1i*(nAnoUpDown(orbno:nOrbitals:end)-nAnoDownUp(orbno:nOrbitals:end)))))...
+                )/numel(nAnoUpDown(orbno:nOrbitals:end))
             Avg_vec_mag = sum([(nAnoUpDown(orbno:nOrbitals:end)+nAnoDownUp(orbno:nOrbitals:end)),(1i*(nAnoUpDown(orbno:nOrbitals:end)-nAnoDownUp(orbno:nOrbitals:end))),(nUp(orbno:nOrbitals:end)-nDown(orbno:nOrbitals:end))],1)/numel(nAnoUpDown(orbno:nOrbitals:end))
 %             Avg_vec_xy_mag = sum([(nAnoUpDown+nAnoDownUp).^2,(1i*(nAnoUpDown-nAnoDownUp)).^2,(nUp-nDown).^2],1)/numel(nAnoUpDown)
-            Avg_xy_abs_magnetization = sum(sqrt((nAnoUpDown(orbno:nOrbitals:end)+nAnoDownUp(orbno:nOrbitals:end)).^2+(1i*(nAnoUpDown(orbno:nOrbitals:end)-nAnoDownUp(orbno:nOrbitals:end))).^2))/numel(nAnoUpDown(orbno:nOrbitals:end))
-            Max_xy_abs_mag = max(sqrt(sum([(nAnoUpDown(orbno:nOrbitals:end)+nAnoDownUp(orbno:nOrbitals:end)).^2,(1i*(nAnoUpDown(orbno:nOrbitals:end)-nAnoDownUp(orbno:nOrbitals:end))).^2],2)))           
+            Avg_xy_abs_magnetization = sum(sqrt((nAnoUpDown(orbno:nOrbitals:end)+nAnoDownUp(orbno:nOrbitals:end)).*conj((nAnoUpDown(orbno:nOrbitals:end)+nAnoDownUp(orbno:nOrbitals:end)))+...
+                (1i*(nAnoUpDown(orbno:nOrbitals:end)-nAnoDownUp(orbno:nOrbitals:end))).*conj((1i*(nAnoUpDown(orbno:nOrbitals:end)-nAnoDownUp(orbno:nOrbitals:end)))))...
+                )/numel(nAnoUpDown(orbno:nOrbitals:end))
+            Max_xy_abs_mag = max(sqrt(sum([(nAnoUpDown(orbno:nOrbitals:end)+nAnoDownUp(orbno:nOrbitals:end)).*conj((nAnoUpDown(orbno:nOrbitals:end)+nAnoDownUp(orbno:nOrbitals:end))),...
+                (1i*(nAnoUpDown(orbno:nOrbitals:end)-nAnoDownUp(orbno:nOrbitals:end))).*conj((1i*(nAnoUpDown(orbno:nOrbitals:end)-nAnoDownUp(orbno:nOrbitals:end))))]...
+                ,2)))           
             quiver(r(:,1),r(:,2),(scl/Max_xy_abs_mag)*(nAnoUpDown(orbno:nOrbitals:end)+nAnoDownUp(orbno:nOrbitals:end)),(scl/Max_xy_abs_mag)*1i*(nAnoUpDown(orbno:nOrbitals:end)-nAnoDownUp(orbno:nOrbitals:end)),0,'color','black');            
 %         end
         
@@ -55,7 +64,7 @@ function [ output_args ] = plot_mag_den_1band( inputfile,orbno )
             title({' ',[repmat(' ',1,20),'Magnetization',' orbital/layer ',num2str(orbno),' (',' kT=',num2str(kT),' U=',num2str(U),' n=',num2str(n0),' N=',num2str(N),' B=',num2str(field),')'],[' |M|xy max=',num2str(Max_xy_abs_mag),', |M| max=',num2str(Max_abs_mag)],['Avg M=','(',num2str(Avg_vec_mag(1)),',',num2str(Avg_vec_mag(2)),',',num2str(Avg_vec_mag(3)),')',', Avg |M|=',num2str(Avg_abs_magnetization),],' '});
         end
         testgca=gca;
-        testgca.FontSize=20;%30;
+        testgca.FontSize=10;%30;
         axis equal;
         box on;
         xlim([-N/2,N/2]);

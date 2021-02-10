@@ -110,6 +110,16 @@ load(Gamma_file,'-mat')
 %if ~(exist('input_fileName','var'))
 %    input_fileName=BdGfileName;
 %end;
+
+if exist('Gamma1_file','var')
+    load(Gamma1_file,'-mat')
+end
+if exist('Gamma2_file','var')
+    load(Gamma2_file,'-mat')
+end
+if exist('Gamma3_file','var')
+    load(Gamma3_file,'-mat')
+end
 %%%%%Mainak
 if exist('ref_grid_hopping_file','var')
     t_r_ref=load(ref_grid_hopping_file);
@@ -225,6 +235,21 @@ if exist('Gamma','var')
         SCInteractionMatrix = lattice_translation(N, Gamma, latticeVectorsSC); %%%%%%Jan 2021: For superconductivity with dislocation, SCInteractionMatrix 
         %%%%%%                                                                                 has to be generated as the same way as hopping with NN (or maybe NNN later) 
         %%%%%%                                                                                 neighbours 
+        if exist('Gamma1','var')
+            SCInteractionMatrix1 = lattice_translation(N, Gamma1, latticeVectorsSC);
+        else 
+            SCInteractionMatrix1 = zeros(size(H0));
+        end
+        if exist('Gamma2','var')
+            SCInteractionMatrix2 = lattice_translation(N, Gamma2, latticeVectorsSC);
+        else 
+            SCInteractionMatrix2 = zeros(size(H0));
+        end
+        if exist('Gamma3','var')
+            SCInteractionMatrix3 = lattice_translation(N, Gamma3, latticeVectorsSC);
+        else
+            SCInteractionMatrix3 = zeros(size(H0));
+        end        
     end
     fullgamma=false;
 else
@@ -386,15 +411,15 @@ end
 
 if spin_and_nambu  %Jan2021: try settign random delta in a spin singlet/spin triplet way
 %     len_del=size(delta,1);
-%     UpDown_delta=delta(1:len_del/2,len_del/2+1:len_del);
-%     DownUp_delta=(len_del/2+1:len_del,1:len_del/2);
-%     UpUp_delta=(1:len_del/2,1:len_del/2);
-%     DownDown_delta=(len_del/2+1:len_del,len_del/2+1:len_del);
+%     UpDown_delta=delta(1:nBands,nBands+1:2*nBands);
+%     DownUp_delta=(nBands+1:2*nBands,1:nBands);
+%     UpUp_delta=(1:nBands,1:nBands);
+%     DownDown_delta=(nBands+1:2*nBands,nBands+1:2*nBands);
     if ~(exist('UpDown_delta','var'))
-        UpDown_delta=0.001*rand(numel(nUp));%zeros(numel(nUp));
-        DownUp_delta=-UpDown_delta;%0.001*rand(numel(nUp));%zeros(numel(nUp));
-        UpUp_delta=zeros(numel(nUp));%0.001*rand(numel(nUp));%zeros(numel(nUp));
-        DownDown_delta=zeros(numel(nUp));%0.001*rand(numel(nUp));%zeros(numel(nUp));
+        UpDown_delta=0.001*(rand(numel(nUp))+1i*rand(numel(nUp)));%zeros(numel(nUp));
+        DownUp_delta=0.001*(rand(numel(nUp))+1i*rand(numel(nUp)));%zeros(numel(nUp));
+        UpUp_delta=0.001*(rand(numel(nUp))+1i*rand(numel(nUp)));%zeros(numel(nUp));zeros(numel(nUp));%
+        DownDown_delta=0.001*(rand(numel(nUp))+1i*rand(numel(nUp)));%zeros(numel(nUp));zeros(numel(nUp));%
     end
 end
 
@@ -572,11 +597,14 @@ for i = 1:maxLoop
                 end
                 
                 if spinfullnormal
-                    [ nUpCal, nDownCal, deltaCal, En, TotKE, nAnoUpDownCal, nAnoDownUpCal] = BdG_step1( KE,delta, kT,nBands, SCInteractionMatrix,KEdown,H_off_up,H_off_down);
+                    [ nUpCal, nDownCal, deltaCal, En, TotKE, nAnoUpDownCal, nAnoDownUpCal] = ...
+                        BdG_step1( KE,delta, kT,nBands, SCInteractionMatrix,KEdown,H_off_up,H_off_down);
                 elseif spin_and_nambu
-                    delta = [UpUp_delta,UpDown_delta;DownUp_delta,DownDown_delta];
-                    [ nUpCal, nDownCal, UpDown_deltaCal,DownUp_deltaCal,UpUp_deltaCal,DownDown_deltaCal, En, TotKE, nAnoUpDownCal, nAnoDownUpCal] = BdG_step2( KE,UpDown_delta,DownUp_delta,UpUp_delta,DownDown_delta, kT,nBands, SCInteractionMatrix,KEdown,H_off_up,H_off_down);                    
-                    deltaCal = [UpUp_deltaCal,UpDown_deltaCal;DownUp_deltaCal,DownDown_deltaCal];
+                    delta = [UpUp_delta,(UpDown_delta);(DownUp_delta),DownDown_delta];
+                    [ nUpCal, nDownCal, UpDown_deltaCal,DownUp_deltaCal,UpUp_deltaCal,DownDown_deltaCal, En, TotKE, nAnoUpDownCal, nAnoDownUpCal] = ...
+                        BdG_step2( KE,UpDown_delta,DownUp_delta,UpUp_delta,DownDown_delta, kT,nBands, SCInteractionMatrix,KEdown,H_off_up,H_off_down,...
+                        SCInteractionMatrix1,SCInteractionMatrix2,SCInteractionMatrix3);                    
+                    deltaCal = [UpUp_deltaCal,(UpDown_deltaCal);(DownUp_deltaCal),DownDown_deltaCal];
                 else
                     [ nUpCal, nDownCal, deltaCal, En, TotKE ] = BdG_step( KE,delta, kT,nBands, SCInteractionMatrix,-KEdown);                    
                 end

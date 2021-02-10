@@ -185,7 +185,12 @@ for N1=1:N
 end
 %%%delta_map_singleH=sqrt(delta_map_singleH);
 figure
-imagesc(delta_map_singleH');
+subplot(1,2,1);
+imagesc(real(delta_map_singleH'));
+axis square;
+colorbar
+subplot(1,2,2);
+imagesc(imag(delta_map_singleH'));
 axis square;
 colorbar
 [filepath,name,ext]=fileparts(BdGfileName);
@@ -212,7 +217,12 @@ for N1=1:N
 end
 %%%delta_map_singleV=sqrt(delta_map_singleV);
 figure
-imagesc(delta_map_singleV');
+subplot(1,2,1);
+imagesc(real(delta_map_singleV'));
+axis square;
+colorbar
+subplot(1,2,2);
+imagesc(imag(delta_map_singleV'));
 axis square;
 colorbar
 [filepath,name,ext]=fileparts(BdGfileName);

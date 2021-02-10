@@ -9,7 +9,7 @@
         disp('error with buildin eig, using eigen3 library now')
         clear eVector eValue
         tic
-        [eVector, eValue] =    SelfAdjointEigenSolver(BdGMatrix);
+        [eVector, eValue] = SelfAdjointEigenSolver(BdGMatrix);
         toc
 %         [En, sortIndex] = sort(eValue);
         En=diag(eValue);
@@ -24,19 +24,53 @@
     clear eValue
     % dressing of the eVector
     if ~isempty(dress)
-        eVector=eVector.*repmat(dress',nBands*2/numel(dress),nBands*2);
+        eVector=eVector.*repmat(dress', nBands*2/numel(dress),nBands*2);
     end;
 %     eVector = eVector(:,sortIndex);
     fermi = 1./(1 + exp(En/kT));
     if ~fullgamma
+        UpDownExpec=((eVector(1:nBands,:)*(((eVector((3*nBands + 1):end,:))').*repmat(fermi,1,nBands))));
+        DownUpExpec=((eVector(1*nBands+1:2*nBands,:)*(((eVector((2*nBands + 1):3*nBands,:))').*repmat(fermi,1,nBands))));
+        UpUpExpec=((eVector(1:nBands,:)*(((eVector((2*nBands + 1):3*nBands,:))').*repmat((1-fermi),1,nBands))));
+        DownDownExpec=((eVector(nBands+1:2*nBands,:)*(((eVector((3*nBands + 1):end,:))').*repmat((1-fermi),1,nBands))));
+        
+        UpDown_deltaCal=SCInteractionMatrix.*(UpDownExpec - DownUpExpec)*0.5;
+        DownUp_deltaCal=-SCInteractionMatrix.*(UpDownExpec - DownUpExpec)*0.5;
+        UpUp_deltaCal=zeros(size(UpDown_deltaCal));
+        DownDown_deltaCal=zeros(size(UpDown_deltaCal));
+
+        
+        UpUp_deltaCal1=-SCInteractionMatrix1.*(UpUpExpec - DownDownExpec)*0.5;%zeros(size(UpDown_deltaCal1));
+        DownDown_deltaCal1=SCInteractionMatrix1.*(UpUpExpec - DownDownExpec)*0.5;%zeros(size(UpDown_deltaCal1));
+        UpDown_deltaCal1=zeros(size(UpUp_deltaCal1));
+        DownUp_deltaCal1=zeros(size(UpUp_deltaCal1));
+
+        UpUp_deltaCal2=-SCInteractionMatrix2.*(UpUpExpec + DownDownExpec)*0.5;%zeros(size(UpDown_deltaCal1));
+        DownDown_deltaCal2=-SCInteractionMatrix2.*(UpUpExpec + DownDownExpec)*0.5;%zeros(size(UpDown_deltaCal1));
+        UpDown_deltaCal2=zeros(size(UpUp_deltaCal2));
+        DownUp_deltaCal2=zeros(size(UpUp_deltaCal2));
+        
+        UpDown_deltaCal3=SCInteractionMatrix3.*(UpDownExpec + DownUpExpec)*0.5;
+        DownUp_deltaCal3=SCInteractionMatrix3.*(UpDownExpec + DownUpExpec)*0.5;
+        UpUp_deltaCal3=zeros(size(UpDown_deltaCal3));
+        DownDown_deltaCal3=zeros(size(UpDown_deltaCal3));
+        
+        
+        UpDown_deltaCal = UpDown_deltaCal + UpDown_deltaCal1 + UpDown_deltaCal2 + UpDown_deltaCal3;
+        DownUp_deltaCal = DownUp_deltaCal + DownUp_deltaCal1 + DownUp_deltaCal2 + DownUp_deltaCal3;
+        UpUp_deltaCal = UpUp_deltaCal + UpUp_deltaCal1 + UpUp_deltaCal2 + UpUp_deltaCal3;
+        DownDown_deltaCal = DownDown_deltaCal + DownDown_deltaCal1 + DownDown_deltaCal2 + DownDown_deltaCal3;
+
+
+        
 %         SCInteractionMatrix.*((eVector(1:nBands,:)*(((eVector((nBands + 1):end,:))').*repmat(fermi,1,nBands))));
-       UpDown_deltaCal = SCInteractionMatrix.*((eVector(1:nBands,:)*(((eVector((3*nBands + 1):end,:))').*repmat(fermi,1,nBands))));
-       DownUp_deltaCal = SCInteractionMatrix.*((eVector(2*nBands+1:3*nBands,:)*(((eVector((1*nBands + 1):2*nBands,:))').*repmat(fermi,1,nBands))));
-       UpUp_deltaCal = 0*SCInteractionMatrix.*((eVector(1:nBands,:)*(((eVector((2*nBands + 1):3*nBands,:))').*repmat(fermi,1,nBands))));
-       DownDown_deltaCal = 0*SCInteractionMatrix.*((eVector(nBands+1:2*nBands,:)*(((eVector((3*nBands + 1):end,:))').*repmat(fermi,1,nBands))));
+%         UpDown_deltaCal = SCInteractionMatrix.*((eVector(1:nBands,:)*(((eVector((3*nBands + 1):end,:))').*repmat(fermi,1,nBands))));
+%        DownUp_deltaCal = SCInteractionMatrix.*((eVector(1*nBands+1:2*nBands,:)*(((eVector((2*nBands + 1):3*nBands,:))').*repmat(fermi,1,nBands))));
+%        UpUp_deltaCal = 0*SCInteractionMatrix.*((eVector(1:nBands,:)*(((eVector((2*nBands + 1):3*nBands,:))').*repmat((1-fermi),1,nBands))));
+%        DownDown_deltaCal = 0*SCInteractionMatrix.*((eVector(nBands+1:2*nBands,:)*(((eVector((3*nBands + 1):end,:))').*repmat((1-fermi),1,nBands))));
         %%%%%%%%%%%%%%%%Mainak
         nAnoUpDownCal = diag(eVector(0*nBands+1:1*nBands,:)*(((eVector((nBands + 1):2*nBands,:))').*repmat(fermi,1,nBands)));
-        nAnoDownUpCal = conj(nAnoUpDownCal);%diag(eVector(3*nBands+1:4*nBands,:)*(((eVector((0*nBands + 1):1*nBands,:))').*repmat(fermi,1,nBands)));
+        nAnoDownUpCal = diag(eVector(1*nBands+1:2*nBands,:)*(((eVector((0*nBands + 1):1*nBands,:))').*repmat(fermi,1,nBands)));%conj(nAnoUpDownCal);%diag(eVector(3*nBands+1:4*nBands,:)*(((eVector((0*nBands + 1):1*nBands,:))').*repmat(fermi,1,nBands)));
 %         nAnoDownUpCal = conj(nAnoUpDownCal);
 %         nAnoDownUp = (eVector(1:nBands,:))'.*eVector((nBands + 1):end,:).*repmat(fermi,1,nBands);
 %         if sum(abs(nAnoUpDown-conj(nAnoDownUp))) > 1e-5
@@ -77,7 +111,7 @@
         toc
     end
     nUpCal = (abs(eVector(1:nBands,:)).^2)*fermi;%??????????????????????????
-    nDownCal = (abs(eVector((nBands + 1):2*nBands,:)).^2)*(fermi);%???????????????????
+    nDownCal = (abs(eVector((3*nBands + 1):4*nBands,:)).^2)*(1-fermi);%???????????????????
     %anomalousncalc
     % problem in matlab R2018b and later
     if nargout_tmp > 6 
