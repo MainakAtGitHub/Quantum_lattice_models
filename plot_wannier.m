@@ -65,7 +65,7 @@ end
  psi2=sum(sum(wannierValues(:,:,z0,band).*conj(wannierValues(:,:,z0,band))));
  mx=max(max(abs(wannierValues(:,:,z0,band))))
  % some manual setting
- mx=0.012
+ %mx=0.012
  caxis([-mx,mx]);
  ca=caxis;
 colorbar;
@@ -92,10 +92,10 @@ if wsize>1
 % mark Li positions
 NNNx=[0,0,0,1,1,1]*RDiscrete(1);
 NNNy=[0,1,-1,0,1,-1]*RDiscrete(2);
-scatter3(xGrid(round(NNNx+shift(1)-RDiscrete(1)/4)),yGrid(round(NNNy+shift(2)-RDiscrete(1)/4)),ones(numel(NNNx),1)*mx*1,'o','MarkerEdgeColor','k')
+%scatter3(xGrid(round(NNNx+shift(1)-RDiscrete(1)/4)),yGrid(round(NNNy+shift(2)-RDiscrete(1)/4)),ones(numel(NNNx),1)*mx*1,'o','MarkerEdgeColor','k')
 NNNy=[-1,-1,-1,0,0,0]*RDiscrete(2);
 NNNx=[0,1,-1,0,1,-1]*RDiscrete(1);
-scatter3(xGrid(round(NNNx+shift(1)+RDiscrete(1)/4)),yGrid(round(NNNy+shift(2)+RDiscrete(1)/4)),ones(numel(NNNx),1)*mx*1,'square','MarkerEdgeColor','k')
+%scatter3(xGrid(round(NNNx+shift(1)+RDiscrete(1)/4)),yGrid(round(NNNy+shift(2)+RDiscrete(1)/4)),ones(numel(NNNx),1)*mx*1,'square','MarkerEdgeColor','k')
 end;
 flnm=['/tmp/Wannier_band_',num2str(band),'_z_',num2str(z0)];
  print('-djpeg', [flnm,'.jpg'],'-r200');
@@ -103,5 +103,21 @@ flnm=['/tmp/Wannier_band_',num2str(band),'_z_',num2str(z0)];
  % also do a one pixel export
    rgbImage = ind2rgb(fix((wannierValues(:,:,z0,band)-ca(1))/(ca(2)-ca(1))*256), mp);
 imwrite(rgbImage,[flnm,'_map_only.png']);
+
+% also do a contour plot
+% Create figure
+fige = figure;
+% Create axes
+axes1 = axes('Parent',fige);
+hold(axes1,'on');
+contour(wannierValues(:,:,z0,band),10)
+blue_red_map_dark(fige)
+box(axes1,'on');
+axis(axes1,'tight');
+% Set the remaining axes properties
+set(axes1,'BoxStyle','full','CLim',[-mx,mx],'DataAspectRatio',[1 1 1],...
+    'Layer','top','PlotBoxAspectRatio',[126 126 1],'XTick',zeros(1,0),'YTick',...
+    zeros(1,0));
+print_pdf([flnm,'_contour_only.pdf']);
 
 end

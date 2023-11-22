@@ -16,7 +16,7 @@ numel=rows*columns;
 indodd=1:2:2*numel;
 indeven=2:2:2*numel;
 nLines = 0;
-while (fgets(fid) ~= -1),
+while (fgets(fid) ~= -1)
   nLines = nLines+1;
 end
 nLines=nLines-imag(skip);

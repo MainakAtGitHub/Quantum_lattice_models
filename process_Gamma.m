@@ -141,7 +141,7 @@ tickx={'$d_{z^2}$','$d_{x^2-y^2}$','$d_{yz}$','$d_{xz}$','$d_{xy}$'}; % orbitals
 %     image(sign(real(Gamma2Plot)).*(abs(real(Gamma2Plot)/GammaRealMax))*128+128);
 % end
 
-r=realspaceplot(Gamma2Plot,N,tickx,flnm,'s');
+r=realspaceplot(Gamma2Plot,N,tickx,flnm,'');
 
 % 
 % scale='s';

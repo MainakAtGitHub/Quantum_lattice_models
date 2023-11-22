@@ -39,14 +39,21 @@
 
 function print_pdf(name, fig)
 if nargin < 2
-    fig = gcf;
+    if verLessThan('matlab','8.4.0')
+        % execute code for R2014a or earlier
+        fig = gcf;
+    else
+        % execute code for R2014b or later
+        fig_obj = gcf;
+        fig=fig_obj.Number;
+    end
 end
 % workaround for KU computer:
 cmd='gs';
 if isunix
     [status,string]=system('lsb_release -c');
     if status==0
-        if ~isempty(findstr(string,'trusty'))
+        if ~isempty(findstr(string,'jammy'))
             %disp('workaround for gs used');
             %disp('problem with gs, using another export');
             %print(name,'-dpdf');
@@ -54,62 +61,54 @@ if isunix
         end;
     end;
 end
+% print into path containing ~ does not work, so replace by absolute home
+% directory
+if ispc
+    userdir= getenv('USERPROFILE');
+else
+    userdir= getenv('HOME');
+end
+if name(1)=='~'
+    name=[userdir,name(2:end)]
+end;
 % Set paper size
 set(fig, 'PaperPositionMode', 'auto');
 % Print to eps file
 tmp_nam = [tempname '.eps'];
-if verLessThan('matlab', '8.4')
-    fignum=fig;
-else
-    fignum=fig.Number;
-end;
-print('-depsc2', '-noui', '-painters', ['-f' num2str(fignum)], '-r864', tmp_nam);
+print('-depsc2', '-noui', '-painters', ['-f' num2str(fig)], '-r864', tmp_nam);
 % Fix the line styles
 %fix_lines(tmp_nam);
 % Construct the filename
 if numel(name) < 5 || ~strcmpi(name(end-3:end), '.pdf')
     name = [name '.pdf']; % Add the missing extension
 end
-
-try
-    % manual fix for "~"
-    if name(1)=='~'
-        [~,home_path]=system('echo -n $HOME');
-        name=[home_path,name(2:end)];
-    end
-    % Construct the command string for ghostscript. This assumes that the
-    % ghostscript binary is on your path - you can also give the complete path,
-    % e.g. cmd = '"C:\Program Files\gs\gs8.63\bin\gswin32c.exe"';
-    if ispc
-        cmd = [cmd 'win32c.exe'];
-    end
-    options = [' -q -dNOPAUSE -dBATCH -dEPSCrop -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -sOutputFile="' name '" -f "' tmp_nam '"'];
-    % options = [' -dNOPAUSE -dBATCH -dEPSCrop -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -sOutputFile="' name '" -f "' tmp_nam '"'];
-    % Convert to pdf
-    [status result] = system([cmd options]);
-    % Check status
-    if status
-        % Something went wrong
-        if isempty(strfind(result, 'not recognized'))
-            error('%s\n', result);
+% Construct the command string for ghostscript. This assumes that the
+% ghostscript binary is on your path - you can also give the complete path,
+% e.g. cmd = '"C:\Program Files\gs\gs8.63\bin\gswin32c.exe"';
+if ispc
+    cmd = [cmd 'win32c.exe'];
+end
+options = [' -q -dNOPAUSE -dBATCH -dEPSCrop -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -sOutputFile="' name '" -f "' tmp_nam '"'];
+% options = [' -dNOPAUSE -dBATCH -dEPSCrop -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -sOutputFile="' name '" -f "' tmp_nam '"'];
+% Convert to pdf
+[status result] = system([cmd options]);
+% Check status
+if status
+    % Something went wrong
+    if isempty(strfind(result, 'not recognized'))
+        fprintf('%s\n', result);
+    else
+        % Ghostscript isn't on the path - try to find it
+        cmd = find_ghostscript;
+        if isempty(cmd)
+            fprintf('Ghostscript not found.\n');
         else
-            % Ghostscript isn't on the path - try to find it
-            cmd = find_ghostscript;
-            if isempty(cmd)
-                %fprintf('Ghostscript not found.\n');
-                error('Ghostscript not found.\n')
-            else
-                system([cmd options]);
-            end
+            system([cmd options]);
         end
     end
-    % Delete the temporary file
-    delete(tmp_nam);
-catch e
-    fprintf(1,'The identifier was:\n%s',e.identifier);
-    fprintf(1,'There was an error! The message was:\n%s',e.message);
-    disp(['Exporting to PDF did not work, saving to EPS instead, file is',tmp_nam]);
 end
+% Delete the temporary file
+delete(tmp_nam);
 return
 
 function cmd = find_ghostscript
