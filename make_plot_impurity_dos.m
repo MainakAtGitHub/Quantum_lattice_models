@@ -59,7 +59,7 @@ if nargin < 2
 end
 
 if (isempty(plotrange))
-    plotrange=[-0.06 0.06];
+    plotrange=[-0.6 0.6];
         %plotrange=[-2 2];
 end;
 
@@ -81,7 +81,7 @@ if ~exist('orbitalLDOS','var')
     orbitalLDOS(3*efforb+(1:efforb),:)=orbitalLDOSImpNNN;
     LDOSsites=[-inf,-inf; 0,0; 0,1;1,1];
 end;
-nDosSites = length(LDOSsites);
+nDosSites = size(LDOSsites,1);
 if homogeneous
     nDosSites=1
 end;
@@ -317,7 +317,6 @@ end;
 
 %peak detection plot 
 figure6= figure('Position',[200, 50, 500, 300]);
-try
 data=[sum(orbitalLDOSImpNNN)./sum(orbitalLDOS(2*efforb+(1:efforb),:),1);1./sum(orbitalLDOS(3*efforb+(1:efforb),:),1).*sum(orbitalLDOS(2*efforb+(1:efforb),:),1)];
 plot6=plot(energy,data);
 set(plot6(1),'DisplayName','NNN/NN','Color',coloruf2);
@@ -335,11 +334,8 @@ set(legend1,'Location','Best');
 if isunix
   %  print_pdf(['/tmp/',inputfile,'_rel.pdf']);
 end;
-catch
-        disp('could not plot NNN ratio');
+    end
 end
-    end
-    end
 
 function setlabels(plot,orb,range)
 szorb=size(orb,2);

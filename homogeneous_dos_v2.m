@@ -23,6 +23,9 @@ end;
 if ~exist('calcSC','var')
     calcSC=true;
 end;
+if ~exist('spin_and_nambu','var')
+    spin_and_nambu=false;
+end
 if (~exist('Vimp','var'))
     if abs(Vimp)>0
         disp('Warning: finite impurity potential, not homogeneous case.')
@@ -100,19 +103,28 @@ end
 if calcSC
     load(Gamma_file,'-mat');
     load(BdGfileName,'-mat');
-    N = sqrt(size(delta,1)/nOrbitals);
+    N = sqrt(size(delta,1)/(nOrbitals*(spin_and_nambu+1)));
     if exist('latticeVectorsSC','var')
         nUnitCellsDelta = size(latticeVectorsSC,1);
     else
         latticeVectorsSC=Gammafull.latt;
         nUnitCellsDelta = size(Gammafull.latt,1);
     end
-    deltaCenter = zeros(nOrbitals, nOrbitals, nUnitCellsDelta);
+    deltaCenter = zeros(nOrbitals*(spin_and_nambu+1), nOrbitals*(spin_and_nambu+1), nUnitCellsDelta);
     jCell = [ceil(N/2) ceil(N/2)];
     for i = 1:nUnitCellsDelta
         iCell = jCell + latticeVectorsSC(i,:);
         [iRange, jRange] = find_lattice_translation_index(N, nOrbitals, iCell, jCell);
-        deltaCenter(:,:,i) = delta(iRange, jRange);
+        if ~(spin_and_nambu)
+            deltaCenter(:,:,i) = delta(iRange, jRange);
+        else
+            dlta1= delta(1:size(delta,1)/2,1:size(delta,1)/2);
+            dlta2= delta(1:size(delta,1)/2,size(delta,1)/2+1:size(delta,1));
+            dlta3= delta(size(delta,1)/2+1:size(delta,1),1:size(delta,1)/2);
+            dlta4= delta(size(delta,1)/2+1:size(delta,1),size(delta,1)/2+1:size(delta,1));
+            deltaCenter(:,:,i) = [dlta1(iRange, jRange),dlta2(iRange, jRange);...
+                dlta3(iRange, jRange),dlta4(iRange, jRange)];
+        end
     end
     delta = deltaCenter;
 else
@@ -130,14 +142,15 @@ nUnitCells = size(latticeVector,1);
 %TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) = ...
 %TBparameters(:,:,(latticeVector(:,1)==0) & (latticeVector(:,2)==0)) - mu*eye(nOrbitals);
 
-M=N*M;
+M=N*M; % In real space one would need N*M by N*M grid, so hamiltonian would be (N*M)^2 by (N*M)^2 in real space 
 kx = (2*pi/M)*(0:(M - 1));% + pi/M;
 ky = kx;
 delKx = kx(2)-kx(1);
 delKy = delKx;
 energy = linspace(firstEnergy, lastEnergy, nEnergyPoints);
-kSpaceEigenValues = zeros(M, M, 2*nOrbitals);
-kSpaceEigenVectors = zeros(M, M, 2*nOrbitals, 2*nOrbitals);
+
+kSpaceEigenValues = zeros(M, M, 2*(spin_and_nambu+1)*nOrbitals); % Aug2021, *(spin_and_nambu+1) is to transit from the 2x2 SC case to spin and nambu SC case
+kSpaceEigenVectors = zeros(M, M, 2*(spin_and_nambu+1)*nOrbitals, 2*(spin_and_nambu+1)*nOrbitals);
 kSpaceEigenValuesNormal = zeros(M, M, nOrbitals);
 kSpaceEigenVectorsNormal = zeros(M, M, nOrbitals, nOrbitals);
 for iKx = 1:M
@@ -145,7 +158,7 @@ for iKx = 1:M
             k = [kx(iKx) ky(iKy)];
             % diagonalizing for normal state DOS
             kSpaceHopping = - mu*eye(nOrbitals);
-            kSpaceHoppingc = - mu*eye(nOrbitals);
+            kSpaceHoppingc = - mu*eye(nOrbitals);  %(Mainak,Aug2021) kSpaceHoppingc relevant for only SC part(?) 
             %zeros(nOrbitals,nOrbitals);
             for iUnitCell = 1:nUnitCells
                 iLatticeVector = latticeVector(iUnitCell,1:2);
@@ -159,18 +172,29 @@ for iKx = 1:M
             kSpaceEigenVectorsNormal(iKx, iKy, :,:) =  eigVectorKNormal;
             % diagonalizing for SC state DOS
             if calcSC
-            kSpaceGap = zeros(nOrbitals,nOrbitals);
+            kSpaceGap = zeros((spin_and_nambu+1)*nOrbitals,(spin_and_nambu+1)*nOrbitals); % (spin_and_nambu+1) for distinguishing 2x2 and 4x4 spin_and_nambu case
             for iUnitCellDelta = 1:nUnitCellsDelta
                 iLatticeVectorDelta = latticeVectorsSC(iUnitCellDelta,:);
                 kSpaceGap = kSpaceGap + delta(:,:,iUnitCellDelta)*exp(1i*(iLatticeVectorDelta*k'));
             end
-            kSpaceHamiltonian = [kSpaceHopping -kSpaceGap; -kSpaceGap' -conj(kSpaceHoppingc)];
+
+            if ~ spin_and_nambu
+                kSpaceHamiltonian = [kSpaceHopping -kSpaceGap; -kSpaceGap' -conj(kSpaceHoppingc)];
+            else
+                kSpaceHamiltonian = [[kSpaceHopping,zeros(size(kSpaceHopping));zeros(size(kSpaceHopping)),kSpaceHopping],...
+                    -kSpaceGap; -kSpaceGap',...
+                    -conj([kSpaceHoppingc,zeros(size(kSpaceHoppingc));zeros(size(kSpaceHoppingc)),kSpaceHoppingc])];
+            end
+                
             [eigVector, eigValue] = eig(kSpaceHamiltonian);
             [eigValueK, sortingIndex] = sort(real(diag(eigValue)));
             eigVectorK = (eigVector(:,sortingIndex))';
             kSpaceEigenValues(iKx, iKy, :) = eigValueK;
             kSpaceEigenVectors(iKx, iKy, :,:) =  eigVectorK;
             end;
+             
+       %     
+ 
         end
         if  mod(iKx,10)==0   
             disp(['Done ',num2str(iKx), ' of ',num2str(M),' kx values.']);
@@ -237,18 +261,18 @@ totalDOSNormal = sum(bandDOSNormal,1);
 if calcSC
 % SC state dos
 disp('Computing SC state DOS......')
-eigValuesPlus = kSpaceEigenValues(:,:,(nOrbitals + 1):end); % choose positive branch of spectrum
-eigVectorsPlus = kSpaceEigenVectors(:,:,(nOrbitals + 1):end,:); % corresponding eigenvectors
-u = eigVectorsPlus(:,:,:,1:nOrbitals);
-v = eigVectorsPlus(:,:,:,(nOrbitals+1):end);
+eigValuesPlus = kSpaceEigenValues(:,:,(nOrbitals*(spin_and_nambu+1) + 1):end); % choose positive branch of spectrum
+eigVectorsPlus = kSpaceEigenVectors(:,:,(nOrbitals*(spin_and_nambu+1) + 1):end,:); % corresponding eigenvectors
+u = eigVectorsPlus(:,:,:,1:nOrbitals*(spin_and_nambu+1));
+v = eigVectorsPlus(:,:,:,(nOrbitals*(spin_and_nambu+1)+1):end);
 countLoop = 0;
-greensDiagonal = zeros(nOrbitals,nEnergyPoints); 
+greensDiagonal = zeros(nOrbitals*(spin_and_nambu+1),nEnergyPoints); 
 if ~tetra
 for iEnergyPoint = 1:nEnergyPoints
-    for jBand = 1:nOrbitals
+    for jBand = 1:nOrbitals*(spin_and_nambu+1)
         greensKSpace = 0;
         E = energy(iEnergyPoint);
-        for iBand = 1:nOrbitals
+        for iBand = 1:nOrbitals*(spin_and_nambu+1)
             % find eigenvector elements in this band
             En = squeeze(eigValuesPlus(:,:,iBand));
             un = squeeze(u(:,:,iBand,jBand));
@@ -279,8 +303,8 @@ else
             % to do: kx,ky can be only a vector to simplify indexing
             [kx,ky] = meshgrid(mesh1, mesh1);
                 % to do: vectorize the code!
-                for iband=1:nOrbitals
-                    disp(['Band ',num2str(iband),' of ',num2str(nOrbitals)]);
+                for iband=1:nOrbitals*(spin_and_nambu+1)
+                    disp(['Band ',num2str(iband),' of ',num2str(nOrbitals*(spin_and_nambu+1))]);
 		    E=squeeze(eigValuesPlus(:,:,iband));
 		    un = squeeze(u(:,:,iband,:));
 		    vn = squeeze(v(:,:,iband,:));
@@ -312,14 +336,14 @@ else
     %# GUI available
 % Plotting
 figure; 
-plot(energy,(5/nOrbitals)*totalDOSNormal,'k'); hold; plot(energy,(5/nOrbitals)*totalDOS, 'r');
+plot(energy,(5/((spin_and_nambu+1)*nOrbitals))*totalDOSNormal,'k'); hold; plot(energy,(5/nOrbitals)*totalDOS, 'r');
 axis('square'); title('Normal Vs SC dos')
 % Create legend
 %%Mainak
 % legend show
 %%Mainak
 figure;
-plot(energy, (5/nOrbitals)*totalDOS, 'k');
+plot(energy, (5/((spin_and_nambu+1)*nOrbitals))*totalDOS, 'k');
 hold
 plot(energy, bandDOS(1,:), 'r');
 try
@@ -330,6 +354,20 @@ plot(energy, bandDOS(5,:), 'b');
 catch
 end;
 axis('square'); title('Orbital resolved SC dos')
+%%%%%%%%%%%%%%%%%%%%%%%% Mainak Sep 2021
+figure;
+plot(energy, (5/((spin_and_nambu+1)*nOrbitals))*totalDOSNormal, 'k');
+hold
+plot(energy, bandDOSNormal(1,:), 'r');
+try
+plot(energy, bandDOSNormal(2,:), 'g');
+plot(energy, bandDOSNormal(3,:), 'c');
+plot(energy, bandDOSNormal(4,:), 'm');
+plot(energy, bandDOSNormal(5,:), 'b');
+catch
+end;
+axis('square'); title('Orbital resolved normal dos')
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% Mainak Sep2021
 % Create legend
 %%Mainak
 % legend show

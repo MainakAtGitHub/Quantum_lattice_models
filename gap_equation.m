@@ -25,7 +25,9 @@
         eVector=eVector.*repmat(dress',nBands*2/numel(dress),nBands*2);
     end;
     eVector = eVector(:,sortIndex);
-    fermi = 1./(1 + exp(En/kT));
+    fermi = 1./(1 + exp(En/kT)); %fermi =1- tanh(En/2/kT);
+% % % %     if calc_special
+% % % %     end
     if ~fullgamma
         deltaCal = SCInteractionMatrix.*((eVector(1:nBands,:)*(((eVector((nBands + 1):end,:))').*repmat(fermi,1,nBands))));
         % debuging code
@@ -63,11 +65,32 @@
     end
     nUpCal = (abs(eVector(1:nBands,:)).^2)*fermi;
     nDownCal = (abs(eVector((nBands + 1):end,:)).^2)*(1 - fermi); %%%%%%Jan2021: Here no other choice than using (1-fermi).....but for gap_equation2, 
-                                                                  %%%%%%%%%%%%%  there's probably choice depending which part of full matrix is being used
+    
+    
+    %%%%%%%%%%%%%  there's probably choice depending which part of full matrix is being used
     %anomalousncalc
     % problem in matlab R2018b and later
     if nargout_tmp > 4 
     TotKE = sum(1/2*diag((eVector((nBands + 1):end,:))'*KE*(eVector((nBands + 1):end,:)) + (eVector(1:nBands,:))'*(-KE)*(eVector(1:nBands,:))).*tanh(En/kT));
+    end
+   global pen_dep_gamma_dia pen_dep_gamma pen_dep_dir BdGfileName 
+    if ~isempty(pen_dep_gamma)
+%         change sign of lower part of evector;
+%         eVector((nBands + 1):end,:)=-eVector((nBands + 1):end,:);
+        DenMatrChk=(repmat(En,1,length(En)) - repmat(transpose(En),length(En),1));
+        DenMatrSml=abs(DenMatrChk)<10^(-10);
+        FracMatr= (repmat(fermi,1,length(fermi)) - repmat(transpose(fermi),length(fermi),1))./(repmat(En,1,length(En)) - repmat(transpose(En),length(En),1));
+        RpMatr =  repmat(En,1,length(En));
+        aux_mat = -1/kT*exp(RpMatr(DenMatrSml)/kT)./(1+exp(RpMatr(DenMatrSml)/kT)).^2;
+        DenMatrBig = RpMatr(DenMatrSml)/kT > 50;
+        aux_mat(DenMatrBig) = 0;
+        FracMatr(DenMatrSml) = aux_mat;
+        KXX=-sum(sum((abs(eVector'*[pen_dep_gamma, zeros(size(pen_dep_gamma)); zeros(size(pen_dep_gamma)), pen_dep_gamma]*eVector)).^2.*FracMatr))/(length(En)/2/1); % need to divide by (length(En)/2/nOrbitals) actually
+        KXX_dia = sum(diag(eVector'*[pen_dep_gamma_dia,zeros(size(pen_dep_gamma_dia));zeros(size(pen_dep_gamma_dia)),-pen_dep_gamma_dia]*eVector).*fermi)/(length(En)/2/1); % need to divide by (length(En)/2/nOrbitals) actually
+        [filepath,name,ext]=fileparts(BdGfileName);
+        KXX_tot = KXX_dia - KXX;
+         save([filepath,'/',name,'_pen_dep_',num2str(pen_dep_dir),'.txt'],'KXX','KXX_dia','KXX_tot','-ascii');
+%         eVector((nBands + 1):end,:)=-eVector((nBands + 1):end,:);
     end
     % Mainak
 %     uCal = (abs(eVector(1:nBands,floor(nBands/2)).^2));%*ones(size(fermi));

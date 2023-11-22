@@ -1,5 +1,9 @@
 function [t,H_soc1,H_soc2] = hoppings(r,N_lin,figg,t_r_ref,eff_pot,further_N_cut_off,NN_cut_off,chg_map_filepath,nOrbitals,bilayer_int,int_soc)
 
+%%%%%%%temporary for reduced xbox calculation
+N_linx=N_lin;%29.606;%N_lin;%
+N_liny=N_lin;
+%%%%%%%temporary for reduced xbox calculation
 % if nargin < 8
 %     filepath
 % end
@@ -94,12 +98,12 @@ if figg
 end
 for i = 1:size(r,1)
     [min_abs_d_x,min_abs_d_x_index]=min([abs(r(i,1)-r(nearest_neighbours_index{i},1)),...
-        abs(r(i,1)-r(nearest_neighbours_index{i},1)-N_lin),...
-        abs(r(i,1)-r(nearest_neighbours_index{i},1)+N_lin)],[],2);
+        abs(r(i,1)-r(nearest_neighbours_index{i},1)-N_linx),...
+        abs(r(i,1)-r(nearest_neighbours_index{i},1)+N_linx)],[],2);
     
     dummy_x_dist_colmns=-[(r(i,1)-r(nearest_neighbours_index{i},1)),...
-        (r(i,1)-r(nearest_neighbours_index{i},1)-N_lin),...
-        (r(i,1)-r(nearest_neighbours_index{i},1)+N_lin)];
+        (r(i,1)-r(nearest_neighbours_index{i},1)-N_linx),...
+        (r(i,1)-r(nearest_neighbours_index{i},1)+N_linx)];
     
     for it_min=1:length(min_abs_d_x_index)
         min_signed_d_x(it_min)=dummy_x_dist_colmns(it_min,min_abs_d_x_index(it_min));
@@ -141,12 +145,12 @@ for i = 1:size(r,1)
 
     
     [min_abs_d_x,min_abs_d_x_index]=min([abs(r(i,1)-r(further_neighbours_index{i},1)),...
-        abs(r(i,1)-r(further_neighbours_index{i},1)-N_lin),...
-        abs(r(i,1)-r(further_neighbours_index{i},1)+N_lin)],[],2);
+        abs(r(i,1)-r(further_neighbours_index{i},1)-N_linx),...
+        abs(r(i,1)-r(further_neighbours_index{i},1)+N_linx)],[],2);
     
     dummy_x_dist_colmns=-[(r(i,1)-r(further_neighbours_index{i},1)),...
-        (r(i,1)-r(further_neighbours_index{i},1)-N_lin),...
-        (r(i,1)-r(further_neighbours_index{i},1)+N_lin)];
+        (r(i,1)-r(further_neighbours_index{i},1)-N_linx),...
+        (r(i,1)-r(further_neighbours_index{i},1)+N_linx)];
     
     for it_min=1:length(min_abs_d_x_index)
         min_signed_d_x(it_min)=dummy_x_dist_colmns(it_min,min_abs_d_x_index(it_min));
@@ -178,12 +182,12 @@ for i = 1:size(r,1)
     
     if bilayer_int
         [min_abs_d_x,min_abs_d_x_index]=min([abs(r(i,1)-r(intlayerNN_index{i},1)),...
-            abs(r(i,1)-r(intlayerNN_index{i},1)-N_lin),...
-            abs(r(i,1)-r(intlayerNN_index{i},1)+N_lin)],[],2);
+            abs(r(i,1)-r(intlayerNN_index{i},1)-N_linx),...
+            abs(r(i,1)-r(intlayerNN_index{i},1)+N_linx)],[],2);
         
         dummy_x_dist_colmns=-[(r(i,1)-r(intlayerNN_index{i},1)),...
-            (r(i,1)-r(intlayerNN_index{i},1)-N_lin),...
-            (r(i,1)-r(intlayerNN_index{i},1)+N_lin)];
+            (r(i,1)-r(intlayerNN_index{i},1)-N_linx),...
+            (r(i,1)-r(intlayerNN_index{i},1)+N_linx)];
         
         for it_min=1:length(min_abs_d_x_index)
             min_signed_d_x(it_min)=dummy_x_dist_colmns(it_min,min_abs_d_x_index(it_min));
@@ -231,8 +235,8 @@ for i = 1:size(r,1)
                 tempcol=abs(t(nOrbitals*(i-1)+1,nOrbitals*(further_neighbours_index{i}(j)-1)+1));
                 
                 tempx_dir=abs(r(i,1)-further_neighbours{i}(j,1))';
-                tempx_righ=abs(r(i,1)-further_neighbours{i}(j,1)-N_lin)';
-                tempx_lef=abs(r(i,1)-further_neighbours{i}(j,1)+N_lin)';
+                tempx_righ=abs(r(i,1)-further_neighbours{i}(j,1)-N_linx)';
+                tempx_lef=abs(r(i,1)-further_neighbours{i}(j,1)+N_linx)';
                                 
                 tempy_dir=abs(r(i,2)-further_neighbours{i}(j,2))';
                 tempy_righ=abs(r(i,2)-further_neighbours{i}(j,2)-N_lin)';
@@ -380,7 +384,7 @@ end
 if figg
     hold on;
     t_diag_dummy=diag(t);
-    scatter(r(:,1),r(:,2),4*4*25+(t_diag_dummy(1:nOrbitals:end)/10).^2,-t_diag_dummy(1:nOrbitals:end)/abs(eff_pot),'filled');
+    scatter(r(:,1),r(:,2),1/16*4*4*25+(t_diag_dummy(1:nOrbitals:end)/10).^2,-t_diag_dummy(1:nOrbitals:end)/abs(eff_pot),'filled');
     colorbar;
     c=colorbar;
     c.Label.String='Q';

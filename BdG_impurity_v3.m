@@ -27,9 +27,40 @@ end
 %     normal_metal = false;
 % end
 % Mainak
+
+global pen_dep_gamma_dia pen_dep_gamma
+global pen_dep_dir
+
+if ~exist('pen_dep_gamma_dia','var')
+    pen_dep_gamma_dia = [];
+end
+if ~exist('pen_dep_gamma','var')
+    pen_dep_gamma = [];
+end
+if ~exist('pen_dep_dir','var')
+    pen_dep_dir = 0;
+end
+
+global E_Sup saveEnTot_spin_and_nambu
+if ~exist('saveEnTot_spin_and_nambu','var')
+    saveEnTot_spin_and_nambu=false;
+end
+
+
+if ~exist('compl_ini_delta','var')
+    compl_ini_delta=0;
+end
+
 if ~exist('normal_metal','var')
     normal_metal=false;
 end
+
+if normal_metal
+    deltaTol=-1;
+end
+
+
+
 % MAINAK
 if nargin < 3
     saveEnTot = false;
@@ -79,6 +110,9 @@ else
     end
 end
 
+if numel(N)==1
+    N=[N,N]; %%%%% 23 Dec 2021: changing N to [N,N] only for current cases, implementing exclusively to be done later
+end
 
 % Mainak
 
@@ -132,7 +166,7 @@ if ~exist('pos_file','var')
     dislocation_length=0
 else
     load(pos_file,'-mat');
-    dislocation_length=N^2-size(r,1);
+    dislocation_length=N(1)*N(2)-size(r,1);
 end
 % end
 %%%%Mainak
@@ -154,6 +188,11 @@ end
 if ~exist('deltaTol','var')
     deltaTol=eps;
 end
+
+if ~exist('magTol','var')
+    magTol=10^-5;
+end
+
 % switch to activate memory management actions (clear, sparse matrix
 % arrays)
 if ~exist('memorymanagement','var')
@@ -187,16 +226,16 @@ end
 % BdG matrix blocks (to be done: make it work for non-square system sizes)
 %%%%% Mainak temporary changing size due to dislocation
 if true %dislocation_length>0
-    nBands = (N^2-dislocation_length)*nOrbitals;
+    nBands = (N(1)*N(2)-dislocation_length)*nOrbitals;
 else
-    nBands = N^2*nOrbitals;
+    nBands = N(1)*N(2)*nOrbitals;
 end
 %%%%% Mainak
 
 if ~super
     % kinetic energy
     % Mainak
-    if dislocation_length>0 %true %
+    if dislocation_length>0 %true % %%%%%%%%%%%%%%%%%% for dislocation_length>0 block N(1)*N(2) to be implemented in hoppings() function
         if ~exist('eff_pot','var')
             eff_pot=1.5;
         end
@@ -221,7 +260,7 @@ if ~super
         H0 = lattice_translation(N, TBparameters, latticeVector);
     end
 else
-    [H0, superLatticeVectors] = supercell_hoppings(N, TBparameters, latticeVector);
+    [H0, superLatticeVectors] = supercell_hoppings(N, TBparameters, latticeVector); %%%%%%%%%% N(1)*N(2) to be implemented in supercell_hoppings() function
 end
 
 % ugly global variable to treat full orbital dependent pairing interaction
@@ -249,7 +288,28 @@ if exist('Gamma','var')
             SCInteractionMatrix3 = lattice_translation(N, Gamma3, latticeVectorsSC);
         else
             SCInteractionMatrix3 = zeros(size(H0));
-        end        
+        end 
+        %%%%%%%%%%%%%%% trying below to set the SCInteractionMatrix1,2,3 with
+        %%%%%%%%%%%%%%% triplet symmetry......required?
+        if any([exist('Gamma1','var'),exist('Gamma2','var'),exist('Gamma3','var')])
+            if exist('tripletOrderFile','var')
+            load(tripletOrderFile);
+            tripletOrderMatrix=lattice_translation(N, tripletOrder, tripletOrderVecs);                
+            ini_guess_SCInteractionMatrix1=tripletOrderMatrix.*SCInteractionMatrix1;
+            ini_guess_SCInteractionMatrix2=tripletOrderMatrix.*SCInteractionMatrix2;
+            ini_guess_SCInteractionMatrix3=tripletOrderMatrix.*SCInteractionMatrix3;
+            %%%%%%%%% test random complex delta ini guess 
+            ini_guess_SCInteractionMatrix1=ini_guess_SCInteractionMatrix1...
+                .*0.001;%*((rand(size(ini_guess_SCInteractionMatrix1))-0.5) + 1i*(rand(size(ini_guess_SCInteractionMatrix1))-0.5));
+            ini_guess_SCInteractionMatrix2=ini_guess_SCInteractionMatrix2...
+                .*0.001;%*((rand(size(ini_guess_SCInteractionMatrix2))-0.5) + 1i*(rand(size(ini_guess_SCInteractionMatrix2))-0.5));
+            ini_guess_SCInteractionMatrix3=ini_guess_SCInteractionMatrix3...
+                .*0.001;%*((rand(size(ini_guess_SCInteractionMatrix3))-0.5) + 1i*(rand(size(ini_guess_SCInteractionMatrix3))-0.5));
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            else
+                disp('tripletOrderFile not found, remember tripletOrderFile in structure of SCInteractionMatrix1,2,3' );
+            end
+        end
     end
     fullgamma=false;
 else
@@ -260,7 +320,7 @@ end
 % fix the position of the impurity unit cell
 % to be done: allow for different impurity positions; allow for multiple
 % impurities
-impCell = [ceil(N/2) ceil(N/2)];
+impCell = [ceil(N(1)/2) ceil(N(2)/2)];
 % % allow for general impurity potentials
 % if ~ischar(Vimp)
 %     [iRange, jRange] = find_lattice_translation_index(N, nOrbitals, impCell, impCell);
@@ -357,6 +417,10 @@ end
 if ~(exist('J','var'))
     J = 0;
 end
+
+if ~(exist('J_pr','var'))
+    J_pr = 0;
+end
 % Mainak
 
 
@@ -398,8 +462,8 @@ end
 %%%%%%%%Mainak
 if or(spinfullnormal,spin_and_nambu)
     if ~(exist('nAnoUpDown','var'))
-        nAnoUpDown=zeros(size(nUp));
-%         nAnoUpDown=0.01*(rand(size(nUp))+1i*rand(size(nUp)))/sqrt(2);
+%         nAnoUpDown=zeros(size(nUp));
+        nAnoUpDown=0*0.01*((rand(size(nUp))-0.5)+1i*(rand(size(nUp))-0.5))/sqrt(2);
     end
     if ~(exist('nAnoDownUp','var'))
         nAnoDownUp=conj(nAnoUpDown);
@@ -415,11 +479,48 @@ if spin_and_nambu  %Jan2021: try settign random delta in a spin singlet/spin tri
 %     DownUp_delta=(nBands+1:2*nBands,1:nBands);
 %     UpUp_delta=(1:nBands,1:nBands);
 %     DownDown_delta=(nBands+1:2*nBands,nBands+1:2*nBands);
-    if ~(exist('UpDown_delta','var'))
-        UpDown_delta=0.001*(rand(numel(nUp))+1i*rand(numel(nUp)));%zeros(numel(nUp));
-        DownUp_delta=0.001*(rand(numel(nUp))+1i*rand(numel(nUp)));%zeros(numel(nUp));
-        UpUp_delta=0.001*(rand(numel(nUp))+1i*rand(numel(nUp)));%zeros(numel(nUp));zeros(numel(nUp));%
-        DownDown_delta=0.001*(rand(numel(nUp))+1i*rand(numel(nUp)));%zeros(numel(nUp));zeros(numel(nUp));%
+    if  ~(exist('UpDown_delta','var'))
+        if max(max(abs(SCInteractionMatrix)))==0
+            %%%%%%%%!!!!!!! put  back below
+            if compl_ini_delta
+                UpDown_delta=0.001*ini_guess_SCInteractionMatrix3.*(rand(size(SCInteractionMatrix3))-0.5).*(rand(numel(nUp))+1i*rand(numel(nUp)));%zeros(numel(nUp));%0.05*SCInteractionMatrix3;%
+            else
+                UpDown_delta=0.001*ini_guess_SCInteractionMatrix3.*(rand(size(SCInteractionMatrix3))-0.5);
+            end
+        else
+            if compl_ini_delta
+                UpDown_delta=0.001*SCInteractionMatrix.*(rand(size(SCInteractionMatrix3))-0.5).*(rand(numel(nUp))+1i*rand(numel(nUp)));
+            else
+                UpDown_delta=0.001*SCInteractionMatrix.*(rand(size(SCInteractionMatrix3))-0.5);
+            end
+                
+        end
+        DownUp_delta=-transpose(UpDown_delta);%0.001*(rand(numel(nUp))+1i*rand(numel(nUp)));%zeros(numel(nUp));
+%         dummymat=0.001*(rand(numel(nUp))+1i*rand(numel(nUp)));
+        if max(max(abs(SCInteractionMatrix1)))==0
+            if compl_ini_delta
+                UpUp_delta=0.001*ini_guess_SCInteractionMatrix2.*(rand(size(SCInteractionMatrix3))-0.5).*(rand(numel(nUp))+1i*rand(numel(nUp))); %dummymat-transpose(dummymat);%zeros(size(UpDown_delta));%0.001*(rand(numel(nUp))+1i*rand(numel(nUp)));%zeros(numel(nUp));zeros(numel(nUp));%
+                %             UpUp_delta=UpUp_delta-transpose(UpUp_delta);
+            else
+                UpUp_delta=0.001*ini_guess_SCInteractionMatrix2.*(rand(size(SCInteractionMatrix3))-0.5);
+            end
+        else
+            if compl_ini_delta
+                UpUp_delta=0.001*ini_guess_SCInteractionMatrix1.*(rand(size(SCInteractionMatrix3))-0.5).*(rand(numel(nUp))+1i*rand(numel(nUp)));
+                %             UpUp_delta=UpUp_delta-transpose(UpUp_delta);
+            else
+                UpUp_delta=0.001*ini_guess_SCInteractionMatrix1.*(rand(size(SCInteractionMatrix3))-0.5);
+            end
+        end
+        UpUp_delta=UpUp_delta-transpose(UpUp_delta);
+%         dummymat=0.001*(rand(numel(nUp))+1i*rand(numel(nUp)));
+        DownDown_delta=UpUp_delta;%dummymat-transpose(dummymat);%zeros(size(UpDown_delta));%0.001*(rand(numel(nUp))+1i*rand(numel(nUp)));%zeros(numel(nUp));zeros(numel(nUp));%
+%         %%%%%%%debugging23feb2021
+%         testdel=[-UpUp_delta, -(UpDown_delta);...
+%             -(DownUp_delta),-DownDown_delta];
+%         newvar=testdel+transpose(testdel);
+%         max(max(abs(newvar)))
+%         %%%%%%%%%%%%5
     end
 end
 
@@ -451,6 +552,17 @@ end
 if ~(exist('nUpAcc','var'))
  nUpAcc=[];
 end
+
+if ~(exist('xmagAccAbs','var'))
+ xmagAccAbs=[];
+end
+if ~(exist('ymagAccAbs','var'))
+ ymagAccAbs=[];
+end
+if ~(exist('zmagAccAbs','var'))
+ zmagAccAbs=[];
+end
+
 % by default mix delta
 if ~(exist('mixdelta','var'))
     mixdelta=true;
@@ -473,7 +585,7 @@ Himp=get_Himp(Vimp,N,nOrbitals,sublattice,false,BdGfileName,dislocation_length);
 if ~super
     H = H0 + Himp;
 else
-    [HSuper, superLatticeVectors] = supercell_hoppings(N, TBparameters, latticeVector);
+    [HSuper, superLatticeVectors] = supercell_hoppings(N, TBparameters, latticeVector); %%%%%%%%%%%%%%N(1)*N(2) to be implemented in supercell_hoppings() function
 end
 
 
@@ -521,16 +633,39 @@ end
 % BdG iterations: up to maxLoop
 
 %Mainak
-IntUp1 = zeros(size(nUp));
+IntUp1 = zeros(size(nUp));     %%Initialization
 IntDown1 = zeros(size(nDown));
+H_Hund_UpUp=zeros(nBands);
+H_Hund_DownDown=zeros(nBands);
+H_Hund_UpDown=zeros(nBands);
+H_Hund_DownUp=zeros(nBands);
 %Mainak
 %Mainak
-if spin_and_nambu
+if spin_and_nambu               %%Initialization
     H_off_up=zeros(numel(nUp));
     H_off_down=zeros(numel(nUp));
 end
 %Mainak
+if or(spinfullnormal,spin_and_nambu) %%%for adding remaining Hunds int terms, May 2021
+    if~exist('ExpMatNorUpUp','var') %(below) initialization of the form off-diagonal rand only in orbital space using kron 
+        ExpMatNorUpUp=0.01*(zeros(size(zeros(nBands)))).*kron(eye(nBands/nOrbitals),ones(nOrbitals))/sqrt(2);%+1i*rand(size(zeros(nBands))))/sqrt(2);%zeros(nBands);
+        ExpMatNorUpUp=0.5*(ExpMatNorUpUp+ExpMatNorUpUp');
+        ExpMatNorDownDown=0.01*(zeros(size(zeros(nBands)))).*kron(eye(nBands/nOrbitals),ones(nOrbitals))/sqrt(2);%+1i*rand(size(zeros(nBands))))/sqrt(2);%zeros(nBands);
+        ExpMatNorDownDown=0.5*(ExpMatNorDownDown+ExpMatNorDownDown');
+        ExpMatNorUpDown=0.01*kron(eye(nBands/nOrbitals),ones(nOrbitals)).*(zeros(size(zeros(nBands)))+1i*zeros(size(zeros(nBands))))/sqrt(2);%zeros(nBands);
+        ExpMatNorDownUp=ExpMatNorUpDown';%0.01*(rand(size(zeros(nBands))));%+1i*rand(size(zeros(nBands))))/sqrt(2);%zeros(nBands);
+%         (ExpMatNorUpDown');%
+    end
+    ExpMatNorUpUp=ExpMatNorUpUp-diag(diag(ExpMatNorUpUp))+diag(nUp); % replacing the diagonal with nUp and nDown originally used
+    ExpMatNorDownDown=ExpMatNorDownDown-diag(diag(ExpMatNorDownDown))+diag(nDown);
+    ExpMatNorUpDown=ExpMatNorUpDown-diag(diag(ExpMatNorUpDown))+diag(nAnoDownUp);
+    ExpMatNorDownUp=ExpMatNorDownUp-diag(diag(ExpMatNorDownUp))+diag(nAnoUpDown);    
+end
 
+if pen_dep_dir ~= 0
+    pen_dep_gamma = make_pen_dep_gamma(N, TBparameters, latticeVector, pen_dep_dir);
+    pen_dep_gamma_dia = make_pen_dep_gamma_dia(N, TBparameters, latticeVector, pen_dep_dir);
+end
 
 for i = 1:maxLoop
     % two cases for supercell calculations here, first the usual one
@@ -578,7 +713,7 @@ for i = 1:maxLoop
                 end
                 %%%%%%%%%%%%% Mainak
                 if or(spinfullnormal,spin_and_nambu)
-                    H_off_up = -U*diag(nAnoUpDown);
+                    H_off_up = -U*diag(nAnoUpDown);  %%23Mar2021, nAnoUpDown is expectation of cDownDaggercUp....**Note the flip of Up and Down, similar flip in nAnoUpDown
                     H_off_down = -U*diag(nAnoDownUp); %%%??????????????COULD BE SETA AS conj(H_off_up)?
                     if exist('field','var')
                         if numel(field)>1                          
@@ -590,10 +725,144 @@ for i = 1:maxLoop
                         end
                     end 
                     
-                    if int_soc
+                    if int_soc     % SOC corresponding to the bilayer case in spinfullnormal........SOC corresponding to spin_and_nambu is encoded in variable "spin_and_nambu_SOC"
                         H_off_up=H_off_up+H_soc1+(-1i)*H_soc2;
                         H_off_down=H_off_down+H_soc1+(1i)*H_soc2;
                     end
+                    if spin_and_nambu_SOC %% xz, yz, xy, x2-y2,z2 basis (%%%%%probably calculation of HSOC_UU etc can be done outside loop and then added here inside the loop, comment in May2021)
+                        lmbda_SOC=spin_and_nambu_SOC;%0.005;%0.01;%0.001;%0.02;
+%                         Lx5 = [[0 0 1i 0 0];[0 0 0 -1i -sqrt(3)*1i];[-1i 0 0 0 0];[0 1i 0 0 0];[0 sqrt(3)*1i 0 0 0]];
+%                         Ly5 = [[0 0 0 1i -sqrt(3)*1i];[0 0 1i 0 0];[0 -1i 0 0 0];[-1i 0 0 0 0];[sqrt(3)*1i 0 0 0 0]];
+%                         Lz5= [[0 -1i 0 0 0];[1i 0 0 0 0];[0 0 0 2i 0];[0 0 -2i 0 0];[0 0 0 0 0]];
+                        if ~exist('Orb_seq','var')
+                        % z^2 (1), xz (2), yz (3), x^2-y^2 (4), xy (5)
+                        % Orb_seq=[2,3,1,5,4];
+                        %Orb_seq=[2,3,4,5,1]; % correct seq for Ikeda for
+                        %our .csv file
+                         %Orb_seq=[3,2,1,5,4];
+                         %Orb_seq=[3,2,4,5,1];
+                         disp('Define orbital sequence for SO coupling')
+                        end
+                        Lx5 = [[0             0  sqrt(3)*1i      0    0];...
+                               [0             0           0      0   1i];...
+                               [-sqrt(3)*1i   0           0    -1i    0];...
+                               [0             0          1i      0    0];...
+                               [0           -1i           0      0    0]];
+                          
+                        Ly5 = [[0    sqrt(3)*1i           0      0    0];...
+                               [-sqrt(3)*1i   0           0     1i    0];...
+                               [0             0           0      0   1i];...
+                               [0           -1i           0      0    0];...
+                               [0             0         -1i      0    0]];
+                          
+                        Lz5 = [[0             0           0      0    0];...
+                               [0             0         -1i      0    0];...
+                               [0            1i           0      0    0];...
+                               [0             0           0      0  -2i];...
+                               [0             0           0     2i    0]];
+                          
+                        Lx5=Lx5(:,Orb_seq); Lx5= Lx5(Orb_seq,:);
+                        Ly5=Ly5(:,Orb_seq); Ly5= Ly5(Orb_seq,:);
+                        Lz5=Lz5(:,Orb_seq); Lz5= Lz5(Orb_seq,:);
+                        
+                        HSOC_UU = Lz5(1:nOrbitals,1:nOrbitals)/2;
+                        HSOC_DD = -Lz5(1:nOrbitals,1:nOrbitals)/2;
+                        HSOC_UD = (Lx5(1:nOrbitals,1:nOrbitals)+1i*Ly5(1:nOrbitals,1:nOrbitals))/2;
+                        HSOC_DU = (Lx5(1:nOrbitals,1:nOrbitals)-1i*Ly5(1:nOrbitals,1:nOrbitals))/2;
+                        
+                        H_off_up=H_off_up+lmbda_SOC*kron(eye(N(1)*N(2)),HSOC_UD);%repmat(HSOC_UD,N^2);
+                        H_off_down=H_off_down+lmbda_SOC*kron(eye(N(1)*N(2)),HSOC_DU);%repmat(HSOC_DU,N^2);
+                        KE = KE + lmbda_SOC*kron(eye(N(1)*N(2)),HSOC_UU);%repmat(HSOC_UU,N^2);
+                        KEdown = KEdown + lmbda_SOC*kron(eye(N(1)*N(2)),HSOC_DD);%repmat(HSOC_DD,N^2);
+                    end
+                    E_Hund_remaining=0; % initializing E_Hund_remaining
+                    for lat_pt_num = 1:nBands/nOrbitals % form the Hund interaction using the ExpMatNor matrix to be taken as an output (just like nUp, nDown etc.) from BdG_step2 fn
+                        if ~exist('J_pr','var') %temporary to avoid error, can be removed later
+                            J_pr=0;
+                        end
+                        
+                        for orb_num1 = 1:nOrbitals
+                            
+                            dmi=(lat_pt_num-1)*nOrbitals+orb_num1; %calculating matrix indices
+                            
+                            temp_diag=diag(ExpMatNorDownUp);
+                            H_Hund_UpDown(dmi,dmi) = ...; % forming upper diagonal part of the matrix H_Hund_UpDown (only J because U has been implemented in earlier step)
+                                (-J)*(sum(temp_diag((lat_pt_num-1)*nOrbitals+1:(lat_pt_num-1)*nOrbitals+nOrbitals))-temp_diag(dmi));
+                            
+                            E_Hund_remaining=E_Hund_remaining + H_Hund_UpDown(dmi,dmi)*ExpMatNorUpDown(dmi,dmi); %%%%%% FIRST OCCURENCE OF E_Hund_remaining, SO NO "E_Hund_remaining=E_Hund_remaining+"
+
+                            temp_diag=diag(ExpMatNorUpDown);
+                            H_Hund_DownUp(dmi,dmi) = ...; % forming upper diagonal part of the matrix H_Hund_DownUp (only J because U has been implemented in earlier step)
+                                (-J)*(sum(temp_diag((lat_pt_num-1)*nOrbitals+1:(lat_pt_num-1)*nOrbitals+nOrbitals))-temp_diag(dmi));
+                            
+                            E_Hund_remaining=E_Hund_remaining + H_Hund_DownUp(dmi,dmi)*ExpMatNorDownUp(dmi,dmi);
+                            
+                            if orb_num1 < nOrbitals
+                            for orb_num2 = orb_num1+1:nOrbitals
+                                                                
+                                dmj=(lat_pt_num-1)*nOrbitals+orb_num2; %calculating matrix indices
+                                
+                                H_Hund_UpUp(dmi,dmj) = ... % forming upper triangular part of the matrix H_Hund_UpUp
+                                    J_pr*ExpMatNorDownDown(dmi,dmj)...
+                                   -(U_pr-J)*ExpMatNorUpUp(dmj,dmi)...
+                                    +J*ExpMatNorDownDown(dmj,dmi); 
+                                
+                                E_Hund_remaining=E_Hund_remaining + H_Hund_UpUp(dmi,dmj)*ExpMatNorUpUp(dmi,dmj);
+                                
+                                H_Hund_UpUp(dmj,dmi) = ... % forming lower triangular part of the matrix H_Hund_UpUp
+                                    J_pr*ExpMatNorDownDown(dmj,dmi)...
+                                    -(U_pr-J)*ExpMatNorUpUp(dmi,dmj)...
+                                    +J*ExpMatNorDownDown(dmi,dmj);
+                                
+                                E_Hund_remaining=E_Hund_remaining + H_Hund_UpUp(dmj,dmi)*ExpMatNorUpUp(dmj,dmi);
+
+                                H_Hund_DownDown(dmi,dmj) = ... % forming upper triangular part of the matrix H_Hund_DownDown
+                                    J_pr*ExpMatNorUpUp(dmi,dmj)...
+                                   -(U_pr-J)*ExpMatNorDownDown(dmj,dmi)...
+                                    +J*ExpMatNorUpUp(dmj,dmi); 
+                                
+                                E_Hund_remaining=E_Hund_remaining + H_Hund_DownDown(dmi,dmj)*ExpMatNorDownDown(dmi,dmj);
+                                
+                                H_Hund_DownDown(dmj,dmi) = ... % forming lower triangular part of the matrix H_Hund_DownDown
+                                    J_pr*ExpMatNorUpUp(dmj,dmi)...
+                                    -(U_pr-J)*ExpMatNorDownDown(dmi,dmj)...
+                                    +J*ExpMatNorUpUp(dmi,dmj);
+                                
+                                E_Hund_remaining=E_Hund_remaining + H_Hund_DownDown(dmj,dmi)*ExpMatNorDownDown(dmj,dmi);
+                                
+                                H_Hund_UpDown(dmi,dmj) = ... % forming upper triangular part of the matrix H_Hund_UpDown
+                                    (-U_pr)*ExpMatNorDownUp(dmj,dmi)...
+                                    -J_pr*ExpMatNorDownUp(dmi,dmj);
+                                
+                                E_Hund_remaining=E_Hund_remaining + H_Hund_UpDown(dmi,dmj)*ExpMatNorUpDown(dmi,dmj);
+                                
+                                H_Hund_UpDown(dmj,dmi) = ... % forming lower triangular part of the matrix H_Hund_UpDown
+                                    (-U_pr)*ExpMatNorDownUp(dmi,dmj)...
+                                    -J_pr*ExpMatNorDownUp(dmj,dmi);
+                                
+                                E_Hund_remaining=E_Hund_remaining + H_Hund_UpDown(dmj,dmi)*ExpMatNorUpDown(dmj,dmi);                              
+                                
+                                H_Hund_DownUp(dmi,dmj) = ... % forming upper triangular part of the matrix H_Hund_DownUp
+                                    (-U_pr)*ExpMatNorUpDown(dmj,dmi)...
+                                    -J_pr*ExpMatNorUpDown(dmi,dmj);
+                                
+                                E_Hund_remaining=E_Hund_remaining + H_Hund_DownUp(dmi,dmj)*ExpMatNorDownUp(dmi,dmj);
+                                
+                                H_Hund_DownUp(dmj,dmi) = ... % forming lower triangular part of the matrix H_Hund_DownUp
+                                    (-U_pr)*ExpMatNorUpDown(dmi,dmj)...
+                                    -J_pr*ExpMatNorUpDown(dmj,dmi);
+                                
+                                E_Hund_remaining=E_Hund_remaining + H_Hund_DownUp(dmj,dmi)*ExpMatNorDownUp(dmj,dmi);
+                            end
+                            end
+                        end
+                    end
+                    
+                    KE = KE + H_Hund_UpUp;
+                    KEdown = KEdown + H_Hund_DownDown;
+                    H_off_up = H_off_up + H_Hund_UpDown;
+                    H_off_down = H_off_down + H_Hund_DownUp;
+                    
                 end
                 
                 if spinfullnormal
@@ -601,7 +870,7 @@ for i = 1:maxLoop
                         BdG_step1( KE,delta, kT,nBands, SCInteractionMatrix,KEdown,H_off_up,H_off_down);
                 elseif spin_and_nambu
                     delta = [UpUp_delta,(UpDown_delta);(DownUp_delta),DownDown_delta];
-                    [ nUpCal, nDownCal, UpDown_deltaCal,DownUp_deltaCal,UpUp_deltaCal,DownDown_deltaCal, En, TotKE, nAnoUpDownCal, nAnoDownUpCal] = ...
+                    [ nUpCal, nDownCal, UpDown_deltaCal,DownUp_deltaCal,UpUp_deltaCal,DownDown_deltaCal, En, TotKE, nAnoUpDownCal, nAnoDownUpCal,ExpMatNorUpUpCal,ExpMatNorUpDownCal,ExpMatNorDownUpCal,ExpMatNorDownDownCal] = ...
                         BdG_step2( KE,UpDown_delta,DownUp_delta,UpUp_delta,DownDown_delta, kT,nBands, SCInteractionMatrix,KEdown,H_off_up,H_off_down,...
                         SCInteractionMatrix1,SCInteractionMatrix2,SCInteractionMatrix3);                    
                     deltaCal = [UpUp_deltaCal,(UpDown_deltaCal);(DownUp_deltaCal),DownDown_deltaCal];
@@ -720,7 +989,7 @@ for i = 1:maxLoop
        end
        if spinfullnormal
 %        TotEn = 1/numel(nUp)*(TotKE + E_Hub + E_Hub_12 + E_Sup + E_Hub_Ano);
-         TotEn = 1/numel(nUp)*(TotKE - E_Hub + E_Hub_12 + E_Sup - E_Hub_Ano) + mu*n0; %%%%%%Jan2021: remember significance of + mu*n0, + (or -?) E_Hub_12 ? 
+         TotEn = 1/numel(nUp)*(TotKE - E_Hub + E_Hub_12 + E_Sup - E_Hub_Ano) + mu*n0; %%%%%%Jan2021: remember significance of + mu*n0, + (or -?) E_Hub_12? 
 %            if exist('field','var')
 %                if numel(field)>1
 %                  TotEn = TotEn + 1/numel(nUp)*(E_field_x + E_field_y);  
@@ -730,28 +999,82 @@ for i = 1:maxLoop
            TotEn = 1/numel(nUp)*(TotKE - E_Hub + E_Hub_12 + E_Sup) + mu*n0;
        else 
          TotEn = 1/numel(nUp)*(TotKE - E_Hub + E_Hub_12 + E_Sup) + mu*n0;  %Jan2021: Adding mu*n0
-%        TotEn = 1/numel(nUp)*(TotKE + E_Hub + E_Hub_12 + E_Sup);  %%%%%%Jan2021: +(or -?) E_Hub + (or -?) E_Hub_12 +(or -?) E_Sup ?
+%        TotEn = 1/numel(nUp)*(TotKE + E_Hub + E_Hub_12 + E_Sup);  %%%%%%Jan2021: +(or -?) E_Hub + (or -?) E_Hub_12 +(or -?) E_Sup?
        end
 %      save([BdGfileName,'eigTotEn'],'uS','vS','TotEn');
        save([BdGfileName,'eigTotEnNoVec'],'TotEn','-ascii');
        disp('Total Energy =');
        disp(TotEn);
    end
-   % Mainak
-   if ~normal_metal
-       if ((sum(nDiff) < numel(nDiff)*nTol) && ((sum(deltaDiff) < numel(deltaDiff)*deltaTol)|| (norm(delta(:))/(numel(nUp)/nOrbitals) < deltaTol)))
-           break % go out of loop if self-consistency is achieved
+   
+   if saveEnTot_spin_and_nambu %(FULL ENERGY CALCULATION)
+       if sum(sum(sum(abs(Gamma)+abs(Gamma1)+abs(Gamma2)+abs(Gamma3))))==0
+           E_Sup=0;
        end
-   else
-       if ((sum(nDiff) < numel(nDiff)*nTol))
-           break % go out of loop if self-consistency is achieved
-       end
+       E_Hub = U/4*sum((nUp+nDown).^2 - (nUp-nDown).^2);
+       E_Hub_Ano = -U/4*sum((nAnoUpDown+nAnoDownUp).^2 + (1i*(nAnoUpDown-nAnoDownUp)).^2);
+       E_Hub_12 = sum(IntUp1.*nUp) + sum(IntDown1.*nDown);
+       %E_Hund_remaining = E_Hund_remaining/2;
+       
+       TotEn = 1/numel(nUp)*(TotKE - E_Hub - E_Hub_12 - E_Sup - E_Hub_Ano - E_Hund_remaining) + mu*n0;
+       save([BdGfileName,'eigTotEnNoVec'],'TotEn','-ascii');
+       disp('Total Energy =');
+       disp(TotEn);
    end
+   
+    dens_stop = false;
+    mags_stop = false;
+    delta_stop = false;
+    
+    disp_string = [num2str(i)];
+    
+    
+    if nTol < 0
+        dens_stop = true;
+    else
+        disp_string = [disp_string,' nDiff= ',num2str(nDiff)];
+        dens_stop = (sum(nDiff) < numel(nDiff)*nTol);
+    end
+    
+    if magTol < 0
+        mags_stop = true;
+    else
+        disp_string = [disp_string,' nUpDiff= ',num2str(nUpDiff)];
+        mags_stop = (sum(nUpDiff) < numel(nUpDiff)*magTol);
+    end    
+    
+    deltaMaxNN = max(max(abs(delta(iNNsiteRange, jNNsiteRange))));
+    deltaMaxNNN = max(max(abs(delta(iNNNsiteRange, jNNNsiteRange))));
+    %deltaMaxAcc = [deltaMaxAcc; deltamax];
+    %deltaMinAcc = [deltaMinAcc; min(min(real(delta)))]; 
+    deltaMaxAcc = [deltaMaxAcc; deltaMaxNN];
+    deltaMinAcc = [deltaMinAcc; deltaMaxNNN];
+    
+    if deltaTol < 0
+        delta_stop = true;
+    else
+        disp_string = [disp_string,' deltaDiff= ',num2str( deltaDiff), ' deltaMaxNN= ',num2str(deltaMaxNN)];
+        delta_stop = (((sum(deltaDiff) < numel(deltaDiff)*deltaTol)|| (norm(delta(:))/(numel(nUp)/nOrbitals) < deltaTol)));
+    end    
+    
+    if (dens_stop && mags_stop && delta_stop)
+        break;
+    end
+   % Mainak
+%    if ~normal_metal
+%        if ((sum(nDiff) < numel(nDiff)*nTol) && ((sum(deltaDiff) < numel(deltaDiff)*deltaTol)|| (norm(delta(:))/(numel(nUp)/nOrbitals) < deltaTol)))
+%            break % go out of loop if self-consistency is achieved
+%        end
+%    else
+%        if ((sum(nDiff) < numel(nDiff)*nTol))
+%            break % go out of loop if self-consistency is achieved
+%        end
+%    end
         
     % (Mainak) norm(delta(:))/N^2 < deltaTol condition to be revoked for normal metal? 
     % homogenize calculation to get faster convergence without impurity
     if (hom && (Vimp==0))
-        delta=homogenize_delta(delta,latticeVectorsSC,nOrbitals,N);
+        delta=homogenize_delta(delta,latticeVectorsSC,nOrbitals,N); %%%%%% N(1)*N(2) to be implemented in this function
     end
     % update
     beta =  beta1 + (beta2 - beta1).*rand(1); 
@@ -765,6 +1088,11 @@ for i = 1:maxLoop
     if spin_and_nambu
         nAnoUpDown=beta*nAnoUpDown + (1-beta)*nAnoUpDownCal;
         nAnoDownUp=beta*nAnoDownUp + (1-beta)*nAnoDownUpCal;
+        
+        ExpMatNorUpUp=beta*ExpMatNorUpUp + (1-beta)*ExpMatNorUpUpCal;
+        ExpMatNorUpDown=beta*ExpMatNorUpDown + (1-beta)*ExpMatNorUpDownCal;
+        ExpMatNorDownUp=beta*ExpMatNorDownUp + (1-beta)*ExpMatNorDownUpCal;
+        ExpMatNorDownDown=beta*ExpMatNorDownDown + (1-beta)*ExpMatNorDownDownCal;
     end
     % Mainak
 %     uS = beta*uS + (1-beta)*uCal;
@@ -781,6 +1109,12 @@ for i = 1:maxLoop
     % new variable for input file: mixdelta to only converge nUp, nDown, mu
     % with fixing delta (makes only sense if the initial guess for delta is
     % already good).
+    %%%%% test  variables below
+    if exist('UpDown_delta','var') && exist('UpDown_deltaCal','var')
+    max(abs(UpDown_delta(:)))
+    max(abs(UpDown_deltaCal(:)))
+    end
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%
     if mixdelta
       %  if ~spinpolarized
             delta = beta*delta + (1-beta)*deltaCal;
@@ -801,6 +1135,16 @@ for i = 1:maxLoop
 %     nUpAvg = (1/N^2)*(sum(nUp));
     nUpAvg = (1/(numel(nUp)/nOrbitals))*(sum(nUp));
     % Mainak
+    
+    if or(spinfullnormal,spin_and_nambu)
+        xmagAbs = max(abs(nAnoUpDown+nAnoDownUp));
+        ymagAbs = max(abs(1i*(nAnoUpDown-nAnoDownUp)));
+        zmagAbs = max(abs(nUp-nDown));
+        xmagAccAbs=[xmagAccAbs,xmagAbs];
+        ymagAccAbs=[ymagAccAbs,ymagAbs];
+        zmagAccAbs=[zmagAccAbs,zmagAbs];
+    end
+    
     %BM convention
     %    nAvg = (1/N^2)*(sum(nUpCal + nDownCal));
 
@@ -824,12 +1168,7 @@ for i = 1:maxLoop
    % [~, index]=max(abs(delta(:)));
    % delta=delta*exp(-1i*angle(delta(index)));
     % second possible observables
-    deltaMaxNN = max(max(abs(delta(iNNsiteRange, jNNsiteRange))));
-    deltaMaxNNN = max(max(abs(delta(iNNNsiteRange, jNNNsiteRange))));
-    %deltaMaxAcc = [deltaMaxAcc; deltamax];
-    %deltaMinAcc = [deltaMinAcc; min(min(real(delta)))]; 
-    deltaMaxAcc = [deltaMaxAcc; deltaMaxNN];
-    deltaMinAcc = [deltaMinAcc; deltaMaxNNN];
+
     % include the lowest 50 eigenenergies into the file
     if exist('energiesAcc','var')
         energiesAcc=[energiesAcc; En(nBands+1:nBands+50)'];
@@ -838,25 +1177,31 @@ for i = 1:maxLoop
     end;
     muAcc = [muAcc; mu];
     deltaDiffAcc = [deltaDiffAcc; sum(deltaDiff)];
-    disp([num2str(i),' ndiff= ',num2str(nDiff), ' deltaDiff= ',num2str( deltaDiff), ' deltaMaxNN= ',num2str(deltaMaxNN)]);
+    disp(disp_string);
     if ~spinpolarized
         if size(delta,1)>11000
-            save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu', 'nUp','nDown','-v7.3');
+            save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu', 'nUp','nDown','xmagAccAbs','ymagAccAbs','zmagAccAbs','-v7.3');
         else
-            save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu', 'nUp','nDown');
+            save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu', 'nUp','nDown','xmagAccAbs','ymagAccAbs','zmagAccAbs');
         end
     else
         if size(delta,1)>11000
-            if or(spinfullnormal,spin_and_nambu)
-              save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown','nAnoUpDown','nAnoDownUp','-v7.3');
+            if spinfullnormal
+              save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown','nAnoUpDown','nAnoDownUp','xmagAccAbs','ymagAccAbs','zmagAccAbs','-v7.3');
+            elseif spin_and_nambu
+              save(BdGfileName,'nAcc','nUpAcc','delta','UpDown_delta','DownUp_delta','UpUp_delta','DownDown_delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown',...
+                  'nUp','nDown','nUpdown','nDowndown','nAnoUpDown','nAnoDownUp','ExpMatNorUpUp','ExpMatNorUpDown','ExpMatNorDownUp','ExpMatNorDownDown','xmagAccAbs','ymagAccAbs','zmagAccAbs','-v7.3');              
             else 
-              save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown','-v7.3');                
+              save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown','xmagAccAbs','ymagAccAbs','zmagAccAbs','-v7.3');                
             end
         else
-            if or(spinfullnormal,spin_and_nambu)
-              save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown','nAnoUpDown','nAnoDownUp');
+            if spinfullnormal
+              save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown','nAnoUpDown','nAnoDownUp','xmagAccAbs','ymagAccAbs','zmagAccAbs');
+            elseif spin_and_nambu
+              save(BdGfileName,'nAcc','nUpAcc','delta','UpDown_delta','DownUp_delta','UpUp_delta','DownDown_delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown',...
+                  'nUp','nDown','nUpdown','nDowndown','nAnoUpDown','nAnoDownUp','ExpMatNorUpUp','ExpMatNorUpDown','ExpMatNorDownUp','ExpMatNorDownDown','xmagAccAbs','ymagAccAbs','zmagAccAbs');  
             else
-              save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown');
+              save(BdGfileName,'nAcc','nUpAcc','delta','deltaMaxAcc','deltaMinAcc','deltaDiffAcc','energiesAcc','muAcc','mu','mudown','nUp','nDown','nUpdown','nDowndown','xmagAccAbs','ymagAccAbs','zmagAccAbs');
             end
         end
     end

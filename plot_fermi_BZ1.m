@@ -23,7 +23,7 @@ hold(axes1,'on');
 
 % for orb=1:nOrb
 % here some change is needed for multi orbital systems
-the_colors={'red','blue','green','cyan'};
+the_colors={'red','blue','green','cyan','magenta','yellow','black'};
 for it_orb=1:2*nOrbitals
 %     f=figure;
     Hk=reshape(kSpaceHamiltonian(:,it_orb),2*k_points+1,2*k_points+1);

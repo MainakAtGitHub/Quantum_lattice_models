@@ -1,10 +1,15 @@
-function f=generate_initialguess(N,Gamma_file,n0_orb,mu,random_n,neel_n,stripe_n,dislocation_length)
+function filename_guess=generate_initialguess(N,Gamma_file,n0_orb,mu,random_n,neel_n,stripe_n,dislocation_length)
 % generate an initialguess for a system of size N times N
 % (MAINAK) 
 % random_n can be false or true, neel_n can be small number like
 % 0.01, 0.02 etc which says how strongly neel_n initial deviation from
 % half-filled nUp and nDown we want
 % (MAINAK)
+
+if numel(N)==1
+    N=[N,N];
+end
+
 if nargin<8
     dislocation_length=false;
 end
@@ -38,14 +43,14 @@ if nargin<3
     n0_orb = 1.2;
 end
 
-nBands = N^2*nOrbitals;
+nBands = N(1)*N(2)*nOrbitals;
 
 
 if exist('nup1','var')
     % if the Gamma_file also contains the fillings nup1 in the homogeneous
     % case, start putting this as initial density; yields faster convergence
     % since already converged in the case without superconductivity    nUp=repmat(nup1,N^2,1);
-    nDown=repmat(ndown1,N^2,1);
+    nDown=repmat(ndown1,N(1)*N(2),1);
     % clean values, i.e. remove values smaller than 1e-8
     SCInteractionMatrix=(abs(real(SCInteractionMatrix))>1e-8).*real(SCInteractionMatrix)+(abs(imag(SCInteractionMatrix))>1e-8).*imag(SCInteractionMatrix);
 else
@@ -53,17 +58,27 @@ else
     nUp = n0_orb/2*ones(nBands,1);
     nDown =n0_orb/2*ones(nBands,1);
     
+    
+    nAnoUpDown=zeros(size(nUp));
+    nAnoDownUp=conj(nAnoUpDown);
+
+    
     % Mainak
     if random_n > 0
-        nUp = n0_orb/(2*nOrbitals)*ones(N^2*nOrbitals,1);
-        nDown = n0_orb/(2*nOrbitals)*ones(N^2*nOrbitals,1);
+        nUp = n0_orb/(2*nOrbitals)*ones(N(1)*N(2)*nOrbitals,1);
+        nDown = n0_orb/(2*nOrbitals)*ones(N(1)*N(2)*nOrbitals,1);
         
         what_rnd_guess_frac = random_n;
         
-        n_randdd = what_rnd_guess_frac*(abs(nOrbitals-abs(nOrbitals-n0_orb)))/(2*nOrbitals)*2*(rand(length(nUp),1)-0.5);
+        n_randdd=what_rnd_guess_frac*(rand(size(nUp))-0.5); % try simplified rand guess June21
+%         n_randdd = what_rnd_guess_frac*(abs(nOrbitals-abs(nOrbitals-n0_orb)))/(2*nOrbitals)*2*(rand(length(nUp),1)-0.5);
 %       n_randdd = what_rnd_guess_frac*(abs(nOrbitals-abs(nOrbitals-n0_orb)))/(2*nOrbitals)*ones(length(nUp),1);        
         nUp = nUp+n_randdd;
         nDown = nDown-n_randdd;
+        n_randdd1=what_rnd_guess_frac*(rand(size(nUp))-0.5);
+        n_randdd2=what_rnd_guess_frac*(rand(size(nUp))-0.5);
+        nAnoUpDown=(n_randdd1+1i*n_randdd2);
+        nAnoDownUp=conj(nAnoUpDown);
     end
     % Mainak
 %     % Mainak
@@ -102,22 +117,23 @@ else
     
     % Mainak
     if neel_n > 0
-        nUp = n0_orb/(2*nOrbitals)*ones(N^2*nOrbitals,1);
-        nDown = n0_orb/(2*nOrbitals)*ones(N^2*nOrbitals,1);
+        nUp = n0_orb/(2*nOrbitals)*ones(N(1)*N(2)*nOrbitals,1);
+        nDown = n0_orb/(2*nOrbitals)*ones(N(1)*N(2)*nOrbitals,1);
         what_frac = neel_n;
+        sqr_nUp = zeros([N,nOrbitals]);
         for i_nOrb = 1:nOrbitals
             sqr_nUp(:,:,i_nOrb)=zeros(N);
             sqr_nDown(:,:,i_nOrb)=zeros(N);
-            for ii=1:N
-                for jj=1:N
+            for ii=1:N(1)
+                for jj=1:N(2)
                     sqr_nUp(ii,jj,i_nOrb)=(-1)^(ii+jj);
                     sqr_nDown(ii,jj,i_nOrb)=(-1)^(ii+jj+1);
                 end
             end
-            sqr_nUp(:,:,i_nOrb)=sqr_nUp(:,:,i_nOrb)';
-            sqr_nDown(:,:,i_nOrb)=sqr_nDown(:,:,i_nOrb)';
-            temp_sqr_up=sqr_nUp(:,:,i_nOrb);
-            temp_sqr_down=sqr_nDown(:,:,i_nOrb);
+            sqr_nUp_rect(:,:,i_nOrb)=sqr_nUp(:,:,i_nOrb)';
+            sqr_nDown_rect(:,:,i_nOrb)=sqr_nDown(:,:,i_nOrb)';
+            temp_sqr_up=sqr_nUp_rect(:,:,i_nOrb);
+            temp_sqr_down=sqr_nDown_rect(:,:,i_nOrb);
             nUp(i_nOrb:nOrbitals:length(nUp))=nUp(i_nOrb:nOrbitals:length(nUp))+what_frac*(abs(nOrbitals-abs(nOrbitals-n0_orb)))/(2*nOrbitals)*temp_sqr_up(:);
             nDown(i_nOrb:nOrbitals:length(nDown))=nDown(i_nOrb:nOrbitals:length(nUp))+what_frac*(abs(nOrbitals-abs(nOrbitals-n0_orb)))/(2*nOrbitals)*temp_sqr_down(:);
         end
@@ -126,14 +142,14 @@ else
     
     % Mainak
     if stripe_n > 0
-        nUp = n0_orb/(2*nOrbitals)*ones(N^2*nOrbitals,1);
-        nDown = n0_orb/(2*nOrbitals)*ones(N^2*nOrbitals,1);
+        nUp = n0_orb/(2*nOrbitals)*ones(N(1)*N(2)*nOrbitals,1);
+        nDown = n0_orb/(2*nOrbitals)*ones(N(1)*N(2)*nOrbitals,1);
         what_frac = stripe_n;
         for i_nOrb = 1:nOrbitals
             sqr_nUp(:,:,i_nOrb)=zeros(N);
             sqr_nDown(:,:,i_nOrb)=zeros(N);
-            for ii=1:N
-                for jj=1:N
+            for ii=1:N(1)
+                for jj=1:N(2)
                     sqr_nUp(ii,jj,i_nOrb)=(-1)^(ii);
                     sqr_nDown(ii,jj,i_nOrb)=(-1)^(ii+1);
                 end
@@ -148,6 +164,44 @@ else
     end
     % Mainak        
 
+% % % % %     if stripe_n > 0     %%%%%%%%this block, inspite of name stripe_n it actually creates higher wavelength stripes  
+% % % % %        nUp = n0_orb/(2*nOrbitals)*ones(N^2*nOrbitals,1);
+% % % % %        nDown = n0_orb/(2*nOrbitals)*ones(N^2*nOrbitals,1);
+% % % % %        what_frac = stripe_n;
+% % % % % %        ndeld=zeros(sqrt(length(nUp)/nOrbitals));
+% % % % % %        ndelu=zeros(sqrt(length(nUp)/nOrbitals));
+% % % % %        for ddii=1:sqrt(length(nUp)/nOrbitals)
+% % % % %            for ddjj=1:sqrt(length(nUp)/nOrbitals)
+% % % % %                dmlinindxrng=((ddii-1)*N+ddjj-1)*nOrbitals+1:((ddii-1)*N+ddjj)*nOrbitals;
+% % % % %                if mod(ddii,2)==1
+% % % % %                    if mod(ddjj,2)==1
+% % % % % %                        what_frac*(-1)^ddjj
+% % % % %                    nDown(dmlinindxrng)=...
+% % % % %                        nDown(dmlinindxrng)+...
+% % % % %                        what_frac*(-1)^ddjj;
+% % % % %                    nUp(dmlinindxrng)=...
+% % % % %                        nUp(dmlinindxrng)-...
+% % % % %                        what_frac*(-1)^ddjj;
+% % % % %                    end
+% % % % %                else
+% % % % %                    if mod(ddjj,2)==0
+% % % % % %                        what_frac*(-1)^ddjj
+% % % % %                    nUp(dmlinindxrng)=...
+% % % % %                        nUp(dmlinindxrng)-...
+% % % % %                        what_frac*(-1)^ddjj;
+% % % % %                    nDown(dmlinindxrng)=...
+% % % % %                        nDown(dmlinindxrng)+...
+% % % % %                        what_frac*(-1)^ddjj;
+% % % % %                    end
+% % % % %                end
+% % % % %            end
+% % % % %        end
+% % % % % %        reshape(ndeld,[length(nDown)/nOrbitals,1]);
+% % % % % %        reshape(ndelu,[length(nUp)/nOrbitals,1]);
+% % % % % %        nUp=nUp+ndelu;
+% % % % % %        nDown=nDown+ndeld;
+% % % % %     end
+    
     if nargin < 4
         mu=0;
     end
@@ -159,16 +213,18 @@ delta=SCInteractionMatrix;
 % clear variable to save memory
 clear SCInteractionMatrix;
 % save the initial guess
+filename_guess=[Gamma_file,'guess','[',num2str(N(1)),'_',num2str(N(2)),']','_rand_strength_',num2str(random_n),'_neel_strengh_',num2str(neel_n),'_stripe_strengh_',num2str(stripe_n)];
 if size(delta,1)>11000
     % use new version for large system sizes (file limitation)
-    save([Gamma_file,'guess',num2str(N),'_rand_strength_',num2str(random_n),'_neel_strengh_',num2str(neel_n),'_stripe_strengh_',num2str(stripe_n)],'delta','mu','nUp','nDown','-v7.3');
+    
+    save(filename_guess,'delta','mu','nUp','nDown','nAnoUpDown','nAnoDownUp','-v7.3');
     % also generate a random guess for checking that the convergence works
     % independent of initial guess
     delta=delta.*(rand(size(delta))*2-1);
 %     save([Gamma_file,'guess',num2str(N),'rand'],'delta','mu','nUp','nDown','-v7.3');
 else
     % use default format otherwise
-    save([Gamma_file,'guess',num2str(N),'_rand_strength_',num2str(random_n),'_neel_strengh_',num2str(neel_n),'_stripe_strengh_',num2str(stripe_n)],'delta','mu','nUp','nDown');
+    save(filename_guess,'delta','mu','nUp','nDown','nAnoUpDown','nAnoDownUp');
     delta=delta.*(rand(size(delta))*2-1);
 %     save([Gamma_file,'guess',num2str(N),'rand'],'delta','mu','nUp','nDown');
 end

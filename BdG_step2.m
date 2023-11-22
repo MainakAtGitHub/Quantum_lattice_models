@@ -1,4 +1,4 @@
-function [ nUpCal, nDownCal, UpDown_deltaCal,DownUp_deltaCal,UpUp_deltaCal,DownDown_deltaCal, En, TotKE, nAnoUpDownCal, nAnoDownUpCal] = ...
+function [ nUpCal, nDownCal, UpDown_deltaCal,DownUp_deltaCal,UpUp_deltaCal,DownDown_deltaCal, En, TotKE, nAnoUpDownCal, nAnoDownUpCal,ExpMatNorUpUpCal,ExpMatNorUpDownCal,ExpMatNorDownUpCal,ExpMatNorDownDownCal] = ...
     BdG_step2( KE,UpDown_delta,DownUp_delta,UpUp_delta,DownDown_delta, kT,nBands, SCInteractionMatrix,mKE,H_off_up,H_off_down,...
     SCInteractionMatrix1,SCInteractionMatrix2,SCInteractionMatrix3)
 %UNTITLED Summary of this function goes here
@@ -16,6 +16,19 @@ function [ nUpCal, nDownCal, UpDown_deltaCal,DownUp_deltaCal,UpUp_deltaCal,DownD
         -(DownUp_delta),-DownDown_delta]',...
         -transpose([KE, H_off_up;...
         H_off_down, mKE])];
+    Bdgtestvar=sum(sum(abs(BdGMatrix-BdGMatrix')))
+    if Bdgtestvar > 1e-18
+        disp('PROBLEM! NONHERMITIAN HAMILTONIAN')
+        BdGMatrix=0.5*(BdGMatrix+BdGMatrix');
+    end
+    %%%%%%%debugging23feb2021
+    testdel=[-UpUp_delta, -(UpDown_delta);...
+        -(DownUp_delta),-DownDown_delta];
+    newvar=testdel+transpose(testdel);
+    max_newvar=max(max(abs(newvar)))
+    %%%%%%%%%%%%5
+    
+    
     %tic
     %BdGMatrix1=sparse(BdGMatrix);
     %toc

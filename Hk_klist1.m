@@ -30,6 +30,10 @@ latticeVector=[1,0,0;
                 0 2 0;
                 0 -2 0;
                 0 0 0];
+            
+if ~exist('bilayer_int','var')
+    bilayer_int=false;
+end
 if bilayer_int
     perpTB=0.08*0.15*[0;0;0;0;-1/2;-1/2;-1/2;-1/2;1/4;1/4;1/4;1/4;1];
 end

@@ -10,17 +10,20 @@ end;
 % impurity or sets of impurities given in the input file Vimp
 
 % Mainak%%% temporarily changed due to disloc
+if numel(N)==1
+    N=[N,N];
+end
 if true %dislocation_length>0
-    nBands = (N^2-dislocation_length)*nOrbitals;
+    nBands = (N(1)*N(2)-dislocation_length)*nOrbitals;
 else
     % Mainak
     
-    nBands = N^2*nOrbitals;
+    nBands = N(1)*N(2)*nOrbitals;
 end
 Himp = zeros(nBands);
 % rectangular by default
 if numel(N)==1
-     N=[N N];
+     N=[N,N];
 end
 impCell = [ceil(N(1)/2) ceil(N(2)/2)];
 % allow for general impurity potentials
@@ -104,8 +107,8 @@ if randompot>0
         Hrand=0*Himp;
         randomcells=[];
         randompotentials=[];
-        for nx=1:N
-            for ny=1:N
+        for nx=1:N(1)
+            for ny=1:N(2)
                 % decide whether to put a random potential
                 rnd=rand(1);
                 if rnd >1/fraction

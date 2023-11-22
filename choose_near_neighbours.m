@@ -1,5 +1,8 @@
 function [near_neighbours,near_neighbour_index] = choose_near_neighbours(r,N_lin,d_cut_off,plot_near_neighbours,inv_con_len)
-
+%%%%%%%temporary for reduced xbox calculation
+N_linx=N_lin;%29.606;%N_lin;%
+N_liny=N_lin;
+%%%%%%%temporary for reduced xbox calculation
 if nargin < 2
     N_lin=0;
 end
@@ -20,8 +23,8 @@ near_neighbours{size(r,1),1}=[];
 near_neighbour_index{size(r,1),1}=[];
 
 for i = 1:size(r,1)    
-     dist_all_neighbours = sqrt((min([abs(r(:,1)-r(i,1))';abs(r(:,1)-r(i,1)-N_lin)';...
-         abs(r(:,1)-r(i,1)+N_lin)'])).^2+(min([abs(r(:,2)-r(i,2))';...
+     dist_all_neighbours = sqrt((min([abs(r(:,1)-r(i,1))';abs(r(:,1)-r(i,1)-N_linx)';...
+         abs(r(:,1)-r(i,1)+N_linx)'])).^2+(min([abs(r(:,2)-r(i,2))';...
          abs(r(:,2)-r(i,2)-N_lin)';abs(r(:,2)-r(i,2)+N_lin)'])).^2);
      near_neighbour_index{i} = find(dist_all_neighbours<d_cut_off & dist_all_neighbours~=0)';
      near_neighbours{i}=[r(near_neighbour_index{i},1),r(near_neighbour_index{i},2)];
