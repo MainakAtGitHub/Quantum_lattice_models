@@ -63,6 +63,9 @@ end;
 if ~exist('spinpolarized','var')
     spinpolarized=false;
 end
+if ~exist('magnetic','var')
+    magnetic=false;
+end
 [dirprefix,~,~] = fileparts(inputfile);
 if ~isempty(dirprefix)
     dirprefix=[dirprefix,filesep]
@@ -313,6 +316,21 @@ end
 % use external script to set up impurity Hamiltonian
 HImpurity=get_Himp(Vimp,N,nOrbitals,sublattice,randompot,BdGfileName);
 
+%(Mainak) -> move up since spinpolarized is used above
+if correlated
+    if nOrbitals >1
+         disp(['Calculation with more than one orbital, but Up, J, Jp not implemented here!' ]);
+    end
+    disp(['Calculation with general magnetic quantization axis not implemented here!']);
+    spinpolarized=true;
+    HmagUp = U*diag(nDown);
+    HmagDown = U*diag(nUp);
+else
+    HmagUp = 0;
+    HmagDown = 0;
+end
+%(Mainak
+
 if magnetic
     % do a magnetic simulation with magnetic impurity
     % some default behavior: If Vimpdown not defined, use a potential
@@ -334,16 +352,7 @@ if magnetic
 end
 
 
-%(Mainak)
-if correlated
-    spinpolarized=true;
-    HmagUp = U*diag(nDown);
-    HmagDown = U*diag(nUp);
-else
-    HmagUp = 0;
-    HmagDown = 0;
-end
-%(Mainak
+
 
 
 % only one for loop

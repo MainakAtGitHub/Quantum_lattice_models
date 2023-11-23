@@ -1,4 +1,4 @@
-function r=BdG_impurity_v3(inputfile,mode,saveEnTot);%,normal_metal)%,dislocation_length)%,pos_file)
+/function r=BdG_impurity_v3(inputfile,mode,saveEnTot);%,normal_metal)%,dislocation_length)%,pos_file)
 
 % Modified impurity BdG code to include
 % 1. Convergence check parameter as 
