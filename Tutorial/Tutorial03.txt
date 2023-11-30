@@ -1,0 +1,56 @@
+This part deals with the calculation of density of states from a converged
+homogeneous system, see Tutorial01.
+
+A) Having a converged system, one can conveniently calculate the density of
+states. The code reads in the real space gaps, then uses a Fourier transform
+to momentum space and calculates eigenenergies and eigenstates of the
+Hamiltonian in k-space (assuming that there is translational symmetry).
+
+
+For this calculation the following parameters in the input file are used
+
+a) supercell parameter "M"
+M=20 means that N*M=700 k-points are used in each direction
+
+
+b) firstEnergy=-1 and lastEnergy=1 which means that the DOS is calculated for
+energy points in the range [-1 1] and nEnergyPoints=2500 points are
+calculated.
+
+c) a broadening of
+ita=0.001
+is used.
+
+
+B) Do the calculation with
+
+>> homogeneous_dos_v2('~/docs/Mainak/Tutorial/input_1band_SC.txt')
+
+C) Plot the result with
+
+>> plot_homogeneous_dos_v2('~/docs/Mainak/Tutorial/input_1band_SC.txt')
+
+Two plots should pop up (they show the normal state density of states and the
+one in the superconducting state). The second plot is supposed to be orbitally
+resolved (for a one-band system, that one looks identical to the total DOS
+plot). Additionally, PDF files should be generated in the /tmp/ folder. You
+can look for them with
+
+$ ls -ltr /tmp/
+
+D) Doing multiple calculations with different M, and ita is possible
+For this purpose, just copy the input file to another file, edit the latter by
+changing M, ita, nEnergyPoints and do another run
+
+$ cp input_1band_SC.txt input_1band_SC_highres.txt
+
+homogeneous_dos_v2('~/docs/Mainak/Tutorial/input_1band_SC_highres.txt')
+plot_homogeneous_dos_v2('~/docs/Mainak/Tutorial/input_1band_SC_highres.txt')
+
+Note: when changing nEnergyPoints or firstEnergy lastEnergy, the output will
+be overwritten. You can set another output filename by copying the input file
+again and changing
+
+casestring=LDOS_1band_Mainak_U_1_n_0425
+
+and then rerun homogeneous_dos_v2 and plot_homogeneous_dos_v2.

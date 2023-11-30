@@ -1,0 +1,33 @@
+% 1) input files: must be present in the current folder 
+Gamma_file=Gammakkp5_FeSe_tom_true_2D_U6.txt_rlistcut2.mat
+TB_file=TB_hamiltonian_FeSe_2D.mat
+%input_fileName=FeSe_N_11_U_0955.mat
+% 2) input/output file must be present in current folder (will be overwritten on cycle)
+BdGfileName=FeSe_N_11_U_0955.mat
+% 3) output file for density of states (parallel code will create a directory starting with
+%    data_<casestring>
+casestring=LDOS_FeSe_Tom_
+% 4) parameters for BdG calculation
+N=11
+Vimp=0
+nOrbitals=10
+kT=0.01
+% 4a) mixing paramters
+alpha=0.25
+beta1=0.7
+beta2=0.9
+% 4b) convergence parameters
+deltaTol=1e-06
+nTol=1e-05
+maxLoop=500
+% 5) parameters for DOS calculation
+firstEnergy=-1
+lastEnergy=1
+nEnergyPoints=2500
+M=20
+% 5a) Broadening for Greens function
+ita=0.001
+% 5b) Tetrahedron method
+tetra=false
+casename=tom
+n0=12

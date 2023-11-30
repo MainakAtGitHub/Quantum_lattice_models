@@ -1,0 +1,39 @@
+Small tutorial for working with tight binding models
+
+Here: simple 1 band model with NN and NNN interactions
+
+1) Convert the file 1band.csv to the input format used by the BdG code
+>> convert_tb_AK_PC('~/docs/Mainak/Tutorial/1band.csv')
+
+-> replace the directory with the one where the file "1band.csv" is located;
+enter "0" when prompted for sublattice (1,-1 applies for 10 orbital models in
+FeSC)
+
+2) Examine the contents of the generated file (read documentation for the
+"matfile" command)
+
+>> m=matfile('~/docs/Mainak/Tutorial/1band.csv.mat')
+
+3) load the variables in that data file
+>> load ~/docs/Mainak/Tutorial/1band.csv.mat
+
+4) generate the kinetic energy term for a real space system of size (3x3)
+
+>> t=lattice_translation(3,TBparameters,latticeVector)
+
+-> examine the structure of the matrix t and make sure that you understand
+the entries and how these compare to the ones as worked out on paper before
+
+5) generate a kinetic energy term for a real space system of size (3x4)
+
+>> t=lattice_translation([3,4],TBparameters,latticeVector)
+
+-> also understand the structure of this matrix
+
+6) work with bigger matrices, semicolon at the end of command to suppress
+output
+
+>> t=lattice_translation(10,TBparameters,latticeVector);
+
+useful command to inspect matrix
+>> spy(t)

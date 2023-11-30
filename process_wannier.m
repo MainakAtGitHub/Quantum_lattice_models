@@ -1,0 +1,148 @@
+function [ wannierValues xGrid yGrid zGrid] = process_wannier( filename, nOrb,im,geometry)
+if nargin <4
+    dim=input('dimension of map 2/3: ');
+else
+    dim=geometry(1);
+end;
+if dim==2
+% only two dimensional map
+readstring=['%g %g '];
+else
+    if ~dim==3
+        disp('setting dimension to 3');
+    end
+    readstring=['%g %g %g '];
+end
+if nargin <3
+    im=false
+end;
+if im
+    imagnum=2;
+else
+    imagnum=1;
+end;
+for n=1:nOrb
+    if im
+        readstring=[readstring,' (%g,%g)'];
+        % new format
+       % readstring=[readstring,' (%g,%g)'];
+    else
+        readstring=[readstring,' %g'];
+    end;
+end;
+
+
+fid = fopen(filename);
+if dim==3
+    % 3D maps
+    pos=3;
+else
+    % 2D maps
+    pos=2;
+end;
+dble=1;
+%WF = fscanf(fid, readstring, [3+imagnum*nOrb inf]);
+% new format (2D)
+WF = fscanf(fid, readstring, [pos+imagnum*nOrb*dble inf]);
+fclose(fid);
+%UNTITLED Summary of this function goes here
+%   Detailed explanation goes here
+szwf=size(WF);
+num=0;
+if nargin < 4
+while ~(num==szwf(2))
+    disp(['total points ',num2str(szwf(2))]);
+    xpoints=input('points in x-direction: ');
+    ypoints=input('points in y-direction: ');
+    zpoints=input('points in z-direction: ');
+    num=xpoints*ypoints*zpoints;
+end
+else
+    xpoints=geometry(2);
+    ypoints=geometry(3);
+    zpoints=geometry(4);
+end
+ 
+if nargin < 4
+shift = [51 51 51];
+a=input('shift in x-direction: ');
+if ~isempty(a)
+    shift(1)=a;
+    
+end;
+a=input('shift in y-direction: ');
+if ~isempty(a)
+    shift(2)=a;
+end;
+a=input('shift in z-direction: ');
+if ~isempty(a)
+    shift(3)=a;
+end;
+RDiscrete = [40 40 80];
+a=input('cell size in x-direction: ');
+if ~isempty(a)
+    RDiscrete(1)=a;
+end;
+a=input('cell size in y-direction: ');
+if ~isempty(a)
+    RDiscrete(2)=a;
+end;
+a=input('cell size in z-direction: ');
+if ~isempty(a)
+    RDiscrete(3)=a;
+end;
+else
+    shift=geometry(5:7);
+    RDiscrete=geometry(8:10);
+end
+for n=1:nOrb
+   % wannierValues(:,n)=WF(3+(n-1)*2+1,:)+1i*WF(3+n*2,:);
+   % ignore the complex part
+   if im
+       wannierValues(:,n)=WF(pos+(n-1)*2+1,:);
+   else
+       wannierValues(:,n)=WF(pos+(n-1)+1,:);
+   end;
+end;
+wannierValues=reshape(wannierValues,xpoints,ypoints,zpoints,nOrb);
+minx=min(WF(1,:));
+miny=min(WF(2,:));
+minz=min(WF(3,:));
+maxx=max(WF(1,:));
+maxy=max(WF(2,:));
+maxz=max(WF(3,:));
+xGrid=minx:(maxx-minx)/(xpoints-1):maxx;
+yGrid=miny:(maxy-miny)/(ypoints-1):maxy;
+zGrid=minz:(maxz-minz)/(zpoints-1):maxz;
+% some code for the BSCCO input
+if nOrb==1
+wv=real(wannierValues(:,:,:,1));
+wannierValues=wv;
+end;
+% add outer grid for w90 produced wannier functions
+if mod(ypoints,2)==0
+    disp('check map, probably w90 map with missing outer boundaries');
+    mp=wannierValues(:,:,1,1);
+    yp2=ypoints/2;
+    wannierValues(ypoints+1,:,:,:)=0.5*wannierValues(1,:,:,:);
+    wannierValues(1,:,:,:)=0.5*wannierValues(1,:,:,:);
+    mp=wannierValues(:,:,1,1);
+    wannierValues(:,ypoints+1,:,:)=0.5*wannierValues(:,1,:,:);
+    wannierValues(:,1,:,:)=0.5*wannierValues(:,1,:,:);
+xGrid=[xGrid,xGrid(end)+(xGrid(end)-xGrid(end-1))]-xGrid(yp2+1);
+yGrid=[yGrid,yGrid(end)+(yGrid(end)-yGrid(end-1))]-yGrid(yp2+1);
+    % only works for symmetric WF
+    % look for the symmetric position   
+end
+
+%wannierValuest=wannierValues;
+% for i=1:nOrb
+%     for z=1:zpoints
+%         wannierValues(:,:,z,i)=wannierValuest(:,:,z,mod(i+nOrb/2-1,nOrb)+1);
+%     end;
+% end;
+%sizeWannier = [101 101 81];
+%RDiscrete = [40 40 80];
+save([filename,'_conv_a.mat'],'wannierValues','xGrid','yGrid','zGrid','RDiscrete','shift');
+end
+

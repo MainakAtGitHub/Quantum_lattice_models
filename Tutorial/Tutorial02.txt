@@ -1,0 +1,255 @@
+Tutorial to start a one band calculation in the superconducting state
+
+Introductory note:
+
+1. The code is written such that not model specific parameters are in the *.m
+files. Instead all parameters need to be specified in input files such that
+the same code can calculate any model (one band, multiband, any real space
+system size, with/without impurity, ...).
+
+2. Additionally, all code is programmed backward compatible, i.e. calculations
+that have been done before should still run and produce the same (correct)
+output even after modifications of the code to implement new features. For
+example any one-impurity calculation should still work when multi-impurity
+cases have been implemented.
+
+3. Therefore, the format of the input files needs to be kept the same and also
+the output format should be "stable". This tutorial will give an introduction
+to the concept of input and output files.
+
+
+A) Starting a calculation:
+For the present study (superconductor), one needs:
+i) The information about the band structure "tight-binding file" (see
+Tutorial01.txt how to process it in the suitable *.mat format)
+ii) The pairing interactions used to solve the self-consistent BdG equations.
+It has the structure of a set of real space vectors and the corresponding V(r)
+as matrices (to be suitable to work with multi-band systems).
+
+Additionally, one needs to create a text file that sets a couple of options
+and filenames of output files and specifies i) and ii).
+
+This is an example of such a file (line numbers have been added for the
+following discussion).
+
+     1	BdGfileName=1band_N_35_U_1.mat
+     2	Gamma_file=Gamma_1_NN.mat
+     3	M=20
+     4	N=35
+     5	TB_file=1band.csv.mat
+     6	Vimp=0
+     7	alpha=0.25
+     8	beta1=0.7
+     9	beta2=0.9
+    10	casename=Mainak
+    11	casestring=LDOS_1band_Mainak_U_1_n_0425
+    12	deltaTol=1e-06
+    13	firstEnergy=-1
+    14	ita=0.001
+    15	kT=0.0001
+    16	lastEnergy=1
+    17	maxLoop=500
+    18	n0=0.85
+    19	nEnergyPoints=2500
+    20	nOrbitals=1
+    21	tetra=false
+    22	calcGreens=false
+    23	Greensenergy=-0.0036
+    24  nTol=1e-05
+
+Short description of options:
+
+1: Filename of the file containing the self-consitent pairing and density
+fields (together with some data showing the convergence status).
+2: Filename of ii)
+3: Size of supercells (see later)
+4: Size of real space system (here 35x35)
+5: Filename of i)
+6: value of impurity (at the center of the system), can also be filename of
+multiple impurity configuration file (see later)
+7: parameter to control the convergence of the chemical potential (keep as it
+is)
+8/9: parameter for mixing the self-consistent fields (should be between 0 and
+1) larger numbers give slow convergence, too small numbers can give
+oscillatory behavior; usually keep between 0.7 and 0.9; beta1<beta2 required.
+10/11: string to set the filenames for output files
+12: criterion for stopping the self-consistent loop; usually good choice, for
+more precision decrease (more iterations needed)
+13/16: energy values for density of states calculations (lower bound and
+higher bound)
+14: broadening for density of states calculations (and Green's function
+calculations)
+15: temperature (in eV) for the self-consistent calculation
+17: number of loops to maximally perform (increase if slow convergence
+happens)
+18: density (electrons per spin and elementary cell) for the calculation: 0.85
+means 0.425 electrons per spin and elementary cell
+19: number of energy points for dos calculations
+20: number of orbitals of the system
+21: keep to false for now (2D version of tetrahedron method)
+22: keep to false for now (Green's function calculation, needed for Wannier
+calculation)
+23: ignore for now (energy value for Green's function calculation)
+24: convergence criteria for the density smaller values need more iterations.
+
+The order of the variable names in the input file is arbitrary; there can be
+spaces before and after "=", but names are case sensitive. If the same keyword
+appears multiple times, the last occurence is taken.
+
+The lines:
+
+Vimp=10.0
+Vimp=-10.0
+Vimp=0
+
+will have the same effect as just "Vimp=0".
+
+B) Preparing a calculation:
+For the self-consistent calculation, we need an initial guess for the
+mean-fields. This can be conveniently obtained with the script 
+
+
+>> generate_initialguess(35,'~/docs/Mainak/Tutorial/Gamma_1_NN.mat',0.85);
+
+First argument "35" is the real space size, needs to be equal to the number N
+in the input file, whe have "N=35".
+Second argument: usually take the filename of the pairing interaction (replace
+path with the correct one where the file "Gamma_1_NN.mat" is located.
+Third argument: average density, should be identical to the number n0 in the
+input file (can be other value as well, but will give bad convergence)
+
+Execution should give two files
+
+Gamma_1_NN.matguess35
+Gamma_1_NN.matguess35rand
+
+in the same directory where "Gamma_1_NN.mat" is located.
+One with a uniform initial guess, another with a random initial guess.
+
+To start a calculation, copy these files to the file as given in the
+BdGfileName keyword, i.e.
+
+$ cp Gamma_1_NN.matguess35 1band_N_35_U_1.mat
+
+To set up a second calculation, one can also do
+$ cp Gamma_1_NN.matguess35rand 1band_N_35_U_1_rand.mat
+
+and use an input text file with the keyword
+BdGfileName=1band_N_35_U_1_rand.mat
+-> This will then allow us to run two independent calculations in parallel,
+one will use the file 1band_N_35_U_1.mat to store the mean fiels, the other
+will use 1band_N_35_U_1_rand.mat to store the mean fiels. The latter is
+however another (bad) initial guess. Optimally both calculations converge to
+the same mean fields.
+
+C) Now, we have in the same (but arbitrarily located directory) the following
+files:
+
+1band.csv.mat
+Gamma_1_NN.mat
+input_1band_SC.txt
+1band_N_35_U_1.mat
+
+we can start the calculation with the command
+
+>> BdG_impurity_v3('~/docs/Mainak/Tutorial/input_1band_SC.txt')
+
+which should produce the following output
+
+BdGfileName=~/docs/Mainak/Tutorial/1band_N_35_U_1.mat
+Gamma_file=~/docs/Mainak/Tutorial/Gamma_1_NN.mat
+M=20
+N=35
+TB_file=~/docs/Mainak/Tutorial/1band.csv.mat
+Vimp=0
+alpha=0.25
+beta1=0.7
+beta2=0.9
+casename=~/docs/Mainak/Tutorial/Mainak
+casestring=~/docs/Mainak/Tutorial/LDOS_1band_Mainak_U_1_n_0425
+deltaTol=1e-06
+firstEnergy=-1
+ita=0.001
+kT=0.0001
+lastEnergy=1
+maxLoop=500
+n0=0.85
+nEnergyPoints=2500
+nOrbitals=1
+tetra=0
+calcGreens=0
+Greensenergy=-0.0036
+nTol=1e-05
+
+read_input_file =
+
+    '~/docs/Mainak/Tutorial/input_1band_SC.txt'
+
+Elapsed time is 1.897039 seconds.
+1 ndiff= 0.4458 deltaDiff= 0.96584 deltaMaxNN= 0.0058892
+Elapsed time is 1.932058 seconds.
+2 ndiff= 0.4341 deltaDiff= 0.9654 deltaMaxNN= 0.0045289
+Elapsed time is 1.944988 seconds.
+3 ndiff= 0.42376 deltaDiff= 0.96544 deltaMaxNN= 0.0035019
+Elapsed time is 2.029465 seconds.
+(...)
+366 ndiff= 7.488e-12 deltaDiff= 1.0205e-06 deltaMaxNN= 0.076295
+Elapsed time is 2.043252 seconds.
+Converged
+
+(depending on your initial guess, the output might be slightly different,
+after some time (hundreds of iterations), the code should stop (at least after
+maxLoop iterations).
+
+While running, you can look at the convergence status (with another instance
+of Matlab) using the command:
+
+
+plot_BdG_impurity_v3('~/docs/Mainak/Tutorial/1band_N_35_U_1.mat')
+
+(it has one argument, the file that contains the mean fields, specified after
+the BdGfileName keyword).
+
+The following command produces a real space picture of the superconducting
+order parameter which should be almost uniform (mind the scale of the
+colorplot !)
+
+plot_delta_map('~/docs/Mainak/Tutorial/input_1band_SC.txt')
+
+D) The self-consistent calculation can always be stopped by pressing
+Ctrl+C (or killing the Matlab program if running non-interactively). It can be
+restarted again (if killed or not yet converged by) the command
+
+>> BdG_impurity_v3('~/docs/Mainak/Tutorial/input_1band_SC.txt')
+
+
+E) For exploring the properties of the system, one can
+
+a) set up calculations with different system size, i.e. create new input
+files, edit them to change the keyword N to another number (optimally keep odd
+numbers for now), then change the BdGfileName keyword, generate a new initial
+guess, copy it to the filename set in "BdGfileName" and do another run.
+
+-> Check whether the value of the order parameter as seen with 
+plot_delta_map does not change with system size
+
+b) map out the phase diagram, i.e. create new input files, edit them to change
+the kT keyword, change the BdGfileName keyword and copy the initial guess file
+to the filename set in "BdGfileName" and do another run.
+
+-> the value of the order parameter as seen with plot_delta_map should follow
+a order parameter behavior (Note: Convergence might be slow close to the
+critical temperature, multiple starts using BdG_impurity_v3 might be needed.
+
+c) Check that the final result does not depend on the initial guess, i.e.
+create multple initial guess files (each time you run), the "rand" file will
+be a different one:
+
+generate_initialguess(35,'~/docs/Mainak/Tutorial/Gamma_1_NN.mat',0.85);
+
+copy the Gamma_1_NN.matguess35rand file to another filename, set up the input
+file by changing "BdGfileName" to that filename, do another convergence run.
+
+F) Hint: We have started with a very bad guess for the chemical potential
+mu=0. That's why the convergence is quite slow and needs some swing in as you
+can see in the windows created by plot_BdG_impurity_v3.
