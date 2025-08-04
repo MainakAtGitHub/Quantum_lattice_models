@@ -20,7 +20,10 @@ convert_tb_AK_PC('1band.csv')
 ## Publications based on that code (or part of it)
 
 - [ ] [Peayush Choubey, T. Berlijn, A. Kreisel, C. Cao, P. J. Hirschfeld, Phys. Rev. B 90, 134520 (2014) Visualization of atomic-scale phenomena in superconductors: application to FeSe] (http://arxiv.org/abs/1401.7732)
-
+- [ ] [Jia-Xin Yin, Songtian S. Zhang, Guangyang Dai, Yuanyuan Zhao, Andreas Kreisel, Gennevieve Macam, Xianxin Wu, Hu Miao, Zhi-Quan Huang, Johannes H. J. Martiny, Brian M. Andersen, Nana Shumiya, Daniel Multer, Maksim Litskevich, Zijia Cheng, Xian Yang, Tyler A. Cochran, Guoqing Chang, Ilya Belopolski, Lingyi Xing, Xiancheng Wang, Yi Gao, Feng-Chuan Chuang, Hsin Lin, Ziqiang Wang, Changqing Jin, Yunkyu Bang, M. Zahid Hasan Phys. Rev. Lett. 123, 217004 (2019)
+Quantum phase transition of correlated iron-based superconductivity in LiFe1−xCoxAs]  (https://arxiv.org/abs/1910.11396)
+- [ ] [Mainak Pal, Andreas Kreisel, W.A. Atkinson, P.J. Hirschfeld, Phys. Rev. B 107, 144501 (2023) Simulating Superconducting Properties of Overdoped Cuprates: the Role of Inhomogeneity] (https://arxiv.org/abs/2211.13338)
+- [ ] [Miguel Antonio Sulangi, Willem Farmilo, Andreas Kreisel, Mainak Pal, W. A. Atkinson, P. J. Hirschfeld arXiv:2503.20861 Inhomogeneity, Fluctuations, and Gap Filling in Overdoped Cuprates]
 ## Authors and acknowledgment
 
 This code has been developped partly by Peayush Choubey, Mainak Pal, Andreas Kreisel
@@ -29,4 +32,3 @@ This code has been developped partly by Peayush Choubey, Mainak Pal, Andreas Kre
 
 This code is open source and can be used for scientific purposes provided relevant previous work is credited and cited.
 The code has been developped with resources from 
-
