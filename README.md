@@ -32,4 +32,3 @@ This code has been developped partly by Peayush Choubey, Mainak Pal, Andreas Kre
 ## License
 
 This code is open source and can be used for scientific purposes provided relevant previous work is credited and cited.
-The code has been developped with resources from 
