@@ -33,7 +33,12 @@ convert_tb_AK_PC('1band.csv')
 
 ## Authors and acknowledgment
 
-This code has been developped partly by Peayush Choubey, Mainak Pal, Andreas Kreisel
+This is a collaborative research codebase developed jointly by Mainak Pal with Peayush Choubey and Andreas Kreisel.
+
+My contributions comprise approximately half of the development of the
+codebase, including both independently developed components and substantial
+joint development. Because many components evolved collaboratively, individual
+file-level authorship is not assigned.
 
 ## License
 
