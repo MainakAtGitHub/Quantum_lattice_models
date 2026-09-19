@@ -26,12 +26,13 @@ convert_tb_AK_PC('1band.csv')
 
 ## Publications based on that code (or part of it)
 
-- [ ] [Peayush Choubey, T. Berlijn, A. Kreisel, C. Cao, P. J. Hirschfeld, Phys. Rev. B 90, 134520 (2014) Visualization of atomic-scale phenomena in superconductors: application to FeSe] (http://arxiv.org/abs/1401.7732)
-- [ ] [Jia-Xin Yin, Songtian S. Zhang, Guangyang Dai, Yuanyuan Zhao, Andreas Kreisel, Gennevieve Macam, Xianxin Wu, Hu Miao, Zhi-Quan Huang, Johannes H. J. Martiny, Brian M. Andersen, Nana Shumiya, Daniel Multer, Maksim Litskevich, Zijia Cheng, Xian Yang, Tyler A. Cochran, Guoqing Chang, Ilya Belopolski, Lingyi Xing, Xiancheng Wang, Yi Gao, Feng-Chuan Chuang, Hsin Lin, Ziqiang Wang, Changqing Jin, Yunkyu Bang, M. Zahid Hasan Phys. Rev. Lett. 123, 217004 (2019) Quantum phase transition of correlated iron-based superconductivity in LiFe1−xCoxAs]  (https://arxiv.org/abs/1910.11396)
-- [ ] [Mainak Pal, Laetitia Bettmann, Andreas Kreisel, P.J. Hirschfeld, Phys. Rev. B 103, 245132 (2021) Magnetic anisotropy from linear defect structures in correlated electron systems]  (https://arxiv.org/abs/2012.03824)
-- [ ] [Mainak Pal, Andreas Kreisel, W.A. Atkinson, P.J. Hirschfeld, Phys. Rev. B 107, 144501 (2023) Simulating Superconducting Properties of Overdoped Cuprates: the Role of Inhomogeneity] (https://arxiv.org/abs/2211.13338)
-- [ ] [Mainak Pal, Andreas Kreisel, P.J. Hirschfeld, Phys. Rev. B 107, 134503 (2023) Topological superconductivity driven by correlations and linear defects in multiband superconductors] (https://arxiv.org/abs/2212.02394)
-- [ ] [Miguel Antonio Sulangi, Willem Farmilo, Andreas Kreisel, Mainak Pal, W. A. Atkinson, P. J. Hirschfeld Inhomogeneity, Fluctuations, and Gap Filling in Overdoped Cuprates] (https://arxiv.org/abs/2503.20861)
+- [ ] Peayush Choubey, T. Berlijn, A. Kreisel, C. Cao, P. J. Hirschfeld, Phys. Rev. B 90, 134520 (2014) Visualization of atomic-scale phenomena in superconductors: application to FeSe (http://arxiv.org/abs/1401.7732)
+- [ ] Jia-Xin Yin, Songtian S. Zhang, Guangyang Dai, Yuanyuan Zhao, Andreas Kreisel, Gennevieve Macam, Xianxin Wu, Hu Miao, Zhi-Quan Huang, Johannes H. J. Martiny, Brian M. Andersen, Nana Shumiya, Daniel Multer, Maksim Litskevich, Zijia Cheng, Xian Yang, Tyler A. Cochran, Guoqing Chang, Ilya Belopolski, Lingyi Xing, Xiancheng Wang, Yi Gao, Feng-Chuan Chuang, Hsin Lin, Ziqiang Wang, Changqing Jin, Yunkyu Bang, M. Zahid Hasan Phys. Rev. Lett. 123, 217004 (2019) Quantum phase transition of correlated iron-based superconductivity in LiFe1−xCoxAs  (https://arxiv.org/abs/1910.11396)
+- [ ] Mainak Pal, Laetitia Bettmann, Andreas Kreisel, P.J. Hirschfeld, Phys. Rev. B 103, 245132 (2021) Magnetic anisotropy from linear defect structures in correlated electron systems  (https://arxiv.org/abs/2012.03824)
+- [ ] Mainak Pal, Andreas Kreisel, W.A. Atkinson, P.J. Hirschfeld, Phys. Rev. B 107, 144501 (2023) Simulating Superconducting Properties of Overdoped Cuprates: the Role of Inhomogeneity (https://arxiv.org/abs/2211.13338)
+- [ ] Mainak Pal, Andreas Kreisel, P.J. Hirschfeld, Phys. Rev. B 107, 134503 (2023) Topological superconductivity driven by correlations and linear defects in multiband superconductors (https://arxiv.org/abs/2212.02394)
+- [ ] Miguel Antonio Sulangi, Willem Farmilo, Andreas Kreisel, Mainak Pal, W. A. Atkinson, P. J. Hirschfeld Inhomogeneity, Fluctuations, and Gap Filling in Overdoped Cuprates (https://arxiv.org/abs/2503.20861)
+
 ## Authors and acknowledgment
 
 This code has been developped partly by Peayush Choubey, Mainak Pal, Andreas Kreisel
