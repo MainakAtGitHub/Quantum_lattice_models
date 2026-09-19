@@ -15,14 +15,10 @@ The scripts supports large-scale numerical studies of spatially inhomogeneous, s
 - Designed for High Performance Computing environment
 This code is a real space BdG implementation for unconventional superconductivity including disorder and correlations.
 
-## Small Tutorial
+## Tutorial
 
 You can run a test calculation for a d-wave superconductor as described in the Tutorial sub-directory.
-Just follow the instructions in the text files, i.e.
-
-```
-convert_tb_AK_PC('1band.csv')
-```
+Just follow the instructions in the tutorial text files.
 
 ## Relevant publications
 
