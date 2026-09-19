@@ -3,7 +3,7 @@
 Numerical framework for self-consistent real-space Bogoliubov–de Gennes
 (BdG) calculations of superconducting and quantum-material models.
 
-The scripts supports large-scale numerical studies of spatially inhomogeneous, superconducting, and other correlated quantum states. These were developed as part of several collaborative condensed-matter physics research projects.
+The scripts support large-scale numerical studies of spatially inhomogeneous, superconducting, and other correlated quantum states. These were developed as part of several collaborative condensed-matter physics research projects.
 
 ## Highlights
 
