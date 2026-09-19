@@ -28,9 +28,9 @@ My publications that were based on this codebase are -
    [arXiv:2012.03824](https://arxiv.org/abs/2012.03824)
 
 2. **Mainak Pal, Andreas Kreisel, W. A. Atkinson, and P. J. Hirschfeld**,  
-   *[Simulating superconducting properties of overdoped cuprates: The role of inhomogeneity](https://arxiv.org/abs/2211.13338)*,  
+   *[Simulating superconducting properties of overdoped cuprates: The role of inhomogeneity](https://doi.org/10.1103/PhysRevB.107.144501)*,  
    **Physical Review B 107, 144501 (2023)**.
-
+   [arXiv:2211.13338](https://arxiv.org/abs/2211.13338)
 3. **Mainak Pal, Andreas Kreisel, and P. J. Hirschfeld**,  
    *[Topological superconductivity driven by correlations and linear defects in multiband superconductors](https://arxiv.org/abs/2212.02394)*,  
    **Physical Review B 107, 134503 (2023)**.
