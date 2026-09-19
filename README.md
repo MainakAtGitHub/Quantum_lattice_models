@@ -12,7 +12,7 @@ The scripts supports large-scale numerical studies of spatially inhomogeneous, s
 - Spatially resolved superconducting observables
 - Parameter sweeps and numerical analysis
 - MATLAB-based scientific computing workflow
-- HPC-oriented calculations
+- Designed for High Performance Computing environment
 This code is a real space BdG implementation for unconventional superconductivity including disorder and correlations.
 
 ## Small Tutorial
