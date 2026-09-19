@@ -33,10 +33,11 @@ My publications that were based on this codebase are -
    [arXiv:2211.13338](https://arxiv.org/abs/2211.13338)
    
 4. **Mainak Pal, Andreas Kreisel, and P. J. Hirschfeld**,  
-   *[Topological superconductivity driven by correlations and linear defects in multiband superconductors](https://arxiv.org/abs/2212.02394)*,  
+   *[Topological superconductivity driven by correlations and linear defects in multiband superconductors](https://doi.org/10.1103/PhysRevB.107.134503)*,  
    **Physical Review B 107, 134503 (2023)**.
+   [arXiv:2212.02394](https://arxiv.org/abs/2212.02394)
 
-5. **Miguel Antonio Sulangi, Willem Farmilo, Andreas Kreisel, Mainak Pal, W. A. Atkinson, and P. J. Hirschfeld**,  
+6. **Miguel Antonio Sulangi, Willem Farmilo, Andreas Kreisel, Mainak Pal, W. A. Atkinson, and P. J. Hirschfeld**,  
    *[Inhomogeneity, fluctuations, and gap filling in overdoped cuprates](https://arxiv.org/abs/2503.20861)*.  
    [arXiv:2503.20861](https://arxiv.org/abs/2503.20861)
 
