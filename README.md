@@ -1,12 +1,19 @@
-# real_space_BdG
+# Real-Space Bogoliubov–de Gennes Simulations
 
+Numerical framework for self-consistent real-space Bogoliubov–de Gennes
+(BdG) calculations of superconducting and quantum-material models.
 
+The scripts supports large-scale numerical studies of spatially inhomogeneous, superconducting, and other correlated quantum states. These were developed as part of several collaborative condensed-matter physics research projects.
 
-## Description
+## Highlights
 
+- Self-consistent solution of real-space BdG equations
+- Large-scale numerical diagonalization
+- Spatially resolved superconducting observables
+- Parameter sweeps and numerical analysis
+- MATLAB-based scientific computing workflow
+- HPC-oriented calculations
 This code is a real space BdG implementation for unconventional superconductivity including disorder and correlations.
-
-It is written in Matlab and can be run on non-interactive computing systems (Linux) while for plotting and analysis a desktop environment is needed.
 
 ## Small Tutorial
 
