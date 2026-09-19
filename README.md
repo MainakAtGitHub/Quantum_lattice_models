@@ -23,10 +23,10 @@ Just follow the instructions in the tutorial text files.
 ## Relevant publications
 My publications based on this codebase are - 
 
-1. **Mainak Pal, Laetitia Bettmann, Andreas Kreisel, and P. J. Hirschfeld**,  
-   *[Magnetic anisotropy from linear defect structures in correlated electron systems](https://doi.org/10.1103/PhysRevB.103.245132)*,  
-   **Physical Review B 103, 245132 (2021)**.  
-   [arXiv:2012.03824](https://arxiv.org/abs/2012.03824)
+1. **Miguel Antonio Sulangi, Willem Farmilo, Andreas Kreisel, Mainak Pal, W. A. Atkinson, and P. J. Hirschfeld**,  
+   *[Inhomogeneity, fluctuations, and gap filling in disordered overdoped cuprates](https://doi.org/10.1103/x1m7-bs95)*,  
+   **Physical Review Research 7, 043201 (2025)**.  
+   [arXiv:2503.20861](https://arxiv.org/abs/2503.20861)
 
 2. **Mainak Pal, Andreas Kreisel, W. A. Atkinson, and P. J. Hirschfeld**,  
    *[Simulating superconducting properties of overdoped cuprates: The role of inhomogeneity](https://doi.org/10.1103/PhysRevB.107.144501)*,  
@@ -38,9 +38,11 @@ My publications based on this codebase are -
    **Physical Review B 107, 134503 (2023)**.  
    [arXiv:2212.02394](https://arxiv.org/abs/2212.02394)
 
-4. **Miguel Antonio Sulangi, Willem Farmilo, Andreas Kreisel, Mainak Pal, W. A. Atkinson, and P. J. Hirschfeld**,  
-   *[Inhomogeneity, fluctuations, and gap filling in overdoped cuprates](https://doi.org/10.1103/x1m7-bs95)*.  
-   [arXiv:2503.20861](https://arxiv.org/abs/2503.20861)
+4. **Mainak Pal, Laetitia Bettmann, Andreas Kreisel, and P. J. Hirschfeld**,  
+   *[Magnetic anisotropy from linear defect structures in correlated electron systems](https://doi.org/10.1103/PhysRevB.103.245132)*,  
+   **Physical Review B 103, 245132 (2021)**.  
+   [arXiv:2012.03824](https://arxiv.org/abs/2012.03824)
+   
 ## Authors and acknowledgment
 
 This is a collaborative research codebase developed jointly by Mainak Pal with Peayush Choubey and Andreas Kreisel.
