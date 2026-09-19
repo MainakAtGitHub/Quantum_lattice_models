@@ -22,18 +22,22 @@ Just follow the instructions in the tutorial text files.
 
 ## Relevant publications
 My publications that were based on this codebase are - 
-- [ ] Mainak Pal, Laetitia Bettmann, Andreas Kreisel, P.J. Hirschfeld, Phys. Rev. B 103, 245132 (2021)
+1. **Mainak Pal, Laetitia Bettmann, Andreas Kreisel, and P. J. Hirschfeld**,  
+   *[Magnetic anisotropy from linear defect structures in correlated electron systems](https://doi.org/10.1103/PhysRevB.103.245132)*,  
+   **Physical Review B 103, 245132 (2021)**.  
+   [arXiv:2012.03824](https://arxiv.org/abs/2012.03824)
 
-      Magnetic anisotropy from linear defect structures in correlated electron systems  
+2. **Mainak Pal, Andreas Kreisel, W. A. Atkinson, and P. J. Hirschfeld**,  
+   *[Simulating superconducting properties of overdoped cuprates: The role of inhomogeneity](https://arxiv.org/abs/2211.13338)*,  
+   **Physical Review B 107, 144501 (2023)**.
 
-      (https://doi.org/10.1103/PhysRevB.103.245132, https://arxiv.org/abs/2012.03824)
-- [ ] Mainak Pal, Andreas Kreisel, W.A. Atkinson, P.J. Hirschfeld, Phys. Rev. B 107, 144501 (2023)
+3. **Mainak Pal, Andreas Kreisel, and P. J. Hirschfeld**,  
+   *[Topological superconductivity driven by correlations and linear defects in multiband superconductors](https://arxiv.org/abs/2212.02394)*,  
+   **Physical Review B 107, 134503 (2023)**.
 
-Simulating Superconducting Properties of Overdoped Cuprates: the Role of Inhomogeneity 
-
-(https://arxiv.org/abs/2211.13338)
-- [ ] Mainak Pal, Andreas Kreisel, P.J. Hirschfeld, Phys. Rev. B 107, 134503 (2023) Topological superconductivity driven by correlations and linear defects in multiband superconductors (https://arxiv.org/abs/2212.02394)
-- [ ] Miguel Antonio Sulangi, Willem Farmilo, Andreas Kreisel, Mainak Pal, W. A. Atkinson, P. J. Hirschfeld Inhomogeneity, Fluctuations, and Gap Filling in Overdoped Cuprates (https://arxiv.org/abs/2503.20861)
+4. **Miguel Antonio Sulangi, Willem Farmilo, Andreas Kreisel, Mainak Pal, W. A. Atkinson, and P. J. Hirschfeld**,  
+   *[Inhomogeneity, fluctuations, and gap filling in overdoped cuprates](https://arxiv.org/abs/2503.20861)*.  
+   [arXiv:2503.20861](https://arxiv.org/abs/2503.20861)
 
 ## Authors and acknowledgment
 
