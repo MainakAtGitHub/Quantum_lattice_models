@@ -35,6 +35,7 @@ My contributions comprise approximately half of the development of the
 codebase, including both independently developed components and substantial
 joint development. Because many components evolved collaboratively, individual
 file-level authorship is not assigned.
+Original collaborative repository: https://gitlab.itp.uni-frankfurt.de/kreisel/bdg_public/-/tree/main
 
 ## License
 
