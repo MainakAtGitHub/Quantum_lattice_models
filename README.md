@@ -1,4 +1,4 @@
-# Lattice simulations of superconductors and quantum magnets
+# Lattice simulation of superconductors and quantum magnets
 
 Numerical framework for self-consistent real-space Bogoliubov–de Gennes
 (BdG) calculations of superconducting and quantum-material models.
