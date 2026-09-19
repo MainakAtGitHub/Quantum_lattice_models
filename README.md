@@ -1,4 +1,4 @@
-# Real-Space Bogoliubov–de Gennes Simulations
+# Real-space Bogoliubov–de Gennes Simulations
 
 Numerical framework for self-consistent real-space Bogoliubov–de Gennes
 (BdG) calculations of superconducting and quantum-material models.
