@@ -24,7 +24,7 @@ Just follow the instructions in the tutorial text files.
 ## Relevant publications
 My publications based on this codebase are - 
 
-1. **Miguel Antonio Sulangi, Willem Farmilo, Andreas Kreisel, Mainak Pal, W. A. Atkinson, and P. J. Hirschfeld**,  
+1. Miguel Antonio Sulangi, Willem Farmilo, Andreas Kreisel, **Mainak Pal**, W. A. Atkinson, and P. J. Hirschfeld,  
    *[Inhomogeneity, fluctuations, and gap filling in disordered overdoped cuprates](https://doi.org/10.1103/x1m7-bs95)*,  
    **Physical Review Research 7, 043201 (2025)**.  
    [arXiv:2503.20861](https://arxiv.org/abs/2503.20861)
