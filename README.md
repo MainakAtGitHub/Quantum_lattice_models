@@ -1,4 +1,4 @@
-# Lattice simulation of superconductors and quantum magnets
+# Large-scale lattice simulations of superconductors and quantum magnets
 
 Numerical framework for self-consistent real-space Bogoliubov–de Gennes
 (BdG) calculations of superconducting and quantum-material models.
@@ -12,7 +12,7 @@ The scripts support large-scale numerical studies of spatially inhomogeneous, su
 - Spatially resolved superconducting observables
 - Parameter sweeps and numerical analysis
 - MATLAB-based scientific computing workflow
-- Designed for High Performance Computing environment
+- Designed for high-performance computing (HPC) environment
 
 This codebase is a real space BdG implementation for unconventional superconductivity including disorder and correlations.
 
